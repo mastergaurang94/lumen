@@ -10,7 +10,7 @@ Lumen offers weekly coaching that builds self-trust -- not dependence -- through
 - Autonomy by design: built-in spacing between sessions (7 days minimum).
 - Persistent memory: the coach knows the user's story across sessions.
 - Personalization: grounded in the user's influences and what resonates.
-- Privacy: no training usage of user data; local-first storage.
+- Privacy: no training usage of user data; local-first with zero-knowledge encrypted sync in MVP.
 - Action-first: momentum precedes reflection.
 - Pattern recognition: naming loops and dynamics without over-indexing on advice.
 - Challenge with care: hold users accountable when slipping.
@@ -20,11 +20,13 @@ Lumen offers weekly coaching that builds self-trust -- not dependence -- through
 ### Conversational Interface
 - Web-based chat with an AI coach.
 - Freeform sessions (not time-boxed) but that feel like 45-60 minutes.
+- UI prompts user to set aside ~60 minutes before starting a session.
 - Clear privacy line in the UI that sessions are stored locally and not used for training.
-- Coach senses when a session is complete and closes with:
-  - summary
-  - closing words
-  - action steps (if any)
+- Session ends when the user clicks End Session.
+  - The assistant may offer a closure suggestion, but the user decides.
+  - Auto-close if the session remains open for 24 hours.
+- Explicit session-closure UX (e.g., "Ready to wrap?" prompt + End Session action).
+- Primary product target is desktop, with a web app used as the MVP starting point.
 
 ### Intake and Ongoing Sessions
 - First session starts off guided for intake.
@@ -40,9 +42,18 @@ Lumen offers weekly coaching that builds self-trust -- not dependence -- through
 - Conversations are not used for model training.
 - Default: data stored locally in the browser profile.
 - Local encryption at rest for stored data.
+- Passphrase required before first session for recovery.
+- UX must warn users that the passphrase cannot be recovered; losing it means losing access to local data.
+  - Suggested copy: "Only you can unlock your data. We can't recover this passphrase—lose it and your sessions are gone."
+- Zero-knowledge encrypted sync (MVP): server stores ciphertext only; keys never leave the client.
+- Offline-first: local data is the source of truth; sync happens when a network is available.
 - Raw session transcripts are retained to allow re-summarization as models
   improve.
-- User control features (export, delete, forget) are planned post-MVP.
+
+#### Privacy, Storage, and Sync (MVP)
+- Local encrypted storage in the browser.
+- Zero-knowledge encrypted sync (ciphertext only, no server-side plaintext).
+- Passphrase required before first session.
 
 ## Memory (v0)
 Goal: Keep memory simple, high-signal, and future-proof.
@@ -52,14 +63,10 @@ Golden path (no setup required):
 - Session summary (short, actionable)
 - User profile (minimal, stable, low-noise)
 
-Planned later (optional):
-- Patterns and loops
-- Commitments and outcomes
-- Moments of recognition index
-
 ## AI Provider
 - Primary provider: Opus 4.5
-- Model optionality is important long-term, but not expanded in MVP.
+- Minimal provider abstraction in MVP to allow fallback later.
+- Coach unavailable UI message when the model is down or unavailable.
 
 ## Vector Search / Retrieval
 - Not required for MVP.
@@ -73,6 +80,8 @@ likely, invent new best practices) with the intention to potentially open-source
 this layer. This should draw from frontier-lab patterns (like coding harnesses) 
 but adapted for coaching: context curation, memory hygiene, session closure 
 behavior, and safety-aware governance.
+- Treat the harness as product-critical: tests, prompt versioning, and deterministic context assembly.
+  - Minimal evaluation harness for summaries and session-closure quality.
 
 ## Auth
 - Email + magic link for MVP.
@@ -80,7 +89,8 @@ behavior, and safety-aware governance.
 
 ## Tech Stack (MVP)
 - Web: Next.js + React + TypeScript.
-- Storage: IndexedDB (encrypted with WebCrypto AES-GCM + PBKDF2).
+- Storage: IndexedDB via Dexie (encrypted with WebCrypto AES-GCM + PBKDF2).
+- Storage abstraction layer to support browser storage now and desktop filesystem later.
 - LLM: Opus 4.5.
 - Backend: Go with policy/governance separated from proxy logic.
 
@@ -92,40 +102,6 @@ behavior, and safety-aware governance.
   - session spacing
   - model orchestration
   - governance/policy logic
+  - observability scope -- specify what gets logged without violating privacy (timings, token counts, status, error class) and structured logs
 
 ---
-
-## Post-MVP (Planned)
-- Desktop wrapper to enable native filesystem access.
-- Export/import for cross-browser and device portability.
-- User-held-key backups for privacy-max storage.
-
-## Reflection: Are We Building the Right Thing, the Right Way?
-
-This spec is oriented around the core promise: recognition that changes the
-user's footing. The MVP keeps the surface area small while protecting the
-essentials:
-
-- We are prioritizing safety and privacy (local-first, no training use) which
-  enables vulnerability and honest coaching.
-- We are preserving raw transcripts, which is crucial for future upgrades and
-  preventing rework as models improve.
-- We are resisting premature taxonomy decisions, keeping the memory model
-  minimal while still delivering personalization through summaries and a
-  lightweight profile.
-- We are enforcing autonomy structurally with a 7-day cadence, rather than
-  relying on user discipline.
-- We are designing a conversational harness that can scale in quality without
-  locking into vector infrastructure early.
-
-Risks to watch:
-- The coach's ability to recognize "session complete" may vary; needs
-  calibration in the system prompt and careful UX cues.
-- Local-first storage will complicate multi-device support; this should be a
-  deliberate tradeoff for MVP.
-- Opus 4.5 quality is central; if model quality degrades or access is limited,
-  we need a fallback plan.
-
-Overall: This is the right product direction and the right build strategy for
-an MVP. It balances depth with simplicity and sets a clean path for future
-expansion without compromising the core coaching experience.

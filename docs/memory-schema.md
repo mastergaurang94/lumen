@@ -16,6 +16,8 @@ We store three primary objects per user:
 
 All data is stored locally in the browser via IndexedDB, encrypted at rest with
 WebCrypto AES-GCM + PBKDF2.
+Encrypted blobs are synced to the server via zero-knowledge encrypted sync
+(ciphertext only).
 
 ## Entities
 
@@ -32,7 +34,7 @@ Fields:
 - updated_at: string (ISO8601)
 
 ### 2) SessionTranscript
-Raw session content. Immutable once written.
+Raw session content. Immutable once written. Stored encrypted at rest.
 
 Fields:
 - session_id: string (uuid)
@@ -42,15 +44,20 @@ Fields:
 - timezone: string | null (IANA, e.g., "America/Los_Angeles")
 - locale_hint: string | null (e.g., "en-US")
 - system_prompt_version: string (e.g., "intake-v0.1")
-- messages: array of Message
 - encrypted_blob: bytes (ciphertext)
+- encryption_header: object
 - created_at: string (ISO8601)
 
-Message:
-- role: "user" | "assistant" | "system"
-- content: string
-- created_at: string (ISO8601)
-- metadata: object | null (optional, for future tagging)
+encryption_header:
+- kdf: "PBKDF2"
+- kdf_params: object (e.g., { hash: "SHA-256", iterations: 600000 })
+- salt: bytes (16+ bytes)
+- cipher: "AES-GCM"
+- iv: bytes (12 bytes)
+- version: string (e.g., "enc-v0.1")
+
+Note: Decrypted messages live in memory during an active session only. The
+encrypted blob contains the serialized message array and any per-message metadata.
 
 ### 3) SessionSummary
 Short, actionable recap for memory and next-session context.
@@ -81,8 +88,3 @@ Fields:
 - By session_id.
 - By started_at (descending for recent-first lists).
 
-## Post-MVP Extensions (Optional)
-- Pattern index (loops, dynamics)
-- Commitments tracker with outcomes
-- Recognition moment index for quick recall
-- Retrieval layer (embeddings) for long-horizon context

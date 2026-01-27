@@ -7,6 +7,7 @@ Status: Draft (MVP)
 - Keep context tight and high-signal.
 - Preserve privacy and autonomy constraints.
 - Support consistent coaching quality across sessions.
+- Be deterministic and testable for product-critical reliability.
 
 ## High-Level Flow
 1. Load user state (profile + last session summary + open threads).
@@ -32,15 +33,11 @@ Token budget (MVP heuristic):
 - Reserve room for system prompt and model response.
 - Target ~70–75% of the context window for input.
 - If raw transcripts exceed budget, fall back to summaries.
+ 
+Determinism (MVP):
+- Deterministic context assembly for a given input state and budget.
+- Log context selection decisions for replay in tests.
 
-Later considerations (not required for MVP):
-- Context compaction and recap rewriting.
-- Tool-call trimming and irrelevant metadata removal.
-- Summarizing long pasted inputs (code/docs) before storage.
-- Topic-based retrieval or thread pinning for long-horizon continuity.
-- Priority weighting (commitments, recurring themes, recognition moments).
-- Session boundary validation to avoid accidental carryover.
-- Hallucination guards for memory: cite source session for recalled facts.
 
 ## Memory Hygiene
 - After each session, write:
@@ -57,9 +54,16 @@ Later considerations (not required for MVP):
 
 ## Session Completion Detection
 Signals:
-- Explicit user closure (e.g., "I'm done", "that's it for today")
-- Implicit closure (energy drops, decision reached, repeated sign-off)
+- Explicit user closure via End Session UI.
+- Assistant may offer a closure suggestion, but the user decides.
+- Auto-close if a session remains open for 24 hours.
 
 Action:
-- Conclude with summary, closing words, and action steps (if any).
+- On user end or auto-close, conclude with summary, closing words, and action steps (if any).
 
+## Harness Quality
+- Prompt versioning tied to summaries and transcript metadata.
+- Minimal evaluation harness:
+  - Summary quality checks (brevity, action steps present when applicable).
+  - Closure checks (summary + closing words + action steps format).
+  - Deterministic context assembly replay tests.
