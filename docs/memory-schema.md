@@ -16,8 +16,6 @@ We store three primary objects per user:
 
 All data is stored locally in the browser via IndexedDB, encrypted at rest with
 WebCrypto AES-GCM + PBKDF2.
-Encrypted blobs are synced to the server via zero-knowledge encrypted sync
-(ciphertext only).
 
 ## Entities
 

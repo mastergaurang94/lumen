@@ -4,11 +4,10 @@ Date: 2026-01-26
 Status: Draft (MVP)
 
 ## Goals
-- Browser-first, local-first data storage (MVP) with zero-knowledge encrypted sync.
+- Browser-first, local-first data storage (MVP) with a path to zero-knowledge encrypted sync.
 - Simple, production-ready separation of concerns.
 - Enforce 7-day session spacing.
 - Maintain privacy (no training use).
-- Offline-first UX: local is source of truth; sync when network is available.
 
 ## Components
 - **Web App (Next.js + React + TS)**
@@ -16,7 +15,6 @@ Status: Draft (MVP)
   - Pre-session UI prompt to set aside ~60 minutes.
   - Explicit session-closure UX (e.g., "Ready to wrap?" prompt + End Session action).
   - Local storage via IndexedDB + Dexie (encrypted with WebCrypto AES-GCM + PBKDF2).
-  - Offline-first sync queue (push/pull encrypted blobs when online).
   - Context assembly for model calls (per harness flow).
   - Coach unavailable UI state for model outages.
 
@@ -27,7 +25,6 @@ Status: Draft (MVP)
   - Provider abstraction (single provider now, fallback-ready interface).
   - API versioning (e.g., `/v1`) for stable client-server contracts.
   - Request ID propagation across web app, API, and LLM calls.
-  - Encrypted sync endpoints for zero-knowledge data storage.
   - OpenTelemetry hooks for traceability.
   - Structured logs with trace IDs; observability scope.
 
@@ -37,7 +34,6 @@ Status: Draft (MVP)
 - **Postgres**
   - Minimal user metadata (auth, session timestamps).
   - Session metadata only: session_id, user_id, started_at, ended_at, transcript hash.
-  - Encrypted sync blobs + metadata (ciphertext only).
   - No transcripts or summaries stored server-side.
 
 ## Data Flow
@@ -47,7 +43,6 @@ Status: Draft (MVP)
 4. Web app sends prompt + context to Go service.
 5. Go service applies governance/policy, forwards to LLM.
 6. Response returns to web app; transcript + summary stored locally.
-7. Encrypted updates sync to server when online.
 
 ## Security Notes
 - Client-side encryption for local storage.
@@ -56,15 +51,14 @@ Status: Draft (MVP)
   - Store encryption header (kdf params, salt, iv, version) with each encrypted blob.
   - Key rotation: versioned KDF params; re-encrypt all local records when version changes.
 - Transcript hash computed client-side over the encrypted blob + encryption header.
-- No server-side plaintext; ciphertext only.
+- No server-side storage of transcripts or summaries.
 - Explicit UI line for privacy and local storage.
-- Passphrase required before first session for recovery.
+- Passphrase required before first session to unlock local data.
 
 ## Observability
 - OpenTelemetry spans for:
   - session start/stop
   - client-side context assembly
-  - client-side sync (push/pull)
   - LLM calls
   - governance decisions
   - session closure decisions

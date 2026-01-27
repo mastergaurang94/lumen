@@ -6,6 +6,7 @@ Date: 2026-01-27
 - Desktop wrapper to enable native filesystem access.
 - Export/import for recovery.
 - Resolve multi-device edits (merge strategy, last-write-wins vs CRDT, user prompts).
+- Zero-knowledge encrypted sync (ciphertext-only storage).
 
 ## Post-MVP: Memory
 - Pattern index (loops, dynamics).

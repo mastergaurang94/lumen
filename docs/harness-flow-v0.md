@@ -56,10 +56,9 @@ Determinism (MVP):
 Signals:
 - Explicit user closure via End Session UI.
 - Assistant may offer a closure suggestion, but the user decides.
-- Auto-close if a session remains open for 24 hours.
 
 Action:
-- On user end or auto-close, conclude with summary, closing words, and action steps (if any).
+- On user end, conclude with summary, closing words, and action steps (if any).
 
 ## Harness Quality
 - Prompt versioning tied to summaries and transcript metadata.

@@ -10,7 +10,7 @@ Lumen offers weekly coaching that builds self-trust -- not dependence -- through
 - Autonomy by design: built-in spacing between sessions (7 days minimum).
 - Persistent memory: the coach knows the user's story across sessions.
 - Personalization: grounded in the user's influences and what resonates.
-- Privacy: no training usage of user data; local-first with zero-knowledge encrypted sync in MVP.
+- Privacy: no training usage of user data; local-first MVP with a path to zero-knowledge encrypted sync (v1.1).
 - Action-first: momentum precedes reflection.
 - Pattern recognition: naming loops and dynamics without over-indexing on advice.
 - Challenge with care: hold users accountable when slipping.
@@ -24,7 +24,6 @@ Lumen offers weekly coaching that builds self-trust -- not dependence -- through
 - Clear privacy line in the UI that sessions are stored locally and not used for training.
 - Session ends when the user clicks End Session.
   - The assistant may offer a closure suggestion, but the user decides.
-  - Auto-close if the session remains open for 24 hours.
 - Explicit session-closure UX (e.g., "Ready to wrap?" prompt + End Session action).
 - Primary product target is desktop, with a web app used as the MVP starting point.
 
@@ -42,18 +41,16 @@ Lumen offers weekly coaching that builds self-trust -- not dependence -- through
 - Conversations are not used for model training.
 - Default: data stored locally in the browser profile.
 - Local encryption at rest for stored data.
-- Passphrase required before first session for recovery.
+- Passphrase required before first session to unlock local data.
 - UX must warn users that the passphrase cannot be recovered; losing it means losing access to local data.
   - Suggested copy: "Only you can unlock your data. We can't recover this passphrase—lose it and your sessions are gone."
-- Zero-knowledge encrypted sync (MVP): server stores ciphertext only; keys never leave the client.
-- Offline-first: local data is the source of truth; sync happens when a network is available.
 - Raw session transcripts are retained to allow re-summarization as models
   improve.
 
-#### Privacy, Storage, and Sync (MVP)
+#### Privacy, Storage, and Sync
 - Local encrypted storage in the browser.
-- Zero-knowledge encrypted sync (ciphertext only, no server-side plaintext).
 - Passphrase required before first session.
+ - Planned v1.1: zero-knowledge encrypted sync (ciphertext only, no server-side plaintext).
 
 ## Memory (v0)
 Goal: Keep memory simple, high-signal, and future-proof.
