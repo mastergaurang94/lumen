@@ -23,9 +23,24 @@ Inputs:
 - Current time/seasonal context
 
 Rules:
-- Prefer summaries over raw transcripts.
+- Prefer summaries over raw transcripts unless within budget.
+- Use raw transcripts for the last 2–3 sessions if budget allows.
 - Include only what directly informs the next move.
 - If the session number is 1, do not include prior sessions.
+
+Token budget (MVP heuristic):
+- Reserve room for system prompt and model response.
+- Target ~70–75% of the context window for input.
+- If raw transcripts exceed budget, fall back to summaries.
+
+Later considerations (not required for MVP):
+- Context compaction and recap rewriting.
+- Tool-call trimming and irrelevant metadata removal.
+- Summarizing long pasted inputs (code/docs) before storage.
+- Topic-based retrieval or thread pinning for long-horizon continuity.
+- Priority weighting (commitments, recurring themes, recognition moments).
+- Session boundary validation to avoid accidental carryover.
+- Hallucination guards for memory: cite source session for recalled facts.
 
 ## Memory Hygiene
 - After each session, write:
@@ -48,7 +63,3 @@ Signals:
 Action:
 - Conclude with summary, closing words, and action steps (if any).
 
-## Post-MVP (Planned)
-- Embeddings for long-horizon recall if needed.
-- User-held-key backups and export/import.
-- Desktop wrapper for native filesystem access.

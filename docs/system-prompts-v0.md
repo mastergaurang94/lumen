@@ -31,6 +31,8 @@ Both prompts enforce:
 Goal: Enter coaching quickly while surfacing the most useful starting point.
 
 Key moves:
+- Begin with a brief, warm welcome to establish rapport.
+- Offer a one-line orientation (no long explanation) if helpful, including a brief privacy line.
 - Ask 1–2 insightful, exploratory questions that reveal the current edge.
   - Example: "What’s the thing you’ve been circling that matters most right now?"
   - Example: "Where are you feeling stuck or conflicted today?"
