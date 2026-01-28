@@ -5,6 +5,7 @@
 node_modules/
 pnpm-debug.log*
 .pnpm-store/
+prompts/
 
 dist/
 build/
