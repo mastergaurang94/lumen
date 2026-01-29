@@ -7,7 +7,7 @@ Status: Draft
 
 1. Repo & project scaffolding
 
-- Monorepo layout: `apps/web`, `apps/api`, `packages/shared`.
+- Monorepo layout: `apps/web`, `apps/api`.
 - Baseline tooling: TypeScript config, ESLint/Prettier, CI lint/test.
 - Env management: `.env.example`, per-app env loading.
 

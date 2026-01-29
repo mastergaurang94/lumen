@@ -21,10 +21,10 @@ cd apps/api && go run ./cmd/api
 
 ## Architecture
 
-**Monorepo Structure**: pnpm workspaces with three packages:
+**Monorepo Structure**: pnpm workspaces with two packages:
+
 - `apps/web` - Next.js 15 + React 19 frontend (main development focus)
 - `apps/api` - Go chi/v5 backend (auth, session gating, LLM proxy)
-- `packages/shared` - Placeholder for shared types/utilities
 
 **Product**: Privacy-first AI coaching app. Client-side encryption (PBKDF2 + AES-GCM) is a core requirement, not an afterthought. All sensitive data stored locally in IndexedDB.
 
@@ -42,7 +42,7 @@ cd apps/api && go run ./cmd/api
 
 - Single quotes, trailing commas, 100 char print width (Prettier)
 - Prefer `type` over `interface` for simple type aliases
-- Run `pnpm format` before committing
+- Before committing, ensure CI will pass by running the checks in `.github/workflows/ci.yml`
 
 ## Key Documentation
 
