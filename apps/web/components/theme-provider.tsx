@@ -4,10 +4,13 @@ import * as React from 'react';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 
 type TimeOfDay = 'morning' | 'afternoon' | 'evening';
+type PalettePreference = TimeOfDay | 'auto';
+
+const PALETTE_STORAGE_KEY = 'lumen-palette-preference';
 
 interface ThemeContextValue {
   timeOfDay: TimeOfDay;
-  setTimeOfDay: (time: TimeOfDay | 'auto') => void;
+  setTimeOfDay: (time: PalettePreference) => void;
   isAutoTime: boolean;
 }
 
@@ -34,17 +37,48 @@ function applyTimeOfDayClass(time: TimeOfDay) {
   html.classList.add(`theme-${time}`);
 }
 
+function loadPalettePreference(): PalettePreference {
+  if (typeof window === 'undefined') return 'auto';
+  try {
+    const stored = localStorage.getItem(PALETTE_STORAGE_KEY);
+    if (stored === 'morning' || stored === 'afternoon' || stored === 'evening' || stored === 'auto') {
+      return stored;
+    }
+  } catch {
+    // localStorage not available
+  }
+  return 'auto';
+}
+
+function savePalettePreference(preference: PalettePreference) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(PALETTE_STORAGE_KEY, preference);
+  } catch {
+    // localStorage not available
+  }
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [timeOfDay, setTimeOfDayState] = React.useState<TimeOfDay>('afternoon');
   const [isAutoTime, setIsAutoTime] = React.useState(true);
   const [mounted, setMounted] = React.useState(false);
 
-  // Initialize on mount
+  // Initialize on mount - load persisted preference
   React.useEffect(() => {
     setMounted(true);
-    const initialTime = getTimeOfDay();
-    setTimeOfDayState(initialTime);
-    applyTimeOfDayClass(initialTime);
+    const preference = loadPalettePreference();
+
+    if (preference === 'auto') {
+      setIsAutoTime(true);
+      const currentTime = getTimeOfDay();
+      setTimeOfDayState(currentTime);
+      applyTimeOfDayClass(currentTime);
+    } else {
+      setIsAutoTime(false);
+      setTimeOfDayState(preference);
+      applyTimeOfDayClass(preference);
+    }
   }, []);
 
   // Update time every minute if auto
@@ -66,7 +100,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyTimeOfDayClass(timeOfDay);
   }, [timeOfDay, mounted]);
 
-  const setTimeOfDay = React.useCallback((time: TimeOfDay | 'auto') => {
+  const setTimeOfDay = React.useCallback((time: PalettePreference) => {
+    // Persist the preference
+    savePalettePreference(time);
+
     if (time === 'auto') {
       setIsAutoTime(true);
       const currentTime = getTimeOfDay();

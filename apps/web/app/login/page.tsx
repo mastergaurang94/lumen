@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
 
 type ViewState = 'form' | 'loading' | 'sent';
 
@@ -54,18 +55,29 @@ export default function LoginPage() {
                 transition={{ duration: 0.3 }}
                 className="space-y-8"
               >
-                {/* Header */}
-                <div className="text-center space-y-3">
-                  <h1 className="font-display text-4xl font-light tracking-tight text-foreground">
-                    Welcome back
-                  </h1>
-                  <p className="text-muted-foreground">Enter your email to sign in</p>
+                {/* Header with icon */}
+                <div className="text-center space-y-4">
+                  <div className="flex justify-center">
+                    <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+                      <Mail className="h-6 w-6 text-accent" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <h1 className="font-display text-4xl font-light tracking-tight text-foreground">
+                      Welcome back
+                    </h1>
+                    <p className="text-muted-foreground">Enter your email to sign in</p>
+                  </div>
                 </div>
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
+                    <label htmlFor="email" className="sr-only">
+                      Email address
+                    </label>
                     <Input
+                      id="email"
                       type="email"
                       placeholder="you@example.com"
                       value={email}
@@ -73,7 +85,11 @@ export default function LoginPage() {
                       disabled={viewState === 'loading'}
                       autoFocus
                       autoComplete="email"
+                      aria-describedby="email-hint"
                     />
+                    <p id="email-hint" className="sr-only">
+                      We will send a magic link to this email
+                    </p>
                   </div>
 
                   <Button
@@ -83,8 +99,8 @@ export default function LoginPage() {
                   >
                     {viewState === 'loading' ? (
                       <span className="flex items-center gap-2">
-                        <LoadingSpinner />
-                        Sending...
+                        <Spinner size="md" />
+                        <span>Sending...</span>
                       </span>
                     ) : (
                       'Continue with email'
@@ -132,7 +148,7 @@ export default function LoginPage() {
                     setViewState('form');
                     setEmail('');
                   }}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm text-muted-foreground hover:text-foreground hover:underline transition-colors"
                 >
                   Use a different email
                 </button>
@@ -151,23 +167,5 @@ export default function LoginPage() {
         </p>
       </footer>
     </div>
-  );
-}
-
-function LoadingSpinner() {
-  return (
-    <svg
-      className="animate-spin h-4 w-4"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      />
-    </svg>
   );
 }

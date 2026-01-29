@@ -111,11 +111,13 @@ export default function SetupPage() {
                   onBlur={() => setTouched((t) => ({ ...t, passphrase: true }))}
                   className="pr-10"
                   autoComplete="new-password"
+                  aria-describedby={hasPassphrase ? 'passphrase-strength' : undefined}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassphrase(!showPassphrase)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showPassphrase ? 'Hide passphrase' : 'Show passphrase'}
                 >
                   {showPassphrase ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -123,15 +125,15 @@ export default function SetupPage() {
 
               {/* Strength indicator */}
               {hasPassphrase && (
-                <div className="space-y-1.5 pt-1">
+                <div className="space-y-1.5 pt-1" id="passphrase-strength">
                   <div className="h-1 bg-muted rounded-full overflow-hidden">
                     <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: '100%' }}
+                      initial={false}
+                      animate={{ width: strengthInfo.width === 'w-full' ? '100%' : strengthInfo.width === 'w-3/4' ? '75%' : strengthInfo.width === 'w-2/4' ? '50%' : '25%' }}
+                      transition={{ duration: 0.3, ease: 'easeOut' }}
                       className={cn(
-                        'h-full rounded-full transition-all duration-300',
+                        'h-full rounded-full transition-colors duration-300',
                         strengthInfo.color,
-                        strengthInfo.width,
                       )}
                     />
                   </div>
@@ -161,17 +163,22 @@ export default function SetupPage() {
                     showMismatchError && 'border-destructive focus:ring-destructive',
                   )}
                   autoComplete="new-password"
+                  aria-invalid={showMismatchError}
+                  aria-describedby={showMismatchError ? 'confirm-error' : undefined}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirm(!showConfirm)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showConfirm ? 'Hide confirmation passphrase' : 'Show confirmation passphrase'}
                 >
                   {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               {showMismatchError && (
-                <p className="text-xs text-destructive">Passphrases don't match</p>
+                <p id="confirm-error" className="text-xs text-destructive" role="alert">
+                  Passphrases don't match
+                </p>
               )}
             </div>
 

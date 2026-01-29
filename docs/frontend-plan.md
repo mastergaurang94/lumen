@@ -18,7 +18,7 @@ See `design-system.md` for palette, typography, and visual direction.
 | 2. Layout Shell          | ✅ Complete    | Sidebar, floating menu          |
 | 3. Auth Entry            | ✅ Complete    | Email form + confirmation       |
 | 4. Passphrase Gate       | ✅ Complete    |                                 |
-| 4.5 Persistence + Polish | ⬜ Not started | localStorage + a11y + UX polish |
+| 4.5 Persistence + Polish | ✅ Complete    | localStorage + a11y + UX polish |
 | 5. Session Gating        | ⬜ Not started |                                 |
 | 6. Chat UI Core          | ⬜ Not started |                                 |
 | 7. Session Closure       | ⬜ Not started |                                 |
@@ -177,35 +177,43 @@ Completed items:
 
 ---
 
-### Step 4.5: Palette Persistence + Polish ⬜
+### Step 4.5: Palette Persistence + Polish ✅
 
-**Status: Not started**
+**Status: Complete**
 
 **Palette Persistence:**
 
-- [ ] Persist palette preference to localStorage
-- [ ] Load preference on app init
-- [ ] Ensure preference survives page navigation
+- [x] Persist palette preference to localStorage
+- [x] Load preference on app init
+- [x] Ensure preference survives page navigation and hard refresh
 
 **Polish from Step 3 (Login):**
 
-- [ ] Add icon to form state (Mail or User) for visual consistency with confirmation state
-- [ ] Extract `LoadingSpinner` to `components/ui/spinner.tsx` as shared component
-- [ ] Add visible label above email input (accessibility) or use `aria-label`
-- [ ] Consider adding underline-on-hover to "Use a different email" link
+- [x] Add icon to form state (Mail) for visual consistency with confirmation state
+- [x] Extract `LoadingSpinner` to `components/ui/spinner.tsx` as shared component
+- [x] Add visible label above email input (accessibility) with `sr-only` class
+- [x] Add underline-on-hover to "Use a different email" link
+- [x] Add `aria-describedby` hint for email input
 
 **Polish from Step 4 (Setup):**
 
-- [ ] Add `aria-label` to show/hide password toggle buttons (e.g., "Show passphrase")
-- [ ] Improve strength bar animation — animate between states, not always from zero
-- [ ] Consider adding `aria-describedby` linking strength indicator to input
+- [x] Add `aria-label` to show/hide password toggle buttons (e.g., "Show passphrase")
+- [x] Improve strength bar animation — animates smoothly between states using Framer Motion
+- [x] Add `aria-describedby` linking strength indicator to passphrase input
+- [x] Add `aria-invalid` and `aria-describedby` for mismatch error on confirm input
+- [x] Add `role="alert"` to error message for screen reader announcement
 
-**Optional (lower priority):**
+**Key files changed:**
+
+- `components/theme-provider.tsx` — Added localStorage persistence for palette preference
+- `components/ui/spinner.tsx` — New shared loading spinner component
+- `app/login/page.tsx` — Added Mail icon, sr-only label, aria-describedby, hover underline
+- `app/setup/page.tsx` — Added aria-labels, improved strength animation, aria-describedby
+
+**Optional (deferred):**
 
 - [ ] Abstract shared auth page layout pattern (atmosphere + back link + centered content + footer)
 - [ ] More robust email validation regex
-
-**Notes**: Complete persistence + high-priority polish before Step 5. Optional items can be deferred.
 
 ---
 
