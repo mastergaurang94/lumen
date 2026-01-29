@@ -12,17 +12,17 @@ See `design-system.md` for palette, typography, and visual direction.
 
 ## Progress Summary
 
-| Step                     | Status         | Notes                           |
-| ------------------------ | -------------- | ------------------------------- |
-| 1. Foundation Setup      | ✅ Complete    | Tailwind v4, theming, palettes  |
-| 2. Layout Shell          | ✅ Complete    | Sidebar, floating menu          |
-| 3. Auth Entry            | ✅ Complete    | Email form + confirmation       |
-| 4. Passphrase Gate       | ✅ Complete    |                                 |
-| 4.5 Persistence + Polish | ✅ Complete    | localStorage + a11y + UX polish |
-| 5. Session Gating        | ✅ Complete    | Locked/unlocked states          |
-| 6. Chat UI Core          | ✅ Complete    | Messages, input, streaming      |
+| Step                     | Status         | Notes                             |
+| ------------------------ | -------------- | --------------------------------- |
+| 1. Foundation Setup      | ✅ Complete    | Tailwind v4, theming, palettes    |
+| 2. Layout Shell          | ✅ Complete    | Sidebar, floating menu            |
+| 3. Auth Entry            | ✅ Complete    | Email form + confirmation         |
+| 4. Passphrase Gate       | ✅ Complete    |                                   |
+| 4.5 Persistence + Polish | ✅ Complete    | localStorage + a11y + UX polish   |
+| 5. Session Gating        | ✅ Complete    | Locked/unlocked states            |
+| 6. Chat UI Core          | ✅ Complete    | Messages, input, streaming        |
 | 7. Session Closure       | ✅ Complete    | Recognition moment + action steps |
-| 8. Edge States           | ⬜ Not started |                                 |
+| 8. Edge States           | ✅ Complete    | Unavailable, error, loading       |
 
 ---
 
@@ -370,16 +370,45 @@ The closure view intentionally avoids overwhelming the user after an emotional s
 
 ---
 
-### Step 8: Edge States ⬜
+### Step 8: Edge States ✅
 
-**Status: Not started**
+**Status: Complete**
 
-TODO:
+Completed items:
 
-- [ ] "Coach unavailable" UI (for model outages)
-- [ ] Loading/skeleton states
-- [ ] Error boundary with friendly message
-- [ ] Empty state before first message
+- [x] "Coach unavailable" UI — warm, non-alarming state with reassurance messaging
+- [x] Loading state with "Connecting to your coach" message
+- [x] Connection error state with retry button
+- [x] Skeleton components (Skeleton, SkeletonText, SkeletonMessage, SkeletonChat, SkeletonCard, SkeletonPage)
+- [x] Error boundary wrapper with friendly recovery UI
+- [x] Session state machine (loading → active/unavailable/error → complete)
+- [x] Mock toggles for testing edge states during development
+
+**Key files:**
+
+- `components/coach-unavailable.tsx` — Full-page coach unavailable state
+- `components/ui/skeleton.tsx` — Reusable skeleton loading components
+- `components/error-boundary.tsx` — React error boundary + ErrorFallback component
+- `app/chat/page.tsx` — Updated with session state machine and error handling
+
+**Implementation notes:**
+
+- Chat page now uses a state machine: `loading` → `active` | `unavailable` | `error` → `complete`
+- `ChatPageInner` component wrapped with `ErrorBoundary` for crash recovery
+- Mock toggles (`MOCK_COACH_UNAVAILABLE`, `MOCK_CONNECTION_ERROR`) for testing edge states
+- Coach unavailable uses warm language ("Taking a moment") rather than alarming error text
+- Skeleton components designed for the warm aesthetic with `bg-muted` and smooth pulse animation
+- Error states include reassurance about data safety ("Your data is safe")
+- All states maintain atmospheric backgrounds and theme consistency
+
+**Design philosophy:**
+
+Edge states should feel grounded and reassuring, not alarming:
+- "Taking a moment" instead of "Error" or "Unavailable"
+- "Connection interrupted" instead of "Network error"
+- Always reassure users their data is safe
+- Provide clear next steps (retry, return home)
+- Maintain the warm, human tone throughout
 
 ---
 
@@ -449,11 +478,13 @@ apps/web/
 │   ├── session/
 │   │   └── page.tsx     # Session gating
 │   └── chat/
-│       └── page.tsx     # Chat interface
+│       └── page.tsx     # Chat interface with edge state handling
 ├── components/
-│   ├── layout-shell.tsx # Main layout wrapper
-│   ├── sidebar.tsx      # Slide-out sidebar
+│   ├── layout-shell.tsx     # Main layout wrapper
+│   ├── sidebar.tsx          # Slide-out sidebar
 │   ├── theme-provider.tsx
+│   ├── coach-unavailable.tsx  # Coach unavailable state
+│   ├── error-boundary.tsx     # Error boundary + fallback
 │   ├── chat/
 │   │   ├── index.ts            # Barrel export
 │   │   ├── coach-message.tsx   # Coach message with markdown
@@ -465,6 +496,7 @@ apps/web/
 │       ├── button.tsx
 │       ├── input.tsx
 │       ├── spinner.tsx
+│       ├── skeleton.tsx   # Skeleton loading components
 │       └── ...
 └── lib/
     └── utils.ts         # cn() helper

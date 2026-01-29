@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sidebar } from '@/components/sidebar';
+import { ErrorBoundary } from '@/components/error-boundary';
+import { CoachUnavailable } from '@/components/coach-unavailable';
 import {
   CoachMessage,
   UserMessage,
@@ -14,7 +16,11 @@ import {
 } from '@/components/chat';
 
 // Session state
-type SessionState = 'active' | 'complete';
+type SessionState = 'loading' | 'active' | 'complete' | 'unavailable' | 'error';
+
+// Mock toggles for development - set to true to test different states
+const MOCK_COACH_UNAVAILABLE = false;
+const MOCK_CONNECTION_ERROR = false;
 
 // Mock closure data - in real app this would be generated from the session
 const MOCK_RECOGNITION_MOMENT =
@@ -86,23 +92,42 @@ async function* streamText(text: string): AsyncGenerator<string> {
   }
 }
 
-export default function ChatPage() {
+// Inner chat component (wrapped by error boundary)
+function ChatPageInner() {
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [isTyping, setIsTyping] = React.useState(false);
   const [streamingContent, setStreamingContent] = React.useState<string | null>(null);
   const [showEndSessionDialog, setShowEndSessionDialog] = React.useState(false);
-  const [sessionState, setSessionState] = React.useState<SessionState>('active');
-  const [mounted, setMounted] = React.useState(false);
+  const [sessionState, setSessionState] = React.useState<SessionState>('loading');
+  const [isRetrying, setIsRetrying] = React.useState(false);
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const responseIndexRef = React.useRef(0);
   const sessionDateRef = React.useRef(new Date());
 
-  // Initialize with coach greeting
-  React.useEffect(() => {
-    setMounted(true);
+  // Check coach availability and initialize session
+  const initializeSession = React.useCallback(async () => {
+    setSessionState('loading');
+
+    // Simulate checking coach availability
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    // Check mock toggles for testing edge states
+    if (MOCK_COACH_UNAVAILABLE) {
+      setSessionState('unavailable');
+      return;
+    }
+
+    if (MOCK_CONNECTION_ERROR) {
+      setSessionState('error');
+      return;
+    }
+
+    // Coach is available, start session
+    setSessionState('active');
+
     // Add initial coach message after a short delay
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       setMessages([
         {
           id: generateId(),
@@ -111,9 +136,23 @@ export default function ChatPage() {
           timestamp: new Date(),
         },
       ]);
-    }, 500);
-    return () => clearTimeout(timer);
+    }, 300);
   }, []);
+
+  // Initialize on mount
+  React.useEffect(() => {
+    initializeSession();
+  }, [initializeSession]);
+
+  // Retry handler for unavailable state
+  const handleRetry = React.useCallback(async () => {
+    setIsRetrying(true);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setIsRetrying(false);
+    // In real app, this would re-check coach availability
+    // For demo, just try to initialize again
+    initializeSession();
+  }, [initializeSession]);
 
   // Auto-scroll to bottom when messages change
   React.useEffect(() => {
@@ -174,10 +213,54 @@ export default function ChatPage() {
     setSessionState('complete');
   }, []);
 
-  if (!mounted) {
+  // Loading state
+  if (sessionState === 'loading') {
     return (
-      <div className="atmosphere min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
+      <div className="atmosphere min-h-screen flex flex-col items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="text-center space-y-6"
+        >
+          <div className="w-12 h-12 rounded-full border-2 border-accent/30 border-t-accent animate-spin mx-auto" />
+          <div className="space-y-2">
+            <p className="text-foreground font-medium">Connecting to your coach</p>
+            <p className="text-sm text-muted-foreground">Just a moment...</p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Coach unavailable state
+  if (sessionState === 'unavailable') {
+    return <CoachUnavailable onRetry={handleRetry} isRetrying={isRetrying} />;
+  }
+
+  // Error state (connection or other errors)
+  if (sessionState === 'error') {
+    return (
+      <div className="atmosphere min-h-screen flex flex-col items-center justify-center px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="text-center space-y-6 max-w-md"
+        >
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
+            <Shield className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <div className="space-y-3">
+            <h1 className="font-display text-2xl text-foreground">Connection interrupted</h1>
+            <p className="text-muted-foreground">
+              We couldn&apos;t establish a secure connection. Your data is safe.
+            </p>
+          </div>
+          <Button onClick={handleRetry} disabled={isRetrying} className="h-12 px-8">
+            {isRetrying ? 'Reconnecting...' : 'Try again'}
+          </Button>
+        </motion.div>
       </div>
     );
   }
@@ -362,5 +445,14 @@ function EndSessionDialog({
         </div>
       </motion.div>
     </>
+  );
+}
+
+// Main export with error boundary wrapper
+export default function ChatPage() {
+  return (
+    <ErrorBoundary>
+      <ChatPageInner />
+    </ErrorBoundary>
   );
 }
