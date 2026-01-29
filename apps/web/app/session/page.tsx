@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Clock, Sun, Calendar, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 // Mock session state - in real app this would come from the API
 type SessionState = 'locked' | 'unlocked';
@@ -14,10 +13,14 @@ interface SessionGate {
   state: SessionState;
   nextAvailable: Date | null;
   lastSessionDate: Date | null;
+  hasActiveSession: boolean; // Is there an in-progress session?
+  sessionPreview: string | null; // Brief context for active session
 }
 
-// Mock data for development - toggle this to test different states
+// Mock data for development - toggle these to test different states
 const MOCK_UNLOCKED = true;
+const MOCK_ACTIVE_SESSION = true; // Set to true to test "Resume session"
+const MOCK_SESSION_PREVIEW = "You were exploring what's holding you back at work..."; // Preview of active session
 
 function getMockSessionGate(): SessionGate {
   if (MOCK_UNLOCKED) {
@@ -25,6 +28,8 @@ function getMockSessionGate(): SessionGate {
       state: 'unlocked',
       nextAvailable: null,
       lastSessionDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
+      hasActiveSession: MOCK_ACTIVE_SESSION,
+      sessionPreview: MOCK_ACTIVE_SESSION ? MOCK_SESSION_PREVIEW : null,
     };
   }
 
@@ -37,6 +42,8 @@ function getMockSessionGate(): SessionGate {
     state: 'locked',
     nextAvailable,
     lastSessionDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
+    hasActiveSession: false,
+    sessionPreview: null,
   };
 }
 
@@ -144,6 +151,7 @@ export default function SessionPage() {
               <UnlockedState
                 key="unlocked"
                 lastSessionDate={sessionGate.lastSessionDate}
+                hasActiveSession={sessionGate.hasActiveSession}
               />
             )}
           </AnimatePresence>
@@ -151,11 +159,9 @@ export default function SessionPage() {
       </main>
 
       {/* Footer */}
-      <footer className="py-8 text-center">
-        <p className="text-sm text-muted-foreground/70 max-w-xs mx-auto leading-relaxed">
-          Sessions are spaced 7 days apart
-          <br />
-          to give you time to reflect and act.
+      <footer className="py-8 text-center px-6">
+        <p className="text-sm text-muted-foreground/70">
+          Sessions are spaced 7 days apart to give you time to reflect and act.
         </p>
       </footer>
     </div>
@@ -229,9 +235,15 @@ function LockedState({
   );
 }
 
-function UnlockedState({ lastSessionDate }: { lastSessionDate: Date | null }) {
+function UnlockedState({
+  lastSessionDate,
+  hasActiveSession,
+}: {
+  lastSessionDate: Date | null;
+  hasActiveSession: boolean;
+}) {
   const greeting = getTimeGreeting();
-  const isFirstSession = !lastSessionDate;
+  const isFirstSession = !lastSessionDate && !hasActiveSession;
 
   return (
     <motion.div
@@ -259,44 +271,49 @@ function UnlockedState({ lastSessionDate }: { lastSessionDate: Date | null }) {
       {/* Header */}
       <div className="space-y-3">
         <h1 className="font-display text-4xl font-light tracking-tight text-foreground">
-          {isFirstSession ? 'Welcome' : greeting}
+          {hasActiveSession ? 'Welcome back' : isFirstSession ? 'Welcome' : greeting}
         </h1>
         <p className="text-lg text-muted-foreground">
-          {isFirstSession
-            ? "Let's begin your first session"
-            : "Your session is ready"
-          }
+          {hasActiveSession
+            ? 'Your session is waiting for you'
+            : isFirstSession
+              ? "Let's begin your first session"
+              : 'Your session is ready'}
         </p>
       </div>
 
-      {/* Pre-session prompt card */}
-      <div className="bg-accent/5 border border-accent/10 rounded-xl p-6 space-y-4">
-        <div className="flex items-start gap-3 text-left">
-          <Clock className="h-5 w-5 text-accent shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-medium text-foreground">Set aside about 60 minutes</p>
-            <p className="text-sm text-muted-foreground">
-              Find a quiet space where you can reflect without interruption.
-            </p>
+      {/* Pre-session prompt card - only show for new sessions */}
+      {!hasActiveSession && (
+        <div className="bg-accent/5 border border-accent/10 rounded-xl p-6 space-y-4">
+          <div className="flex items-start gap-3 text-left">
+            <Clock className="h-5 w-5 text-accent shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-medium text-foreground">Set aside about 60 minutes</p>
+              <p className="text-sm text-muted-foreground">
+                Find a quiet space where you can reflect without interruption.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Begin button */}
+      {/* Begin/Resume button */}
       <Link href="/chat" className="block">
         <Button className="w-full h-14 text-lg font-medium">
-          Begin session
+          {hasActiveSession ? 'Resume session' : 'Begin session'}
         </Button>
       </Link>
 
-      {/* Returning user context */}
-      {!isFirstSession && lastSessionDate && (
-        <p className="text-sm text-muted-foreground/70">
-          It&apos;s been a week since we last spoke.
-          <br />
-          What&apos;s been on your mind?
-        </p>
-      )}
+      {/* Context text */}
+      {!hasActiveSession &&
+        !isFirstSession &&
+        lastSessionDate && (
+          <p className="text-sm text-muted-foreground/70">
+            It&apos;s been a week since we last spoke.
+            <br />
+            What&apos;s been on your mind?
+          </p>
+        )}
     </motion.div>
   );
 }

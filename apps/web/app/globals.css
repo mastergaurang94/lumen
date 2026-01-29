@@ -1,7 +1,9 @@
 @import 'tailwindcss';
+@plugin '@tailwindcss/typography';
 
 /* Tell Tailwind where to find classes */
 @source "../components/**/*.tsx";
+@source "../components/**/*.ts";
 @source "../app/**/*.tsx";
 @source "../lib/**/*.ts";
 
@@ -194,16 +196,16 @@ body {
 body,
 body * {
   transition:
-    background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 /* Don't transition text color to avoid flickering */
 body {
   transition:
-    background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    color 0.2s ease;
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.15s ease;
 }
 
 /* ============================================
@@ -319,10 +321,17 @@ body {
    Focus States
    ============================================ */
 
+/* Focus ring for interactive elements (buttons, links) */
 :focus-visible {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
   border-radius: var(--radius-sm);
+}
+
+/* No focus ring on text inputs - cursor is sufficient indicator */
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
 }
 
 /* ============================================
@@ -363,4 +372,34 @@ body {
 .dark .swatch-evening {
   --swatch-bg: hsl(25, 10%, 9%);
   --swatch-accent: hsl(28, 50%, 59%);
+}
+
+/* ============================================
+   Chat Scroll Area
+   ============================================ */
+
+.chat-scroll-area {
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch;
+  /* Firefox scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.5) transparent;
+}
+
+.chat-scroll-area::-webkit-scrollbar {
+  width: 8px;
+  -webkit-appearance: none;
+}
+
+.chat-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-scroll-area::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.5);
+  border-radius: 4px;
+}
+
+.chat-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.7);
 }

@@ -11,17 +11,17 @@ const sidebarVariants = {
   closed: {
     x: '-100%',
     transition: {
-      type: 'spring',
-      stiffness: 400,
-      damping: 40,
+      type: 'tween',
+      duration: 0.2,
+      ease: [0.4, 0, 0.2, 1],
     },
   },
   open: {
     x: 0,
     transition: {
-      type: 'spring',
-      stiffness: 400,
-      damping: 40,
+      type: 'tween',
+      duration: 0.2,
+      ease: [0.16, 1, 0.3, 1],
     },
   },
 };

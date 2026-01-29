@@ -20,7 +20,7 @@ See `design-system.md` for palette, typography, and visual direction.
 | 4. Passphrase Gate       | ✅ Complete    |                                 |
 | 4.5 Persistence + Polish | ✅ Complete    | localStorage + a11y + UX polish |
 | 5. Session Gating        | ✅ Complete    | Locked/unlocked states          |
-| 6. Chat UI Core          | ⬜ Not started |                                 |
+| 6. Chat UI Core          | ✅ Complete    | Messages, input, streaming      |
 | 7. Session Closure       | ⬜ Not started |                                 |
 | 8. Edge States           | ⬜ Not started |                                 |
 
@@ -254,26 +254,78 @@ Completed items:
 
 ---
 
-### Step 6: Chat UI Core ⬜
+### Step 6: Chat UI Core ✅
 
-**Status: Not started**
+**Status: Complete (with polish refinements)**
 
-TODO:
+Completed items:
 
-- [ ] Message list component with scroll area
-- [ ] Coach message (left-aligned, with avatar/icon)
-- [ ] User message (right-aligned)
-- [ ] Typing indicator for streaming
-- [ ] Auto-scroll to bottom on new messages
-- [ ] Multiline expanding textarea input
-- [ ] Send button
-- [ ] "End Session" button
+- [x] Message list component with scroll area
+- [x] Coach message (left-aligned, clean design without avatar)
+- [x] User message (right-aligned, accent-colored bubble)
+- [x] Typing indicator with animated bouncing dots
+- [x] Auto-scroll to bottom on new messages
+- [x] Multiline expanding textarea input (max 200px height)
+- [x] Send button (disabled when empty or streaming)
+- [x] "End Session" button with confirmation dialog
+- [x] Streaming text simulation (no cursor — cleaner)
+- [x] Markdown rendering for coach messages (bold, italic, lists, code, links)
+- [x] Empty state before first message ("Your session is beginning...")
+- [x] Keyboard shortcuts (Enter to send, Shift+Enter for newline)
 
-**Notes for implementation:**
+**Polish refinements (claude.ai-inspired):**
 
-- Consider `react-markdown` for coach message rendering
-- Scroll area should use shadcn ScrollArea or native with custom styling
-- Input should grow but have max height
+- [x] Removed avatar icons for cleaner design
+- [x] Increased text size (prose-lg for coach, text-lg for user/input)
+- [x] Wider conversation area (max-w-4xl)
+- [x] Cream/muted input bubble (bg-muted, rounded-2xl) that stands out
+- [x] Input refocuses after sending message
+- [x] Session title includes date: "Session · Thursday, January 29"
+- [x] Combined footer hints: "Enter to send · Shift+Enter for new line · Lumen is AI and may make mistakes"
+- [x] Removed streaming cursor (unnecessary visual noise)
+- [x] Placeholder changed to "Reply..."
+- [x] Hamburger menu accessible from chat page
+
+**Session page enhancements:**
+
+- [x] Active session detection with "Resume session" button
+- [x] Session preview one-liner: "You were exploring what's holding you back at work..."
+- [x] "Welcome back" greeting for returning users with active sessions
+
+**Design review polish (2026-01-29):**
+
+- [x] Input field theming — uses theme tokens (`bg-muted/50`) instead of hardcoded colors
+- [x] Focus styling — removed harsh focus ring from text inputs (cursor is sufficient)
+- [x] Scrollbar styling — visible, functional scrollbar with transparent track
+- [x] Scroll container — proper flex containment (`min-h-0`) for mouse wheel scrolling
+- [x] Animation timing — faster global transitions (0.2s instead of 0.4s)
+- [x] Sidebar animation — clean tween instead of bouncy spring
+- [x] Input auto-refocus — textarea refocuses after coach finishes responding
+
+**Key files:**
+
+- `app/chat/page.tsx` — Main chat page with message list and state management
+- `app/session/page.tsx` — Session gating with active session support
+- `components/chat/coach-message.tsx` — Coach message with markdown rendering
+- `components/chat/user-message.tsx` — User message bubble
+- `components/chat/typing-indicator.tsx` — Animated typing dots
+- `components/chat/chat-input.tsx` — Expanding textarea with send button
+- `components/chat/index.ts` — Barrel export for chat components
+
+**Implementation notes:**
+
+- Uses `react-markdown` with `remark-gfm` for GitHub-flavored markdown
+- `@tailwindcss/typography` plugin for prose styling with theme-aware colors
+- Streaming simulated with async generator yielding word-by-word
+- Mock responses cycle through 3 different coach replies for demo
+- Header is sticky with backdrop blur for scroll context
+- Input area is sticky at bottom (no border divider — cleaner)
+- End Session dialog uses Framer Motion for smooth enter/exit
+- All colors use theme tokens — adapts to all palettes and light/dark modes
+- Fully responsive — tested on mobile (390px) and desktop viewports
+- SessionGate interface includes hasActiveSession and sessionPreview fields
+- Custom scrollbar uses `.chat-scroll-area` class with transparent track for natural blending
+- Global `:focus-visible` override for inputs removes outline (cursor provides sufficient indicator)
 
 ---
 
@@ -319,14 +371,15 @@ framer-motion
 @radix-ui/react-dialog (installed but sidebar uses custom implementation)
 @radix-ui/react-dropdown-menu
 @radix-ui/react-slot
+react-markdown
+remark-gfm
+@tailwindcss/typography
 ```
 
 ## Dependencies (To Install Later)
 
 ```
-react-markdown
-remark-gfm
-@tailwindcss/typography (for prose styling)
+(none currently)
 ```
 
 ---
@@ -366,12 +419,20 @@ apps/web/
 │   │   └── page.tsx     # Email login
 │   ├── setup/
 │   │   └── page.tsx     # Passphrase setup
-│   └── session/
-│       └── page.tsx     # Session gating
+│   ├── session/
+│   │   └── page.tsx     # Session gating
+│   └── chat/
+│       └── page.tsx     # Chat interface
 ├── components/
 │   ├── layout-shell.tsx # Main layout wrapper
 │   ├── sidebar.tsx      # Slide-out sidebar
 │   ├── theme-provider.tsx
+│   ├── chat/
+│   │   ├── index.ts           # Barrel export
+│   │   ├── coach-message.tsx  # Coach message with markdown
+│   │   ├── user-message.tsx   # User message bubble
+│   │   ├── typing-indicator.tsx
+│   │   └── chat-input.tsx     # Expanding textarea input
 │   └── ui/
 │       ├── button.tsx
 │       ├── input.tsx
