@@ -2,7 +2,7 @@
 
 Date: 2026-01-28
 Status: In Progress
-Last Updated: 2026-01-28
+Last Updated: 2026-01-29
 
 ## Overview
 
@@ -19,7 +19,7 @@ See `design-system.md` for palette, typography, and visual direction.
 | 3. Auth Entry            | ✅ Complete    | Email form + confirmation       |
 | 4. Passphrase Gate       | ✅ Complete    |                                 |
 | 4.5 Persistence + Polish | ✅ Complete    | localStorage + a11y + UX polish |
-| 5. Session Gating        | ⬜ Not started |                                 |
+| 5. Session Gating        | ✅ Complete    | Locked/unlocked states          |
 | 6. Chat UI Core          | ⬜ Not started |                                 |
 | 7. Session Closure       | ⬜ Not started |                                 |
 | 8. Edge States           | ⬜ Not started |                                 |
@@ -217,17 +217,40 @@ Completed items:
 
 ---
 
-### Step 5: Session Gating UI ⬜
+### Step 5: Session Gating UI ✅
 
-**Status: Not started**
+**Status: Complete**
 
-TODO:
+Completed items:
 
-- [ ] "Session locked" state showing next available date/time
-- [ ] Countdown or relative time ("Available in 3 days")
-- [ ] Pre-session prompt when unlocked ("Set aside ~60 minutes")
-- [ ] "Begin Session" button
-- [ ] Button disabled when gate is active
+- [x] Create `/session` route
+- [x] "Session locked" state showing next available date/time
+- [x] Countdown or relative time ("Available in 3 days")
+- [x] Date card showing exact unlock date
+- [x] "Last session" context showing days since last session
+- [x] Pre-session prompt when unlocked ("Set aside ~60 minutes")
+- [x] Time-aware greeting (Good morning/afternoon/evening)
+- [x] First session vs returning user differentiation
+- [x] "Begin Session" button (links to /chat)
+- [x] Button disabled when gate is active
+- [x] Encouragement text explaining the 7-day spacing
+- [x] Loading state with spinner
+- [x] Works across all palettes (morning/afternoon/evening) and light/dark modes
+
+**Key files:**
+
+- `app/session/page.tsx` — Session gating page with locked/unlocked states
+
+**Implementation notes:**
+
+- Uses mock data for now (toggle `MOCK_UNLOCKED` constant to test states)
+- `formatRelativeTime()` for countdown to next session
+- `formatDaysAgo()` for time since last session
+- `getTimeGreeting()` for contextual greeting
+- Locked state uses Calendar icon with muted colors
+- Unlocked state uses Sun icon (or Sparkles for first session) with accent colors
+- AnimatePresence for smooth transitions between states
+- Atmospheric backgrounds consistent with other pages
 
 ---
 
@@ -338,15 +361,22 @@ apps/web/
 ├── app/
 │   ├── globals.css      # Tailwind + palettes
 │   ├── layout.tsx       # Root layout
-│   └── page.tsx         # Home page
+│   ├── page.tsx         # Home page
+│   ├── login/
+│   │   └── page.tsx     # Email login
+│   ├── setup/
+│   │   └── page.tsx     # Passphrase setup
+│   └── session/
+│       └── page.tsx     # Session gating
 ├── components/
 │   ├── layout-shell.tsx # Main layout wrapper
 │   ├── sidebar.tsx      # Slide-out sidebar
 │   ├── theme-provider.tsx
 │   └── ui/
 │       ├── button.tsx
-│       ├── dropdown-menu.tsx
-│       └── sheet.tsx
+│       ├── input.tsx
+│       ├── spinner.tsx
+│       └── ...
 └── lib/
     └── utils.ts         # cn() helper
 ```
