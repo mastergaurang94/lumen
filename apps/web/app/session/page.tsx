@@ -3,24 +3,21 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Clock, Sun, Calendar, Sparkles } from 'lucide-react';
+import { Clock, Sun, Calendar, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AuthPageLayout } from '@/components/auth-page-layout';
+import {
+  formatSessionDate,
+  formatRelativeTime,
+  formatDaysAgo,
+  getTimeGreeting,
+} from '@/lib/format';
+import type { SessionGate } from '@/types/session';
 
-// Mock session state - in real app this would come from the API
-type SessionState = 'locked' | 'unlocked';
-
-interface SessionGate {
-  state: SessionState;
-  nextAvailable: Date | null;
-  lastSessionDate: Date | null;
-  hasActiveSession: boolean; // Is there an in-progress session?
-  sessionPreview: string | null; // Brief context for active session
-}
-
-// Mock data for development - toggle these to test different states
-const MOCK_UNLOCKED = true;
-const MOCK_ACTIVE_SESSION = true; // Set to true to test "Resume session"
-const MOCK_SESSION_PREVIEW = "You were exploring what's holding you back at work..."; // Preview of active session
+// Mock toggles - use env vars in production
+const MOCK_UNLOCKED = process.env.NEXT_PUBLIC_MOCK_SESSION_UNLOCKED !== 'false';
+const MOCK_ACTIVE_SESSION = process.env.NEXT_PUBLIC_MOCK_ACTIVE_SESSION === 'true';
+const MOCK_SESSION_PREVIEW = "You were exploring what's holding you back at work...";
 
 function getMockSessionGate(): SessionGate {
   if (MOCK_UNLOCKED) {
@@ -47,52 +44,6 @@ function getMockSessionGate(): SessionGate {
   };
 }
 
-function formatRelativeTime(date: Date): string {
-  const now = new Date();
-  const diffMs = date.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-  const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
-
-  if (diffDays > 1) {
-    return `${diffDays} days`;
-  } else if (diffDays === 1) {
-    return 'tomorrow';
-  } else if (diffHours > 1) {
-    return `${diffHours} hours`;
-  } else if (diffHours === 1) {
-    return '1 hour';
-  } else {
-    return 'soon';
-  }
-}
-
-function formatDate(date: Date): string {
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
-function formatDaysAgo(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) return 'today';
-  if (diffDays === 1) return 'yesterday';
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 14) return 'a week ago';
-  return `${Math.floor(diffDays / 7)} weeks ago`;
-}
-
-function getTimeGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return 'Good morning';
-  if (hour >= 12 && hour < 18) return 'Good afternoon';
-  return 'Good evening';
-}
-
 export default function SessionPage() {
   const [sessionGate, setSessionGate] = React.useState<SessionGate | null>(null);
   const [mounted, setMounted] = React.useState(false);
@@ -104,67 +55,49 @@ export default function SessionPage() {
     setSessionGate(gate);
   }, []);
 
-  // Don't render until mounted to avoid hydration mismatch
+  // Loading state
   if (!mounted || !sessionGate) {
     return (
-      <div className="atmosphere min-h-screen flex flex-col">
-        <div className="p-6">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="text-sm">Back</span>
-          </Link>
-        </div>
-        <main className="flex-1 flex items-center justify-center">
+      <AuthPageLayout
+        footer={
+          <p className="text-sm text-muted-foreground/70">
+            Sessions are spaced 7 days apart to give you time to reflect and act.
+          </p>
+        }
+      >
+        <div className="flex items-center justify-center">
           <div className="w-8 h-8 rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
-        </main>
-      </div>
+        </div>
+      </AuthPageLayout>
     );
   }
 
   return (
-    <div className="atmosphere min-h-screen flex flex-col">
-      {/* Back link */}
-      <div className="p-6">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span className="text-sm">Back</span>
-        </Link>
-      </div>
-
-      {/* Main content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
-        <div className="relative z-10 w-full max-w-md">
-          <AnimatePresence mode="wait">
-            {sessionGate.state === 'locked' ? (
-              <LockedState
-                key="locked"
-                nextAvailable={sessionGate.nextAvailable!}
-                lastSessionDate={sessionGate.lastSessionDate}
-              />
-            ) : (
-              <UnlockedState
-                key="unlocked"
-                lastSessionDate={sessionGate.lastSessionDate}
-                hasActiveSession={sessionGate.hasActiveSession}
-              />
-            )}
-          </AnimatePresence>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="py-8 text-center px-6">
+    <AuthPageLayout
+      footer={
         <p className="text-sm text-muted-foreground/70">
           Sessions are spaced 7 days apart to give you time to reflect and act.
         </p>
-      </footer>
-    </div>
+      }
+    >
+      <div className="relative z-10 w-full max-w-md">
+        <AnimatePresence mode="wait">
+          {sessionGate.state === 'locked' ? (
+            <LockedState
+              key="locked"
+              nextAvailable={sessionGate.nextAvailable!}
+              lastSessionDate={sessionGate.lastSessionDate}
+            />
+          ) : (
+            <UnlockedState
+              key="unlocked"
+              lastSessionDate={sessionGate.lastSessionDate}
+              hasActiveSession={sessionGate.hasActiveSession}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+    </AuthPageLayout>
   );
 }
 
@@ -176,7 +109,7 @@ function LockedState({
   lastSessionDate: Date | null;
 }) {
   const relativeTime = formatRelativeTime(nextAvailable);
-  const formattedDate = formatDate(nextAvailable);
+  const formattedDate = formatSessionDate(nextAvailable);
 
   return (
     <motion.div
@@ -228,8 +161,8 @@ function LockedState({
 
       {/* Encouragement */}
       <p className="text-sm text-muted-foreground/80 leading-relaxed max-w-sm mx-auto">
-        This space between sessions is intentional — use it to act on what came up,
-        notice patterns, and return with fresh perspective.
+        This space between sessions is intentional — use it to act on what came up, notice patterns,
+        and return with fresh perspective.
       </p>
     </motion.div>
   );
@@ -242,8 +175,13 @@ function UnlockedState({
   lastSessionDate: Date | null;
   hasActiveSession: boolean;
 }) {
-  const greeting = getTimeGreeting();
+  // Only compute greeting on client to avoid hydration mismatch
+  const [greeting, setGreeting] = React.useState('');
   const isFirstSession = !lastSessionDate && !hasActiveSession;
+
+  React.useEffect(() => {
+    setGreeting(getTimeGreeting());
+  }, []);
 
   return (
     <motion.div
@@ -271,7 +209,7 @@ function UnlockedState({
       {/* Header */}
       <div className="space-y-3">
         <h1 className="font-display text-4xl font-light tracking-tight text-foreground">
-          {hasActiveSession ? 'Welcome back' : isFirstSession ? 'Welcome' : greeting}
+          {hasActiveSession ? 'Welcome back' : isFirstSession ? 'Welcome' : greeting || 'Welcome'}
         </h1>
         <p className="text-lg text-muted-foreground">
           {hasActiveSession
@@ -305,15 +243,13 @@ function UnlockedState({
       </Link>
 
       {/* Context text */}
-      {!hasActiveSession &&
-        !isFirstSession &&
-        lastSessionDate && (
-          <p className="text-sm text-muted-foreground/70">
-            It&apos;s been a week since we last spoke.
-            <br />
-            What&apos;s been on your mind?
-          </p>
-        )}
+      {!hasActiveSession && !isFirstSession && lastSessionDate && (
+        <p className="text-sm text-muted-foreground/70">
+          It&apos;s been a week since we last spoke.
+          <br />
+          What&apos;s been on your mind?
+        </p>
+      )}
     </motion.div>
   );
 }

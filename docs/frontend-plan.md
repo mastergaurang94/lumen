@@ -504,6 +504,52 @@ apps/web/
 
 ---
 
+### Step 9: Polish & Refinements ✅
+
+**Status: Complete**
+
+Code review identified UX and technical polish items. Implemented in priority order.
+
+**UX Polish:**
+
+- [x] P0: Wire up navigation — Setup → Session redirect after passphrase creation
+- [x] P1: Differentiate login copy — "Get started" vs "Welcome back" based on context
+- [ ] P1: Add progress breadcrumb — Visual indicator of journey step (deferred - assess need later)
+- [x] P2: Add "back to session" from chat — Exit without ending session
+- [x] P2: Session duration indicator — Subtle "started X min ago" display
+
+**Technical Polish:**
+
+- [x] P0: Extract `AuthPageLayout` — Shared layout for login/setup/session pages
+- [x] P0: Move mock flags to env — `NEXT_PUBLIC_MOCK_*` variables
+- [x] P1: Split chat page — Extracted `EndSessionDialog` component
+- [x] P1: Create `lib/format.ts` — Centralize date formatting utilities (DRY fix)
+- [x] P1: Fix streaming cleanup — Add AbortController pattern for async generator
+- [x] P2: Z-index system — Create `lib/z-index.ts` with named layers
+- [x] P2: Type centralization — Create `types/` directory with shared types
+
+**Files created:**
+
+- `components/auth-page-layout.tsx` — Shared auth page wrapper with PrivacyFooter
+- `lib/format.ts` — Date formatting utilities (formatSessionDate, formatRelativeTime, formatDaysAgo, getTimeGreeting, formatElapsedTime)
+- `lib/z-index.ts` — Z-index constants with named layers
+- `types/session.ts` — Session-related types (SessionState, SessionGate, Message)
+- `components/chat/end-session-dialog.tsx` — Extracted dialog with focus trap and escape key
+
+**Pages updated:**
+
+- `app/login/page.tsx` — Now uses AuthPageLayout, differentiates new/returning users
+- `app/setup/page.tsx` — Now uses AuthPageLayout, navigates to /session on submit
+- `app/session/page.tsx` — Now uses AuthPageLayout, centralized format utilities, env vars for mocks
+- `app/chat/page.tsx` — Uses centralized types/format/z-index, extracted dialog, abort controller, elapsed time display, back link
+
+**Deferred:**
+
+- [ ] Extract `useSessionState` hook from chat page (further decomposition if needed)
+- [ ] Progress breadcrumb indicator (assess need after real user testing)
+
+---
+
 ## Out of Scope (Later Phases)
 
 - Actual auth integration (Phase 4 - Go service)

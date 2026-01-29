@@ -6,22 +6,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, Sun, Moon, Monitor, X } from 'lucide-react';
 import { useTimeOfDay } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
+import { Z_INDEX } from '@/lib/z-index';
 
 const sidebarVariants = {
   closed: {
     x: '-100%',
     transition: {
-      type: 'tween',
+      type: 'tween' as const,
       duration: 0.2,
-      ease: [0.4, 0, 0.2, 1],
+      ease: [0.4, 0, 0.2, 1] as [number, number, number, number],
     },
   },
   open: {
     x: 0,
     transition: {
-      type: 'tween',
+      type: 'tween' as const,
       duration: 0.2,
-      ease: [0.16, 1, 0.3, 1],
+      ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
     },
   },
 };
@@ -40,7 +41,7 @@ export function Sidebar() {
         <span className="sr-only">Open menu</span>
       </button>
 
-      {/* Invisible overlay for click-to-close */}
+      {/* Overlay for click-to-close - covers navigation elements */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -48,8 +49,10 @@ export function Sidebar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 bg-background/60 backdrop-blur-[2px]"
+            style={{ zIndex: Z_INDEX.sidebarOverlay }}
             onClick={() => setOpen(false)}
+            aria-hidden="true"
           />
         )}
       </AnimatePresence>
@@ -59,8 +62,9 @@ export function Sidebar() {
         initial="closed"
         animate={open ? 'open' : 'closed'}
         variants={sidebarVariants}
+        style={{ zIndex: Z_INDEX.sidebar }}
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-80 bg-background border-r border-border/20',
+          'fixed inset-y-0 left-0 w-80 bg-background border-r border-border/20',
           'shadow-[4px_0_24px_-2px_rgba(0,0,0,0.1),8px_0_16px_-4px_rgba(0,0,0,0.06)]',
           'dark:shadow-[4px_0_24px_-2px_rgba(0,0,0,0.3),8px_0_16px_-4px_rgba(0,0,0,0.2)]',
         )}

@@ -39,9 +39,7 @@ export function CoachMessage({ content, className }: CoachMessageProps) {
             '[&>p:first-child]:mt-0 [&>p:last-child]:mb-0',
           )}
         >
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {content}
-          </ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
         </div>
       </div>
     </motion.div>

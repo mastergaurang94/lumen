@@ -1,8 +1,9 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield } from 'lucide-react';
+import { Shield, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sidebar } from '@/components/sidebar';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -13,33 +14,24 @@ import {
   TypingIndicator,
   ChatInput,
   SessionClosure,
+  EndSessionDialog,
 } from '@/components/chat';
+import { formatSessionDate, formatElapsedTime } from '@/lib/format';
+import { Z_INDEX } from '@/lib/z-index';
+import type { SessionState, Message } from '@/types/session';
 
-// Session state
-type SessionState = 'loading' | 'active' | 'complete' | 'unavailable' | 'error';
-
-// Mock toggles for development - set to true to test different states
-const MOCK_COACH_UNAVAILABLE = false;
-const MOCK_CONNECTION_ERROR = false;
+// Mock toggles - use env vars in production
+const MOCK_COACH_UNAVAILABLE = process.env.NEXT_PUBLIC_MOCK_COACH_UNAVAILABLE === 'true';
+const MOCK_CONNECTION_ERROR = process.env.NEXT_PUBLIC_MOCK_CONNECTION_ERROR === 'true';
 
 // Mock closure data - in real app this would be generated from the session
 const MOCK_RECOGNITION_MOMENT =
-  "What would it look like to trust yourself the way you trust your instincts at work?";
+  'What would it look like to trust yourself the way you trust your instincts at work?';
 const MOCK_ACTION_STEPS = [
   "Notice when you're second-guessing a decision this week — pause and ask what your gut says first",
-  "Have one conversation where you share your real opinion, even if it feels uncomfortable",
-  "Write down one thing you did well each day, without qualifying it",
+  'Have one conversation where you share your real opinion, even if it feels uncomfortable',
+  'Write down one thing you did well each day, without qualifying it',
 ];
-
-// Message types
-type MessageRole = 'coach' | 'user';
-
-interface Message {
-  id: string;
-  role: MessageRole;
-  content: string;
-  timestamp: Date;
-}
 
 // Mock initial message from coach
 const INITIAL_COACH_MESSAGE = `Welcome. I'm glad you're here.
@@ -74,19 +66,11 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 }
 
-// Format date for header
-function formatSessionDate(date: Date): string {
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
-// Simulate streaming text
-async function* streamText(text: string): AsyncGenerator<string> {
+// Simulate streaming text with abort support
+async function* streamText(text: string, signal?: AbortSignal): AsyncGenerator<string> {
   const words = text.split(' ');
   for (let i = 0; i < words.length; i++) {
+    if (signal?.aborted) return;
     yield words.slice(0, i + 1).join(' ');
     await new Promise((resolve) => setTimeout(resolve, 30 + Math.random() * 40));
   }
@@ -100,10 +84,12 @@ function ChatPageInner() {
   const [showEndSessionDialog, setShowEndSessionDialog] = React.useState(false);
   const [sessionState, setSessionState] = React.useState<SessionState>('loading');
   const [isRetrying, setIsRetrying] = React.useState(false);
+  const [elapsedTime, setElapsedTime] = React.useState('');
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const responseIndexRef = React.useRef(0);
   const sessionDateRef = React.useRef(new Date());
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
   // Check coach availability and initialize session
   const initializeSession = React.useCallback(async () => {
@@ -142,15 +128,31 @@ function ChatPageInner() {
   // Initialize on mount
   React.useEffect(() => {
     initializeSession();
+
+    // Cleanup abort controller on unmount
+    return () => {
+      abortControllerRef.current?.abort();
+    };
   }, [initializeSession]);
+
+  // Update elapsed time every minute
+  React.useEffect(() => {
+    if (sessionState !== 'active') return;
+
+    const updateElapsed = () => {
+      setElapsedTime(formatElapsedTime(sessionDateRef.current));
+    };
+
+    updateElapsed();
+    const interval = setInterval(updateElapsed, 60000);
+    return () => clearInterval(interval);
+  }, [sessionState]);
 
   // Retry handler for unavailable state
   const handleRetry = React.useCallback(async () => {
     setIsRetrying(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsRetrying(false);
-    // In real app, this would re-check coach availability
-    // For demo, just try to initialize again
     initializeSession();
   }, [initializeSession]);
 
@@ -185,21 +187,28 @@ function ChatPageInner() {
     const responseText = MOCK_RESPONSES[responseIndexRef.current % MOCK_RESPONSES.length];
     responseIndexRef.current++;
 
+    // Create abort controller for this stream
+    abortControllerRef.current = new AbortController();
+
     // Stream the response
     setStreamingContent('');
-    for await (const partial of streamText(responseText)) {
-      setStreamingContent(partial);
-    }
+    try {
+      for await (const partial of streamText(responseText, abortControllerRef.current.signal)) {
+        setStreamingContent(partial);
+      }
 
-    // Finalize the message
-    const coachMessage: Message = {
-      id: generateId(),
-      role: 'coach',
-      content: responseText,
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, coachMessage]);
-    setStreamingContent(null);
+      // Finalize the message
+      const coachMessage: Message = {
+        id: generateId(),
+        role: 'coach',
+        content: responseText,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, coachMessage]);
+    } finally {
+      setStreamingContent(null);
+      abortControllerRef.current = null;
+    }
   }, []);
 
   // Handle end session
@@ -208,6 +217,8 @@ function ChatPageInner() {
   }, []);
 
   const confirmEndSession = React.useCallback(() => {
+    // Abort any ongoing streaming
+    abortControllerRef.current?.abort();
     // Close the dialog and transition to the closure view
     setShowEndSessionDialog(false);
     setSessionState('complete');
@@ -284,17 +295,24 @@ function ChatPageInner() {
   return (
     <div className="atmosphere h-screen flex flex-col overflow-hidden">
       {/* Hamburger menu - top left */}
-      <div className="fixed top-4 left-4 z-30">
+      <div className="fixed top-4 left-4" style={{ zIndex: Z_INDEX.navigation }}>
         <Sidebar />
       </div>
 
-      {/* End Session button - top right */}
-      <div className="fixed top-4 right-4 z-30">
-        <Button
-          variant="outline"
-          onClick={handleEndSession}
-          className="text-base text-foreground"
+      {/* Back to session link - for exiting without ending */}
+      <div className="fixed top-4 left-16" style={{ zIndex: Z_INDEX.navigation }}>
+        <Link
+          href="/session"
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50"
         >
+          <ArrowLeft className="h-4 w-4" />
+          <span className="hidden sm:inline">Back</span>
+        </Link>
+      </div>
+
+      {/* End Session button - top right */}
+      <div className="fixed top-4 right-4" style={{ zIndex: Z_INDEX.navigation }}>
+        <Button variant="outline" onClick={handleEndSession} className="text-base text-foreground">
           End Session
         </Button>
       </div>
@@ -302,16 +320,14 @@ function ChatPageInner() {
       {/* Title - centered */}
       <div className="pt-16 pb-4 text-center">
         <h1 className="font-display text-lg text-foreground">
-          Active Session · {formatSessionDate(sessionDateRef.current)}
+          Session · {formatSessionDate(sessionDateRef.current)}
         </h1>
+        {elapsedTime && <p className="text-xs text-muted-foreground/60 mt-1">{elapsedTime}</p>}
       </div>
 
       {/* Messages area */}
       <main className="flex-1 min-h-0 overflow-hidden">
-        <div
-          ref={scrollAreaRef}
-          className="h-full chat-scroll-area"
-        >
+        <div ref={scrollAreaRef} className="h-full chat-scroll-area">
           <div className="max-w-3xl mx-auto px-6 py-8 min-h-[calc(100%+24px)]">
             {/* Empty state before first message */}
             {messages.length === 0 && !isTyping && (
@@ -342,10 +358,7 @@ function ChatPageInner() {
 
                 {/* Streaming message */}
                 {streamingContent !== null && (
-                  <CoachMessage
-                    key="streaming"
-                    content={streamingContent}
-                  />
+                  <CoachMessage key="streaming" content={streamingContent} />
                 )}
 
                 {/* Typing indicator */}
@@ -360,7 +373,7 @@ function ChatPageInner() {
       </main>
 
       {/* Input area */}
-      <footer className="sticky bottom-0 z-20">
+      <footer className="sticky bottom-0" style={{ zIndex: Z_INDEX.sticky }}>
         {/* Gradient fade for smooth transition */}
         <div
           className="absolute inset-x-0 -top-16 h-16 pointer-events-none"
@@ -370,14 +383,14 @@ function ChatPageInner() {
         />
         <div className="relative bg-background/80 backdrop-blur-md">
           <div className="max-w-3xl mx-auto px-6 pt-4 pb-6">
-          <ChatInput
-            onSend={handleSend}
-            disabled={isTyping || streamingContent !== null}
-            placeholder="Reply..."
-          />
-          <p className="mt-3 text-xs text-muted-foreground/50 text-center">
-            Enter to send · Shift+Enter for new line · Lumen is AI-powered and can make mistakes
-          </p>
+            <ChatInput
+              onSend={handleSend}
+              disabled={isTyping || streamingContent !== null}
+              placeholder="Reply..."
+            />
+            <p className="mt-3 text-xs text-muted-foreground/50 text-center">
+              Enter to send · Shift+Enter for new line · Lumen is AI-powered and can make mistakes
+            </p>
           </div>
         </div>
       </footer>
@@ -392,59 +405,6 @@ function ChatPageInner() {
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-// End Session Confirmation Dialog
-function EndSessionDialog({
-  onConfirm,
-  onCancel,
-}: {
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  return (
-    <>
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
-        onClick={onCancel}
-      />
-
-      {/* Dialog */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md"
-      >
-        <div className="bg-card border border-border rounded-xl p-6 shadow-lg mx-4">
-          <h2 className="font-display text-xl text-foreground mb-2">End this session?</h2>
-          <p className="text-muted-foreground text-sm mb-6">
-            Your conversation will be saved locally. You can start a new session in 7 days.
-          </p>
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={onCancel}
-              className="flex-1"
-            >
-              Continue session
-            </Button>
-            <Button
-              onClick={onConfirm}
-              className="flex-1"
-            >
-              End session
-            </Button>
-          </div>
-        </div>
-      </motion.div>
-    </>
   );
 }
 

@@ -5,20 +5,13 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronDown, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { formatSessionDate } from '@/lib/format';
 
 interface SessionClosureProps {
   sessionDate: Date;
   recognitionMoment: string;
   actionSteps: string[];
   nextSessionDate: Date;
-}
-
-function formatSessionDate(date: Date): string {
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
 }
 
 export function SessionClosure({
@@ -64,9 +57,7 @@ export function SessionClosure({
             <h1 className="font-display text-3xl font-light tracking-tight text-foreground">
               Session complete
             </h1>
-            <p className="text-muted-foreground">
-              {formatSessionDate(sessionDate)}
-            </p>
+            <p className="text-muted-foreground">{formatSessionDate(sessionDate)}</p>
           </motion.div>
 
           {/* Recognition moment - the seed to carry forward */}
@@ -146,9 +137,7 @@ export function SessionClosure({
                           <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center text-xs text-accent font-medium">
                             {index + 1}
                           </span>
-                          <span className="text-sm text-foreground leading-relaxed">
-                            {step}
-                          </span>
+                          <span className="text-sm text-foreground leading-relaxed">{step}</span>
                         </motion.li>
                       ))}
                     </ul>
