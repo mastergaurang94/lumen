@@ -29,24 +29,28 @@ See `design-system.md` for palette, typography, and visual direction.
 
 ### Step 1: Foundation Setup ✅
 
-**Status: Complete**
+**Status: Complete (with refinements)**
 
 Completed items:
 - [x] Tailwind CSS v4 with PostCSS (`@tailwindcss/postcss`)
 - [x] `cn()` utility via `clsx` + `tailwind-merge` (in `lib/utils.ts`)
 - [x] `next-themes` for light/dark mode (default: system)
 - [x] `lucide-react` for icons
-- [x] Lato font via `next/font/google`
+- [x] Lato font via `next/font/google` (body text)
+- [x] **Fraunces display font** for headings (warm, characterful serif)
 - [x] Three time-based palettes in `globals.css`:
   - Morning (dawn): misty blue accent `hsl(200, 30%, 58%)`
   - Afternoon (day): sage green accent `hsl(135, 18%, 55%)`
   - Evening (dusk): warm amber accent `hsl(28, 50%, 59%)`
 - [x] `ThemeProvider` with auto time detection (updates every minute)
 - [x] CSS variables for all color tokens (shadcn-compatible)
+- [x] **Atmospheric backgrounds** — radial gradient glows that shift with palette
+- [x] **Entrance animations** — fade-in-up with staggered delays
+- [x] **Smoother transitions** — cubic-bezier easing for theme changes
 
 **Key files:**
-- `app/globals.css` — Tailwind config, color palettes, base styles
-- `app/layout.tsx` — Root layout with Lato font + ThemeProvider
+- `app/globals.css` — Tailwind config, color palettes, atmospheric backgrounds, animations
+- `app/layout.tsx` — Root layout with Lato + Fraunces fonts + ThemeProvider
 - `components/theme-provider.tsx` — Time-of-day + dark mode context
 - `lib/utils.ts` — `cn()` helper
 
@@ -55,12 +59,14 @@ Completed items:
 - Added `@source` directives in `globals.css` to tell Tailwind where to scan
 - Time ranges: Morning 5-12, Afternoon 12-18, Evening 18-5
 - Palettes use HSL values without `hsl()` wrapper for Tailwind compatibility
+- Atmospheric `.atmosphere` class creates layered radial gradients per palette
+- Animation utilities: `.animate-fade-in-up`, `.animate-fade-in`, `.animation-delay-*`
 
 ---
 
 ### Step 2: Layout Shell ✅
 
-**Status: Complete**
+**Status: Complete (with refinements)**
 
 Completed items:
 - [x] Floating hamburger menu in top-left corner (fixed position)
@@ -68,66 +74,105 @@ Completed items:
 - [x] Centered content area with `max-w-2xl`
 - [x] Responsive padding
 - [x] Theme controls in sidebar:
-  - Appearance: Auto / Light / Dark
-  - Palette: Auto / Dawn / Day / Dusk (with color indicator on selection)
+  - Appearance: Auto / Light / Dark (horizontal button row)
+  - Palette: Auto / Dawn / Day / Dusk with **live color swatches**
 - [x] Privacy footer on main page
+- [x] **Backdrop blur** on sidebar overlay
+- [x] **Color swatch palette selector** — circular swatches showing bg + accent colors
+- [x] **Smoother easing** — cubic-bezier for sidebar slide animation
+- [x] **Home page atmosphere** — gradient glow behind centered content
+- [x] **Staggered entrance animation** — content fades in with delays
 
 **Key files:**
 - `components/layout-shell.tsx` — Main layout wrapper
-- `components/sidebar.tsx` — Custom sidebar (not using Radix Dialog)
+- `components/sidebar.tsx` — Custom sidebar with color swatches
 - `components/ui/button.tsx` — Button component with variants
-- `components/ui/sheet.tsx` — Sheet primitive (currently unused, sidebar is custom)
+- `app/page.tsx` — Home page with atmospheric wrapper and animations
 
 **Implementation notes:**
-- Sidebar is pure CSS transitions (`translate-x`) — Radix Dialog caused layout issues
-- Overlay is subtle (`bg-black/10`)
-- Palette buttons show accent color as background when selected
-- Menu icon: `h-7 w-7` with `strokeWidth={2}`
-- Text sizes increased throughout for readability
+- Sidebar uses `ease-[cubic-bezier(0.32,0.72,0,1)]` for natural deceleration
+- Overlay has `backdrop-blur-[2px]` for subtle depth
+- Palette swatches show actual colors (bg circle with accent dot)
+- "Auto" palette has dashed border indicator
+- Selected palette scales up with ring indicator
+- Home page uses `.atmosphere` class for radial gradient backgrounds
+- Content sections have staggered animation delays (100ms, 200ms, 300ms, 500ms)
 
 **Design decisions:**
 - OmmWriter-inspired minimal UI (hamburger in corner, hidden sidebar)
 - No persistent header — content takes full focus
 - Sidebar contains settings only (session history will come later)
+- Fraunces serif font used for "Lumen" branding in sidebar header
 
 ---
 
-### Step 3: Auth Entry (UI only) ⬜
+### Step 3: Auth Entry (UI only) ✅
+
+**Status: Complete**
+
+Completed items:
+- [x] Create `/login` route
+- [x] Email input with basic validation
+- [x] Submit button (disabled while empty/invalid)
+- [x] Loading state with spinner ("Sending...")
+- [x] "Check your email" confirmation state after submit
+- [x] Privacy line in footer
+- [x] Back link to return to home
+- [x] "Use a different email" link in confirmation state
+- [x] Framer Motion transitions between form/sent states
+
+**Key files:**
+- `app/login/page.tsx` — Login page with form and confirmation states
+- `components/ui/input.tsx` — Shadcn-style Input component
+
+**Implementation notes:**
+- Uses `AnimatePresence` for smooth transitions between states
+- Three view states: `form` → `loading` → `sent`
+- Basic email validation (contains @ and .)
+- 1.5s simulated delay for loading state
+- Atmospheric background consistent with home page
+
+---
+
+### Step 4: Passphrase Onboarding Gate ✅
+
+**Status: Complete**
+
+Completed items:
+- [x] Create `/setup` route
+- [x] Passphrase input (password type)
+- [x] Confirm passphrase input
+- [x] Match validation (shows error when passphrases don't match)
+- [x] Clear warning: "This passphrase cannot be recovered"
+- [x] Strength indicator (weak/fair/good/strong with color bar)
+- [x] Show/hide toggle for both passphrase fields
+- [x] Continue button (disabled until valid)
+- [x] Back link to home
+- [x] Privacy footer
+
+**Key files:**
+- `app/setup/page.tsx` — Passphrase setup page
+
+**Implementation notes:**
+- Password strength based on length, mixed case, numbers, special chars
+- Strength levels: weak (muted), fair (muted), good (accent), strong (accent)
+- All colors use theme tokens — adapts to dawn/day/dusk palettes
+- Minimum 8 characters required
+- Warning box uses accent color with transparency
+- UI only — no actual encryption setup yet
+
+---
+
+### Step 4.5: Palette Persistence ⬜
 
 **Status: Not started**
 
 TODO:
-- [ ] Create `/login` route
-- [ ] Email input with basic validation
-- [ ] Submit button (disabled while empty)
-- [ ] "Check your email" confirmation state after submit
-- [ ] Privacy line in footer
-- [ ] Link to return to home
+- [ ] Persist palette preference to localStorage
+- [ ] Load preference on app init
+- [ ] Ensure preference survives page navigation
 
-**Notes for implementation:**
-- UI only — no actual email sending
-- Use shadcn-style Input component
-- Consider adding subtle loading state on submit
-
----
-
-### Step 4: Passphrase Onboarding Gate ⬜
-
-**Status: Not started**
-
-TODO:
-- [ ] Create `/setup` route
-- [ ] Passphrase input (password type)
-- [ ] Confirm passphrase input
-- [ ] Match validation
-- [ ] Clear warning: "This passphrase cannot be recovered"
-- [ ] Optional: strength indicator
-- [ ] Continue button
-
-**Notes for implementation:**
-- This gates first-time users before they can start a session
-- Consider showing/hide toggle for passphrase fields
-- Warning copy should be prominent but not alarming
+**Notes**: Required before Step 5 so Steps 1-4 are fully complete.
 
 ---
 
@@ -201,6 +246,7 @@ lucide-react
 clsx
 tailwind-merge
 class-variance-authority
+framer-motion
 @radix-ui/react-dialog (installed but sidebar uses custom implementation)
 @radix-ui/react-dropdown-menu
 @radix-ui/react-slot
@@ -235,6 +281,8 @@ pnpm build  # Build for production
 2. **Tailwind classes not applying**: Ensure `@source` directives in `globals.css` point to all component directories.
 
 3. **Sidebar causing layout shift**: Avoid Radix Dialog — use custom fixed-position div with CSS transitions.
+
+4. **Palette preference not persisting**: Currently palette selection is stored in React state and resets on navigation. Future enhancement: persist to localStorage.
 
 ### File Structure
 
