@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { Sidebar } from "@/components/sidebar";
+import * as React from 'react';
+import { Sidebar } from '@/components/sidebar';
 
 interface LayoutShellProps {
   children: React.ReactNode;

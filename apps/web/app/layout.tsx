@@ -1,32 +1,28 @@
-import type { Metadata } from "next";
-import { Lato, Fraunces } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Lato, Fraunces } from 'next/font/google';
+import { ThemeProvider } from '@/components/theme-provider';
+import './globals.css';
 
 const lato = Lato({
-  subsets: ["latin"],
-  weight: ["300", "400", "700"],
-  variable: "--font-lato",
-  display: "swap",
+  subsets: ['latin'],
+  weight: ['300', '400', '700'],
+  variable: '--font-lato',
+  display: 'swap',
 });
 
 const fraunces = Fraunces({
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
-  variable: "--font-display",
-  display: "swap",
+  subsets: ['latin'],
+  weight: ['300', '400', '500'],
+  variable: '--font-display',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: "Lumen",
-  description: "Weekly coaching that builds self-trust",
+  title: 'Lumen',
+  description: 'Weekly coaching that builds self-trust',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${lato.variable} ${fraunces.variable}`} suppressHydrationWarning>
       <body>

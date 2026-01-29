@@ -1,6 +1,6 @@
-import Link from "next/link";
-import { LayoutShell } from "@/components/layout-shell";
-import { Button } from "@/components/ui/button";
+import Link from 'next/link';
+import { LayoutShell } from '@/components/layout-shell';
+import { Button } from '@/components/ui/button';
 
 export default function HomePage() {
   return (

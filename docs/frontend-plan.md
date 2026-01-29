@@ -12,17 +12,17 @@ See `design-system.md` for palette, typography, and visual direction.
 
 ## Progress Summary
 
-| Step | Status | Notes |
-|------|--------|-------|
-| 1. Foundation Setup | ✅ Complete | Tailwind v4, theming, palettes |
-| 2. Layout Shell | ✅ Complete | Sidebar, floating menu |
-| 3. Auth Entry | ✅ Complete | Email form + confirmation |
-| 4. Passphrase Gate | ✅ Complete | |
+| Step                     | Status         | Notes                           |
+| ------------------------ | -------------- | ------------------------------- |
+| 1. Foundation Setup      | ✅ Complete    | Tailwind v4, theming, palettes  |
+| 2. Layout Shell          | ✅ Complete    | Sidebar, floating menu          |
+| 3. Auth Entry            | ✅ Complete    | Email form + confirmation       |
+| 4. Passphrase Gate       | ✅ Complete    |                                 |
 | 4.5 Persistence + Polish | ⬜ Not started | localStorage + a11y + UX polish |
-| 5. Session Gating | ⬜ Not started | |
-| 6. Chat UI Core | ⬜ Not started | |
-| 7. Session Closure | ⬜ Not started | |
-| 8. Edge States | ⬜ Not started | |
+| 5. Session Gating        | ⬜ Not started |                                 |
+| 6. Chat UI Core          | ⬜ Not started |                                 |
+| 7. Session Closure       | ⬜ Not started |                                 |
+| 8. Edge States           | ⬜ Not started |                                 |
 
 ---
 
@@ -33,6 +33,7 @@ See `design-system.md` for palette, typography, and visual direction.
 **Status: Complete (with refinements)**
 
 Completed items:
+
 - [x] Tailwind CSS v4 with PostCSS (`@tailwindcss/postcss`)
 - [x] `cn()` utility via `clsx` + `tailwind-merge` (in `lib/utils.ts`)
 - [x] `next-themes` for light/dark mode (default: system)
@@ -50,12 +51,14 @@ Completed items:
 - [x] **Smoother transitions** — cubic-bezier easing for theme changes
 
 **Key files:**
+
 - `app/globals.css` — Tailwind config, color palettes, atmospheric backgrounds, animations
 - `app/layout.tsx` — Root layout with Lato + Fraunces fonts + ThemeProvider
 - `components/theme-provider.tsx` — Time-of-day + dark mode context
 - `lib/utils.ts` — `cn()` helper
 
 **Implementation notes:**
+
 - Using Tailwind v4 CSS-first config (no `tailwind.config.js`)
 - Added `@source` directives in `globals.css` to tell Tailwind where to scan
 - Time ranges: Morning 5-12, Afternoon 12-18, Evening 18-5
@@ -70,6 +73,7 @@ Completed items:
 **Status: Complete (with refinements)**
 
 Completed items:
+
 - [x] Floating hamburger menu in top-left corner (fixed position)
 - [x] Slide-out sidebar with smooth CSS transitions
 - [x] Centered content area with `max-w-2xl`
@@ -85,12 +89,14 @@ Completed items:
 - [x] **Staggered entrance animation** — content fades in with delays
 
 **Key files:**
+
 - `components/layout-shell.tsx` — Main layout wrapper
 - `components/sidebar.tsx` — Custom sidebar with color swatches
 - `components/ui/button.tsx` — Button component with variants
 - `app/page.tsx` — Home page with atmospheric wrapper and animations
 
 **Implementation notes:**
+
 - Sidebar uses `ease-[cubic-bezier(0.32,0.72,0,1)]` for natural deceleration
 - Overlay has `backdrop-blur-[2px]` for subtle depth
 - Palette swatches show actual colors (bg circle with accent dot)
@@ -100,6 +106,7 @@ Completed items:
 - Content sections have staggered animation delays (100ms, 200ms, 300ms, 500ms)
 
 **Design decisions:**
+
 - OmmWriter-inspired minimal UI (hamburger in corner, hidden sidebar)
 - No persistent header — content takes full focus
 - Sidebar contains settings only (session history will come later)
@@ -112,6 +119,7 @@ Completed items:
 **Status: Complete**
 
 Completed items:
+
 - [x] Create `/login` route
 - [x] Email input with basic validation
 - [x] Submit button (disabled while empty/invalid)
@@ -123,10 +131,12 @@ Completed items:
 - [x] Framer Motion transitions between form/sent states
 
 **Key files:**
+
 - `app/login/page.tsx` — Login page with form and confirmation states
 - `components/ui/input.tsx` — Shadcn-style Input component
 
 **Implementation notes:**
+
 - Uses `AnimatePresence` for smooth transitions between states
 - Three view states: `form` → `loading` → `sent`
 - Basic email validation (contains @ and .)
@@ -140,6 +150,7 @@ Completed items:
 **Status: Complete**
 
 Completed items:
+
 - [x] Create `/setup` route
 - [x] Passphrase input (password type)
 - [x] Confirm passphrase input
@@ -152,9 +163,11 @@ Completed items:
 - [x] Privacy footer
 
 **Key files:**
+
 - `app/setup/page.tsx` — Passphrase setup page
 
 **Implementation notes:**
+
 - Password strength based on length, mixed case, numbers, special chars
 - Strength levels: weak (muted), fair (muted), good (accent), strong (accent)
 - All colors use theme tokens — adapts to dawn/day/dusk palettes
@@ -169,22 +182,26 @@ Completed items:
 **Status: Not started**
 
 **Palette Persistence:**
+
 - [ ] Persist palette preference to localStorage
 - [ ] Load preference on app init
 - [ ] Ensure preference survives page navigation
 
 **Polish from Step 3 (Login):**
+
 - [ ] Add icon to form state (Mail or User) for visual consistency with confirmation state
 - [ ] Extract `LoadingSpinner` to `components/ui/spinner.tsx` as shared component
 - [ ] Add visible label above email input (accessibility) or use `aria-label`
 - [ ] Consider adding underline-on-hover to "Use a different email" link
 
 **Polish from Step 4 (Setup):**
+
 - [ ] Add `aria-label` to show/hide password toggle buttons (e.g., "Show passphrase")
 - [ ] Improve strength bar animation — animate between states, not always from zero
 - [ ] Consider adding `aria-describedby` linking strength indicator to input
 
 **Optional (lower priority):**
+
 - [ ] Abstract shared auth page layout pattern (atmosphere + back link + centered content + footer)
 - [ ] More robust email validation regex
 
@@ -197,6 +214,7 @@ Completed items:
 **Status: Not started**
 
 TODO:
+
 - [ ] "Session locked" state showing next available date/time
 - [ ] Countdown or relative time ("Available in 3 days")
 - [ ] Pre-session prompt when unlocked ("Set aside ~60 minutes")
@@ -210,6 +228,7 @@ TODO:
 **Status: Not started**
 
 TODO:
+
 - [ ] Message list component with scroll area
 - [ ] Coach message (left-aligned, with avatar/icon)
 - [ ] User message (right-aligned)
@@ -220,6 +239,7 @@ TODO:
 - [ ] "End Session" button
 
 **Notes for implementation:**
+
 - Consider `react-markdown` for coach message rendering
 - Scroll area should use shadcn ScrollArea or native with custom styling
 - Input should grow but have max height
@@ -231,6 +251,7 @@ TODO:
 **Status: Not started**
 
 TODO:
+
 - [ ] End session confirmation dialog
 - [ ] Session summary display
 - [ ] Action steps list
@@ -244,6 +265,7 @@ TODO:
 **Status: Not started**
 
 TODO:
+
 - [ ] "Coach unavailable" UI (for model outages)
 - [ ] Loading/skeleton states
 - [ ] Error boundary with friendly message
@@ -281,7 +303,9 @@ remark-gfm
 ## Technical Notes for Future Context
 
 ### Package Manager
+
 Using **pnpm** for the monorepo. Run commands from `apps/web/`:
+
 ```bash
 pnpm dev    # Start dev server
 pnpm build  # Build for production
@@ -290,6 +314,7 @@ pnpm build  # Build for production
 ### Common Issues Encountered
 
 1. **Webpack module error on hard refresh**: Clear `.next` cache and restart:
+
    ```bash
    rm -rf .next && pnpm dev
    ```

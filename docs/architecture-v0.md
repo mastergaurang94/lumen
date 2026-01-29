@@ -4,12 +4,14 @@ Date: 2026-01-26
 Status: Draft (MVP)
 
 ## Goals
+
 - Browser-first, local-first data storage (MVP) with a path to zero-knowledge encrypted sync.
 - Simple, production-ready separation of concerns.
 - Enforce 7-day session spacing.
 - Maintain privacy (no training use).
 
 ## Components
+
 - **Web App (Next.js + React + TS)**
   - Chat UI, session gating UX, summaries.
   - Pre-session UI prompt to set aside ~60 minutes.
@@ -37,6 +39,7 @@ Status: Draft (MVP)
   - No transcripts or summaries stored server-side.
 
 ## Data Flow
+
 1. User authenticates via magic link.
 2. Web app checks session eligibility (7-day gate via Go service).
 3. Web app loads local memory and builds context.
@@ -45,6 +48,7 @@ Status: Draft (MVP)
 6. Response returns to web app; transcript + summary stored locally.
 
 ## Security Notes
+
 - Client-side encryption for local storage.
   - KDF: PBKDF2-HMAC-SHA256 with 16+ byte salt and ~600k iterations (tuned by performance tests).
   - Cipher: AES-GCM with a unique 96-bit (12-byte) IV per encryption.
@@ -56,6 +60,7 @@ Status: Draft (MVP)
 - Passphrase required before first session to unlock local data.
 
 ## Observability
+
 - OpenTelemetry spans for:
   - session start/stop
   - client-side context assembly
@@ -67,5 +72,6 @@ Status: Draft (MVP)
   - evaluation harness runs (summary + closure checks)
 
 ## Governance (MVP)
+
 - Keep governance minimal in MVP; enforce cadence and routing only.
 - Safety, prompt constraints, privacy policy enforcement, and feature flags live in system prompts for now.

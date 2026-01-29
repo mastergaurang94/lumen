@@ -1,43 +1,41 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { ThemeProvider as NextThemesProvider } from "next-themes";
+import * as React from 'react';
+import { ThemeProvider as NextThemesProvider } from 'next-themes';
 
-type TimeOfDay = "morning" | "afternoon" | "evening";
+type TimeOfDay = 'morning' | 'afternoon' | 'evening';
 
 interface ThemeContextValue {
   timeOfDay: TimeOfDay;
-  setTimeOfDay: (time: TimeOfDay | "auto") => void;
+  setTimeOfDay: (time: TimeOfDay | 'auto') => void;
   isAutoTime: boolean;
 }
 
-const ThemeContext = React.createContext<ThemeContextValue | undefined>(
-  undefined
-);
+const ThemeContext = React.createContext<ThemeContextValue | undefined>(undefined);
 
 function getTimeOfDay(): TimeOfDay {
   const hour = new Date().getHours();
 
   // Morning: 5:00 AM – 11:59 AM
   if (hour >= 5 && hour < 12) {
-    return "morning";
+    return 'morning';
   }
   // Afternoon: 12:00 PM – 5:59 PM
   if (hour >= 12 && hour < 18) {
-    return "afternoon";
+    return 'afternoon';
   }
   // Evening: 6:00 PM – 4:59 AM
-  return "evening";
+  return 'evening';
 }
 
 function applyTimeOfDayClass(time: TimeOfDay) {
   const html = document.documentElement;
-  html.classList.remove("theme-morning", "theme-afternoon", "theme-evening");
+  html.classList.remove('theme-morning', 'theme-afternoon', 'theme-evening');
   html.classList.add(`theme-${time}`);
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [timeOfDay, setTimeOfDayState] = React.useState<TimeOfDay>("afternoon");
+  const [timeOfDay, setTimeOfDayState] = React.useState<TimeOfDay>('afternoon');
   const [isAutoTime, setIsAutoTime] = React.useState(true);
   const [mounted, setMounted] = React.useState(false);
 
@@ -68,8 +66,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyTimeOfDayClass(timeOfDay);
   }, [timeOfDay, mounted]);
 
-  const setTimeOfDay = React.useCallback((time: TimeOfDay | "auto") => {
-    if (time === "auto") {
+  const setTimeOfDay = React.useCallback((time: TimeOfDay | 'auto') => {
+    if (time === 'auto') {
       setIsAutoTime(true);
       const currentTime = getTimeOfDay();
       setTimeOfDayState(currentTime);
@@ -87,7 +85,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setTimeOfDay,
       isAutoTime,
     }),
-    [timeOfDay, setTimeOfDay, isAutoTime]
+    [timeOfDay, setTimeOfDay, isAutoTime],
   );
 
   return (
@@ -105,7 +103,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function useTimeOfDay() {
   const context = React.useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error("useTimeOfDay must be used within a ThemeProvider");
+    throw new Error('useTimeOfDay must be used within a ThemeProvider');
   }
   return context;
 }

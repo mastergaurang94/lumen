@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { cn } from "@/lib/utils";
+import * as React from 'react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { cn } from '@/lib/utils';
 
 const Sheet = DialogPrimitive.Root;
 const SheetTrigger = DialogPrimitive.Trigger;
@@ -15,10 +15,10 @@ const SheetOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     className={cn(
-      "fixed inset-0 z-50 bg-black/15",
-      "transition-opacity duration-300 ease-out",
-      "data-[state=open]:opacity-100 data-[state=closed]:opacity-0",
-      className
+      'fixed inset-0 z-50 bg-black/15',
+      'transition-opacity duration-300 ease-out',
+      'data-[state=open]:opacity-100 data-[state=closed]:opacity-0',
+      className,
     )}
     {...props}
     ref={ref}
@@ -26,31 +26,30 @@ const SheetOverlay = React.forwardRef<
 ));
 SheetOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
-interface SheetContentProps
-  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
-  side?: "left" | "right";
+interface SheetContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
+  side?: 'left' | 'right';
 }
 
 const SheetContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   SheetContentProps
->(({ side = "left", className, children, ...props }, ref) => (
+>(({ side = 'left', className, children, ...props }, ref) => (
   <SheetPortal>
     <SheetOverlay />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed z-50 flex flex-col bg-background shadow-2xl",
-        "transition-transform duration-300 ease-out",
-        side === "left" && [
-          "inset-y-0 left-0 h-full w-80 border-r border-border/50",
-          "data-[state=open]:translate-x-0 data-[state=closed]:-translate-x-full",
+        'fixed z-50 flex flex-col bg-background shadow-2xl',
+        'transition-transform duration-300 ease-out',
+        side === 'left' && [
+          'inset-y-0 left-0 h-full w-80 border-r border-border/50',
+          'data-[state=open]:translate-x-0 data-[state=closed]:-translate-x-full',
         ],
-        side === "right" && [
-          "inset-y-0 right-0 h-full w-80 border-l border-border/50",
-          "data-[state=open]:translate-x-0 data-[state=closed]:translate-x-full",
+        side === 'right' && [
+          'inset-y-0 right-0 h-full w-80 border-l border-border/50',
+          'data-[state=open]:translate-x-0 data-[state=closed]:translate-x-full',
         ],
-        className
+        className,
       )}
       {...props}
     >
@@ -60,13 +59,10 @@ const SheetContent = React.forwardRef<
 ));
 SheetContent.displayName = DialogPrimitive.Content.displayName;
 
-const SheetHeader = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col space-y-2", className)} {...props} />
+const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn('flex flex-col space-y-2', className)} {...props} />
 );
-SheetHeader.displayName = "SheetHeader";
+SheetHeader.displayName = 'SheetHeader';
 
 const SheetTitle = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Title>,
@@ -74,7 +70,7 @@ const SheetTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("text-lg font-medium text-foreground", className)}
+    className={cn('text-lg font-medium text-foreground', className)}
     {...props}
   />
 ));
@@ -86,7 +82,7 @@ const SheetDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn('text-sm text-muted-foreground', className)}
     {...props}
   />
 ));

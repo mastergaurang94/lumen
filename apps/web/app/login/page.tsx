@@ -1,31 +1,31 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Mail } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import * as React from 'react';
+import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Mail } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
-type ViewState = "form" | "loading" | "sent";
+type ViewState = 'form' | 'loading' | 'sent';
 
 export default function LoginPage() {
-  const [email, setEmail] = React.useState("");
-  const [viewState, setViewState] = React.useState<ViewState>("form");
+  const [email, setEmail] = React.useState('');
+  const [viewState, setViewState] = React.useState<ViewState>('form');
 
-  const isValidEmail = email.includes("@") && email.includes(".");
+  const isValidEmail = email.includes('@') && email.includes('.');
   const canSubmit = email.length > 0 && isValidEmail;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
 
-    setViewState("loading");
+    setViewState('loading');
 
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    setViewState("sent");
+    setViewState('sent');
   };
 
   return (
@@ -45,7 +45,7 @@ export default function LoginPage() {
       <main className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
         <div className="relative z-10 w-full max-w-sm">
           <AnimatePresence mode="wait">
-            {viewState === "form" || viewState === "loading" ? (
+            {viewState === 'form' || viewState === 'loading' ? (
               <motion.div
                 key="form"
                 initial={{ opacity: 0, y: 12 }}
@@ -59,9 +59,7 @@ export default function LoginPage() {
                   <h1 className="font-display text-4xl font-light tracking-tight text-foreground">
                     Welcome back
                   </h1>
-                  <p className="text-muted-foreground">
-                    Enter your email to sign in
-                  </p>
+                  <p className="text-muted-foreground">Enter your email to sign in</p>
                 </div>
 
                 {/* Form */}
@@ -72,7 +70,7 @@ export default function LoginPage() {
                       placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      disabled={viewState === "loading"}
+                      disabled={viewState === 'loading'}
                       autoFocus
                       autoComplete="email"
                     />
@@ -80,16 +78,16 @@ export default function LoginPage() {
 
                   <Button
                     type="submit"
-                    disabled={!canSubmit || viewState === "loading"}
+                    disabled={!canSubmit || viewState === 'loading'}
                     className="w-full h-12 text-base"
                   >
-                    {viewState === "loading" ? (
+                    {viewState === 'loading' ? (
                       <span className="flex items-center gap-2">
                         <LoadingSpinner />
                         Sending...
                       </span>
                     ) : (
-                      "Continue with email"
+                      'Continue with email'
                     )}
                   </Button>
                 </form>
@@ -116,7 +114,7 @@ export default function LoginPage() {
                     Check your email
                   </h1>
                   <p className="text-muted-foreground">
-                    We sent a sign-in link to{" "}
+                    We sent a sign-in link to{' '}
                     <span className="text-foreground font-medium">{email}</span>
                   </p>
                 </div>
@@ -131,8 +129,8 @@ export default function LoginPage() {
                 {/* Try again */}
                 <button
                   onClick={() => {
-                    setViewState("form");
-                    setEmail("");
+                    setViewState('form');
+                    setEmail('');
                   }}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
@@ -164,14 +162,7 @@ function LoadingSpinner() {
       fill="none"
       viewBox="0 0 24 24"
     >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path
         className="opacity-75"
         fill="currentColor"

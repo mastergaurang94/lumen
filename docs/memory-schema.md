@@ -4,12 +4,15 @@ Date: 2026-01-26
 Status: Draft (MVP)
 
 ## Goals
+
 - Keep memory simple, high-signal, and future-proof.
 - Preserve raw transcripts for re-summarization as models improve.
 - Support autonomy-first weekly cadence and coach continuity.
 
 ## Storage Model (MVP)
+
 We store three primary objects per user:
+
 - Session transcript (raw, immutable)
 - Session summary (short, actionable)
 - User profile (minimal, stable)
@@ -20,9 +23,11 @@ WebCrypto AES-GCM + PBKDF2.
 ## Entities
 
 ### 1) UserProfile
+
 Stable, low-noise, updated occasionally.
 
 Fields:
+
 - user_id: string (uuid)
 - preferred_name: string | null
 - goals: string[] (1–3 concise statements)
@@ -32,9 +37,11 @@ Fields:
 - updated_at: string (ISO8601)
 
 ### 2) SessionTranscript
+
 Raw session content. Immutable once written. Stored encrypted at rest.
 
 Fields:
+
 - session_id: string (uuid)
 - user_id: string (uuid)
 - started_at: string (ISO8601)
@@ -47,6 +54,7 @@ Fields:
 - created_at: string (ISO8601)
 
 encryption_header:
+
 - kdf: "PBKDF2"
 - kdf_params: object (e.g., { hash: "SHA-256", iterations: 600000 })
 - salt: bytes (16+ bytes)
@@ -58,9 +66,11 @@ Note: Decrypted messages live in memory during an active session only. The
 encrypted blob contains the serialized message array and any per-message metadata.
 
 ### 3) SessionSummary
+
 Short, actionable recap for memory and next-session context.
 
 Fields:
+
 - session_id: string (uuid)
 - user_id: string (uuid)
 - summary_text: string (8–12 lines max)
@@ -72,17 +82,19 @@ Fields:
 - updated_at: string (ISO8601)
 
 ## Relationships
+
 - One UserProfile per user.
 - One SessionTranscript per session.
 - One SessionSummary per session.
 - SessionSummary references its SessionTranscript via session_id.
 
 ## Derivation Rules
+
 - SessionSummary is derived from SessionTranscript after session close.
 - UserProfile updates are derived from SessionSummary or explicit user edits.
 
 ## Minimal Indexing
+
 - By user_id.
 - By session_id.
 - By started_at (descending for recent-first lists).
-

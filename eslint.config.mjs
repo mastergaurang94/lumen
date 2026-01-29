@@ -1,16 +1,31 @@
-import js from "@eslint/js";
-import globals from "globals";
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import globals from 'globals';
 
-export default [
+export default tseslint.config(
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
-    files: ["**/*.{js,jsx,ts,tsx}"],
+    files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
       globals: {
         ...globals.browser,
-        ...globals.node
-      }
+        ...globals.node,
+      },
     },
-    ignores: ["**/.next/**", "**/dist/**", "**/build/**", "**/node_modules/**"]
-  }
-];
+  },
+  {
+    files: ['**/*.cjs'],
+    languageOptions: {
+      globals: {
+        module: 'readonly',
+        require: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+      },
+    },
+  },
+  {
+    ignores: ['**/.next/**', '**/dist/**', '**/build/**', '**/node_modules/**', '**/next-env.d.ts'],
+  },
+);

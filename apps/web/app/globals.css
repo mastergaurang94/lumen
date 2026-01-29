@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Tell Tailwind where to find classes */
 @source "../components/**/*.tsx";
@@ -149,8 +149,8 @@
    ============================================ */
 
 @theme inline {
-  --font-sans: var(--font-lato), "Lato", ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-display), "Fraunces", Georgia, serif;
+  --font-sans: var(--font-lato), 'Lato', ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), 'Fraunces', Georgia, serif;
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
@@ -193,12 +193,17 @@ body {
 /* Smooth transitions for theme changes */
 body,
 body * {
-  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Don't transition text color to avoid flickering */
 body {
-  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease;
+  transition:
+    background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.2s ease;
 }
 
 /* ============================================
@@ -221,14 +226,14 @@ body {
   --glow-color-2: hsla(90, 20%, 70%, 0.08);
 }
 .theme-afternoon.dark .atmosphere {
-  --glow-color: hsla(135, 25%, 35%, 0.10);
+  --glow-color: hsla(135, 25%, 35%, 0.1);
   --glow-color-2: hsla(90, 20%, 25%, 0.06);
 }
 
 /* Evening - Warm amber embrace */
 .theme-evening .atmosphere {
   --glow-color: hsla(28, 60%, 65%, 0.14);
-  --glow-color-2: hsla(38, 50%, 75%, 0.10);
+  --glow-color-2: hsla(38, 50%, 75%, 0.1);
 }
 .theme-evening.dark .atmosphere {
   --glow-color: hsla(28, 50%, 40%, 0.12);
@@ -240,7 +245,7 @@ body {
 }
 
 .atmosphere::before {
-  content: "";
+  content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -277,7 +282,8 @@ body {
 }
 
 @keyframes gentle-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

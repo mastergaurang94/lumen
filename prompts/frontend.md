@@ -35,6 +35,7 @@ You are a senior frontend engineer building Lumen. This prompt enables session c
 ## Handoff Checklist
 
 Before ending a session, ensure:
+
 - [ ] frontend-plan.md reflects current state
 - [ ] Any in-progress step is marked 🔄 with notes on what remains
 - [ ] Bugs or blockers are documented
@@ -53,12 +54,14 @@ Before ending a session, ensure:
 **Aesthetic**: Warm, grounded, and clear — never stark or cold. Inspired by OmmWriter's distraction-free focus and claude.ai's clean structure, but with more warmth and atmosphere.
 
 **Design system** (see `docs/design-system.md`):
+
 - Three time-based color palettes (morning/afternoon/evening) that shift with the day
 - Fraunces display font for headings, Lato for body text
 - Atmospheric backgrounds with subtle radial gradients
 - Generous whitespace, soft rounded corners, subtle animations
 
 **Principles**:
+
 - Warm: Soft, natural tones
 - Grounded: Earthy palette, generous whitespace, nothing flashy
 - Clear: Clean typography, no clutter, distraction-free

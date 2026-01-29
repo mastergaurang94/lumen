@@ -1,23 +1,17 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTheme } from "next-themes";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Menu,
-  Sun,
-  Moon,
-  Monitor,
-  X,
-} from "lucide-react";
-import { useTimeOfDay } from "@/components/theme-provider";
-import { cn } from "@/lib/utils";
+import * as React from 'react';
+import { useTheme } from 'next-themes';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, Sun, Moon, Monitor, X } from 'lucide-react';
+import { useTimeOfDay } from '@/components/theme-provider';
+import { cn } from '@/lib/utils';
 
 const sidebarVariants = {
   closed: {
-    x: "-100%",
+    x: '-100%',
     transition: {
-      type: "spring",
+      type: 'spring',
       stiffness: 400,
       damping: 40,
     },
@@ -25,7 +19,7 @@ const sidebarVariants = {
   open: {
     x: 0,
     transition: {
-      type: "spring",
+      type: 'spring',
       stiffness: 400,
       damping: 40,
     },
@@ -63,12 +57,12 @@ export function Sidebar() {
       {/* Sidebar panel */}
       <motion.div
         initial="closed"
-        animate={open ? "open" : "closed"}
+        animate={open ? 'open' : 'closed'}
         variants={sidebarVariants}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-80 bg-background border-r border-border/20",
-          "shadow-[4px_0_24px_-2px_rgba(0,0,0,0.1),8px_0_16px_-4px_rgba(0,0,0,0.06)]",
-          "dark:shadow-[4px_0_24px_-2px_rgba(0,0,0,0.3),8px_0_16px_-4px_rgba(0,0,0,0.2)]"
+          'fixed inset-y-0 left-0 z-50 w-80 bg-background border-r border-border/20',
+          'shadow-[4px_0_24px_-2px_rgba(0,0,0,0.1),8px_0_16px_-4px_rgba(0,0,0,0.06)]',
+          'dark:shadow-[4px_0_24px_-2px_rgba(0,0,0,0.3),8px_0_16px_-4px_rgba(0,0,0,0.2)]',
         )}
       >
         <div className="flex flex-col h-full">
@@ -105,19 +99,13 @@ export function Sidebar() {
   );
 }
 
-function SettingsSection({
-  title,
-  children
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-5">
-      <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{title}</h2>
-      <div className="space-y-6">
-        {children}
-      </div>
+      <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+        {title}
+      </h2>
+      <div className="space-y-6">{children}</div>
     </div>
   );
 }
@@ -133,9 +121,9 @@ function AppearanceOptions() {
   if (!mounted) return null;
 
   const options = [
-    { value: "system", label: "Auto", icon: Monitor },
-    { value: "light", label: "Light", icon: Sun },
-    { value: "dark", label: "Dark", icon: Moon },
+    { value: 'system', label: 'Auto', icon: Monitor },
+    { value: 'light', label: 'Light', icon: Sun },
+    { value: 'dark', label: 'Dark', icon: Moon },
   ];
 
   return (
@@ -160,10 +148,10 @@ function PaletteOptions() {
   const { timeOfDay, setTimeOfDay, isAutoTime } = useTimeOfDay();
 
   const options = [
-    { value: "auto" as const, label: "Auto" },
-    { value: "morning" as const, label: "Dawn" },
-    { value: "afternoon" as const, label: "Day" },
-    { value: "evening" as const, label: "Dusk" },
+    { value: 'auto' as const, label: 'Auto' },
+    { value: 'morning' as const, label: 'Dawn' },
+    { value: 'afternoon' as const, label: 'Day' },
+    { value: 'evening' as const, label: 'Dusk' },
   ];
 
   return (
@@ -172,12 +160,10 @@ function PaletteOptions() {
       <div className="grid grid-cols-4 gap-2">
         {options.map((option) => {
           const isActive =
-            option.value === "auto"
-              ? isAutoTime
-              : !isAutoTime && timeOfDay === option.value;
+            option.value === 'auto' ? isAutoTime : !isAutoTime && timeOfDay === option.value;
 
           // For auto, show current time's colors
-          const swatchPalette = option.value === "auto" ? timeOfDay : option.value;
+          const swatchPalette = option.value === 'auto' ? timeOfDay : option.value;
 
           return (
             <PaletteButton
@@ -186,7 +172,7 @@ function PaletteOptions() {
               onClick={() => setTimeOfDay(option.value)}
               label={option.label}
               swatchClass={`swatch-${swatchPalette}`}
-              isAuto={option.value === "auto"}
+              isAuto={option.value === 'auto'}
             />
           );
         })}
@@ -207,10 +193,10 @@ function OptionButton({ active, onClick, icon, label }: OptionButtonProps) {
     <button
       onClick={onClick}
       className={cn(
-        "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200",
+        'flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200',
         active
-          ? "bg-muted text-foreground"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          ? 'bg-muted text-foreground'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
       )}
     >
       {icon}
@@ -232,26 +218,26 @@ function PaletteButton({ active, onClick, label, swatchClass, isAuto }: PaletteB
     <button
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center gap-2 p-3 rounded-lg text-sm transition-all duration-300",
+        'flex flex-col items-center gap-2 p-3 rounded-lg text-sm transition-all duration-300',
         active
-          ? "bg-muted ring-2 ring-accent/50 ring-offset-1 ring-offset-background"
-          : "hover:bg-muted/50"
+          ? 'bg-muted ring-2 ring-accent/50 ring-offset-1 ring-offset-background'
+          : 'hover:bg-muted/50',
       )}
     >
       {/* Color swatch - uses CSS variables from swatch-* classes */}
       <div
         className={cn(
-          "w-10 h-10 rounded-full transition-transform duration-300 relative overflow-hidden bg-[var(--swatch-bg)]",
+          'w-10 h-10 rounded-full transition-transform duration-300 relative overflow-hidden bg-[var(--swatch-bg)]',
           swatchClass,
-          active && "scale-110"
+          active && 'scale-110',
         )}
       >
         {/* Accent dot */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div
             className={cn(
-              "rounded-full transition-all duration-300 bg-[var(--swatch-accent)]",
-              isAuto ? "w-4 h-4" : "w-5 h-5"
+              'rounded-full transition-all duration-300 bg-[var(--swatch-accent)]',
+              isAuto ? 'w-4 h-4' : 'w-5 h-5',
             )}
           />
         </div>
@@ -260,10 +246,12 @@ function PaletteButton({ active, onClick, label, swatchClass, isAuto }: PaletteB
           <div className="absolute inset-1 rounded-full border border-dashed border-[var(--swatch-accent)] opacity-40" />
         )}
       </div>
-      <span className={cn(
-        "text-xs transition-colors duration-200",
-        active ? "text-foreground" : "text-muted-foreground"
-      )}>
+      <span
+        className={cn(
+          'text-xs transition-colors duration-200',
+          active ? 'text-foreground' : 'text-muted-foreground',
+        )}
+      >
         {label}
       </span>
     </button>

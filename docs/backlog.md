@@ -3,12 +3,14 @@
 Date: 2026-01-27
 
 ## Post-MVP: Platform
+
 - Desktop wrapper to enable native filesystem access.
 - Export/import for recovery.
 - Resolve multi-device edits (merge strategy, last-write-wins vs CRDT, user prompts).
 - Zero-knowledge encrypted sync (ciphertext-only storage).
 
 ## Post-MVP: Memory
+
 - Pattern index (loops, dynamics).
 - Commitments tracker with outcomes.
 - Recognition moment index for quick recall.
@@ -16,6 +18,7 @@ Date: 2026-01-27
 - Fallback provider abstraction.
 
 ## Post-MVP: Harness
+
 - Context compaction and recap rewriting.
 - Summary compaction for long histories (rolling recap).
 - Tool-call trimming and irrelevant metadata removal.
@@ -26,11 +29,13 @@ Date: 2026-01-27
 - Hallucination guards for memory (cite source session for recalled facts).
 
 ## Harness Evaluation
+
 - Define evaluation flow and rubric (summary quality, closure quality, context assembly).
 - Decide where evals run (local vs CI) and how results are stored.
 - Add deterministic replay fixtures and golden outputs.
 
 ## Trust & Safety
+
 - Define coaching boundaries and non-therapeutic positioning.
 - Add crisis UX with immediate resources and escalation guidance.
 - Add user reporting and content flagging.

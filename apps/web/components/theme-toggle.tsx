@@ -1,20 +1,19 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTheme } from "next-themes";
-import { Sun, Moon, Monitor, Sunrise, CloudSun, Sunset, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import * as React from 'react';
+import { useTheme } from 'next-themes';
+import { Sun, Moon, Monitor, Sunrise, CloudSun, Sunset, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-} from "@/components/ui/dropdown-menu";
-import { useTimeOfDay } from "@/components/theme-provider";
+} from '@/components/ui/dropdown-menu';
+import { useTimeOfDay } from '@/components/theme-provider';
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -72,8 +71,10 @@ export function ThemeToggle() {
         <DropdownMenuSeparator />
 
         <DropdownMenuRadioGroup
-          value={isAutoTime ? "auto" : timeOfDay}
-          onValueChange={(value) => setTimeOfDay(value as "auto" | "morning" | "afternoon" | "evening")}
+          value={isAutoTime ? 'auto' : timeOfDay}
+          onValueChange={(value) =>
+            setTimeOfDay(value as 'auto' | 'morning' | 'afternoon' | 'evening')
+          }
         >
           <DropdownMenuRadioItem value="auto">
             <Clock className="mr-2 h-4 w-4" />

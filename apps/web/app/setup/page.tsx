@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { ArrowLeft, Eye, EyeOff, Shield, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import * as React from 'react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Eye, EyeOff, Shield, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
-type PasswordStrength = "weak" | "fair" | "good" | "strong";
+type PasswordStrength = 'weak' | 'fair' | 'good' | 'strong';
 
 function getPasswordStrength(password: string): PasswordStrength {
-  if (password.length < 8) return "weak";
+  if (password.length < 8) return 'weak';
 
   let score = 0;
   if (password.length >= 12) score++;
@@ -19,23 +19,23 @@ function getPasswordStrength(password: string): PasswordStrength {
   if (/\d/.test(password)) score++;
   if (/[^a-zA-Z0-9]/.test(password)) score++;
 
-  if (score <= 1) return "weak";
-  if (score === 2) return "fair";
-  if (score === 3) return "good";
-  return "strong";
+  if (score <= 1) return 'weak';
+  if (score === 2) return 'fair';
+  if (score === 3) return 'good';
+  return 'strong';
 }
 
 // Uses theme-aware colors - accent for positive states, muted for neutral/weak
 const strengthConfig: Record<PasswordStrength, { label: string; color: string; width: string }> = {
-  weak: { label: "Weak", color: "bg-muted-foreground/40", width: "w-1/4" },
-  fair: { label: "Fair", color: "bg-muted-foreground/60", width: "w-2/4" },
-  good: { label: "Good", color: "bg-accent/80", width: "w-3/4" },
-  strong: { label: "Strong", color: "bg-accent", width: "w-full" },
+  weak: { label: 'Weak', color: 'bg-muted-foreground/40', width: 'w-1/4' },
+  fair: { label: 'Fair', color: 'bg-muted-foreground/60', width: 'w-2/4' },
+  good: { label: 'Good', color: 'bg-accent/80', width: 'w-3/4' },
+  strong: { label: 'Strong', color: 'bg-accent', width: 'w-full' },
 };
 
 export default function SetupPage() {
-  const [passphrase, setPassphrase] = React.useState("");
-  const [confirmPassphrase, setConfirmPassphrase] = React.useState("");
+  const [passphrase, setPassphrase] = React.useState('');
+  const [confirmPassphrase, setConfirmPassphrase] = React.useState('');
   const [showPassphrase, setShowPassphrase] = React.useState(false);
   const [showConfirm, setShowConfirm] = React.useState(false);
   const [touched, setTouched] = React.useState({ passphrase: false, confirm: false });
@@ -57,7 +57,7 @@ export default function SetupPage() {
 
     // TODO: In future, this will trigger encryption setup
     // For now, just navigate to the session page
-    console.log("Passphrase setup complete");
+    console.log('Passphrase setup complete');
   };
 
   return (
@@ -91,9 +91,7 @@ export default function SetupPage() {
             <h1 className="font-display text-4xl font-light tracking-tight text-foreground">
               Secure your data
             </h1>
-            <p className="text-muted-foreground">
-              Create a passphrase to encrypt your sessions
-            </p>
+            <p className="text-muted-foreground">Create a passphrase to encrypt your sessions</p>
           </div>
 
           {/* Form */}
@@ -106,7 +104,7 @@ export default function SetupPage() {
               <div className="relative">
                 <Input
                   id="passphrase"
-                  type={showPassphrase ? "text" : "password"}
+                  type={showPassphrase ? 'text' : 'password'}
                   placeholder="Enter a passphrase"
                   value={passphrase}
                   onChange={(e) => setPassphrase(e.target.value)}
@@ -119,11 +117,7 @@ export default function SetupPage() {
                   onClick={() => setShowPassphrase(!showPassphrase)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {showPassphrase ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  {showPassphrase ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
 
@@ -133,13 +127,17 @@ export default function SetupPage() {
                   <div className="h-1 bg-muted rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: "100%" }}
-                      className={cn("h-full rounded-full transition-all duration-300", strengthInfo.color, strengthInfo.width)}
+                      animate={{ width: '100%' }}
+                      className={cn(
+                        'h-full rounded-full transition-all duration-300',
+                        strengthInfo.color,
+                        strengthInfo.width,
+                      )}
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Strength: <span className="text-foreground">{strengthInfo.label}</span>
-                    {!isMinLength && " · Minimum 8 characters"}
+                    {!isMinLength && ' · Minimum 8 characters'}
                   </p>
                 </div>
               )}
@@ -153,12 +151,15 @@ export default function SetupPage() {
               <div className="relative">
                 <Input
                   id="confirm"
-                  type={showConfirm ? "text" : "password"}
+                  type={showConfirm ? 'text' : 'password'}
                   placeholder="Confirm your passphrase"
                   value={confirmPassphrase}
                   onChange={(e) => setConfirmPassphrase(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
-                  className={cn("pr-10", showMismatchError && "border-destructive focus:ring-destructive")}
+                  className={cn(
+                    'pr-10',
+                    showMismatchError && 'border-destructive focus:ring-destructive',
+                  )}
                   autoComplete="new-password"
                 />
                 <button
@@ -166,11 +167,7 @@ export default function SetupPage() {
                   onClick={() => setShowConfirm(!showConfirm)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {showConfirm ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               {showMismatchError && (
@@ -186,17 +183,14 @@ export default function SetupPage() {
                   This passphrase cannot be recovered
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  If you forget it, your session history will be permanently inaccessible. We cannot reset it for you.
+                  If you forget it, your session history will be permanently inaccessible. We cannot
+                  reset it for you.
                 </p>
               </div>
             </div>
 
             {/* Submit button */}
-            <Button
-              type="submit"
-              disabled={!canSubmit}
-              className="w-full h-12 text-base"
-            >
+            <Button type="submit" disabled={!canSubmit} className="w-full h-12 text-base">
               Continue
             </Button>
           </form>
