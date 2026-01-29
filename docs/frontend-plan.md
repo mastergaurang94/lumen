@@ -16,8 +16,9 @@ See `design-system.md` for palette, typography, and visual direction.
 |------|--------|-------|
 | 1. Foundation Setup | ✅ Complete | Tailwind v4, theming, palettes |
 | 2. Layout Shell | ✅ Complete | Sidebar, floating menu |
-| 3. Auth Entry | ⬜ Not started | |
-| 4. Passphrase Gate | ⬜ Not started | |
+| 3. Auth Entry | ✅ Complete | Email form + confirmation |
+| 4. Passphrase Gate | ✅ Complete | |
+| 4.5 Persistence + Polish | ⬜ Not started | localStorage + a11y + UX polish |
 | 5. Session Gating | ⬜ Not started | |
 | 6. Chat UI Core | ⬜ Not started | |
 | 7. Session Closure | ⬜ Not started | |
@@ -163,16 +164,31 @@ Completed items:
 
 ---
 
-### Step 4.5: Palette Persistence ⬜
+### Step 4.5: Palette Persistence + Polish ⬜
 
 **Status: Not started**
 
-TODO:
+**Palette Persistence:**
 - [ ] Persist palette preference to localStorage
 - [ ] Load preference on app init
 - [ ] Ensure preference survives page navigation
 
-**Notes**: Required before Step 5 so Steps 1-4 are fully complete.
+**Polish from Step 3 (Login):**
+- [ ] Add icon to form state (Mail or User) for visual consistency with confirmation state
+- [ ] Extract `LoadingSpinner` to `components/ui/spinner.tsx` as shared component
+- [ ] Add visible label above email input (accessibility) or use `aria-label`
+- [ ] Consider adding underline-on-hover to "Use a different email" link
+
+**Polish from Step 4 (Setup):**
+- [ ] Add `aria-label` to show/hide password toggle buttons (e.g., "Show passphrase")
+- [ ] Improve strength bar animation — animate between states, not always from zero
+- [ ] Consider adding `aria-describedby` linking strength indicator to input
+
+**Optional (lower priority):**
+- [ ] Abstract shared auth page layout pattern (atmosphere + back link + centered content + footer)
+- [ ] More robust email validation regex
+
+**Notes**: Complete persistence + high-priority polish before Step 5. Optional items can be deferred.
 
 ---
 
@@ -280,9 +296,7 @@ pnpm build  # Build for production
 
 2. **Tailwind classes not applying**: Ensure `@source` directives in `globals.css` point to all component directories.
 
-3. **Sidebar causing layout shift**: Avoid Radix Dialog — use custom fixed-position div with CSS transitions.
-
-4. **Palette preference not persisting**: Currently palette selection is stored in React state and resets on navigation. Future enhancement: persist to localStorage.
+3. **Palette preference not persisting**: Currently palette selection is stored in React state and resets on navigation. Future enhancement: persist to localStorage.
 
 ### File Structure
 
