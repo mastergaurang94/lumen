@@ -5,7 +5,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sidebar } from '@/components/sidebar';
-import { CoachMessage, UserMessage, TypingIndicator, ChatInput } from '@/components/chat';
+import {
+  CoachMessage,
+  UserMessage,
+  TypingIndicator,
+  ChatInput,
+  SessionClosure,
+} from '@/components/chat';
+
+// Session state
+type SessionState = 'active' | 'complete';
+
+// Mock closure data - in real app this would be generated from the session
+const MOCK_RECOGNITION_MOMENT =
+  "What would it look like to trust yourself the way you trust your instincts at work?";
+const MOCK_ACTION_STEPS = [
+  "Notice when you're second-guessing a decision this week — pause and ask what your gut says first",
+  "Have one conversation where you share your real opinion, even if it feels uncomfortable",
+  "Write down one thing you did well each day, without qualifying it",
+];
 
 // Message types
 type MessageRole = 'coach' | 'user';
@@ -73,6 +91,7 @@ export default function ChatPage() {
   const [isTyping, setIsTyping] = React.useState(false);
   const [streamingContent, setStreamingContent] = React.useState<string | null>(null);
   const [showEndSessionDialog, setShowEndSessionDialog] = React.useState(false);
+  const [sessionState, setSessionState] = React.useState<SessionState>('active');
   const [mounted, setMounted] = React.useState(false);
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
@@ -150,8 +169,9 @@ export default function ChatPage() {
   }, []);
 
   const confirmEndSession = React.useCallback(() => {
-    // In real app, this would save the session and navigate
-    window.location.href = '/session';
+    // Close the dialog and transition to the closure view
+    setShowEndSessionDialog(false);
+    setSessionState('complete');
   }, []);
 
   if (!mounted) {
@@ -159,6 +179,22 @@ export default function ChatPage() {
       <div className="atmosphere min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
       </div>
+    );
+  }
+
+  // Show session closure when complete
+  if (sessionState === 'complete') {
+    // Calculate next session date (7 days from now)
+    const nextSessionDate = new Date();
+    nextSessionDate.setDate(nextSessionDate.getDate() + 7);
+
+    return (
+      <SessionClosure
+        sessionDate={sessionDateRef.current}
+        recognitionMoment={MOCK_RECOGNITION_MOMENT}
+        actionSteps={MOCK_ACTION_STEPS}
+        nextSessionDate={nextSessionDate}
+      />
     );
   }
 

@@ -21,7 +21,7 @@ See `design-system.md` for palette, typography, and visual direction.
 | 4.5 Persistence + Polish | ✅ Complete    | localStorage + a11y + UX polish |
 | 5. Session Gating        | ✅ Complete    | Locked/unlocked states          |
 | 6. Chat UI Core          | ✅ Complete    | Messages, input, streaming      |
-| 7. Session Closure       | ⬜ Not started |                                 |
+| 7. Session Closure       | ✅ Complete    | Recognition moment + action steps |
 | 8. Edge States           | ⬜ Not started |                                 |
 
 ---
@@ -329,17 +329,44 @@ Completed items:
 
 ---
 
-### Step 7: Session Closure UI ⬜
+### Step 7: Session Closure UI ✅
 
-**Status: Not started**
+**Status: Complete**
 
-TODO:
+Completed items:
 
-- [ ] End session confirmation dialog
-- [ ] Session summary display
-- [ ] Action steps list
-- [ ] "Session complete" state
-- [ ] Next session date display
+- [x] End session confirmation dialog (already existed in Step 6)
+- [x] Session closure view with "Session complete" state
+- [x] Recognition moment display (the most impactful question/statement from the session)
+- [x] Next session date display with calendar icon
+- [x] Collapsible action steps (hidden by default, user opt-in)
+- [x] "Return home" button
+- [x] Smooth entrance animations with staggered reveals
+- [x] Works across all palettes (morning/afternoon/evening) and light/dark modes
+
+**Key files:**
+
+- `components/chat/session-closure.tsx` — Session closure component
+- `components/chat/index.ts` — Updated barrel export
+- `app/chat/page.tsx` — Integrated session state management
+
+**Implementation notes:**
+
+- Closure is rendered within the chat page (not a separate route) for smooth transition
+- Recognition moment is displayed as a centered blockquote with subtle divider lines
+- Action steps are collapsed by default — user clicks "View action steps (3)" to expand
+- Action steps animate in with staggered delay when expanded
+- Design follows product principle: "less is more" after a meaningful session
+- Uses mock data for now — in real app, recognition moment and action steps would be generated from session content
+
+**Design philosophy:**
+
+The closure view intentionally avoids overwhelming the user after an emotional session:
+- Single recognition moment (seed to carry forward) instead of a full summary
+- Action steps are opt-in, not forced
+- Generous whitespace and breathing room
+- Fraunces display font for warmth
+- Atmospheric background maintains continuity with the rest of the app
 
 ---
 
@@ -428,11 +455,12 @@ apps/web/
 │   ├── sidebar.tsx      # Slide-out sidebar
 │   ├── theme-provider.tsx
 │   ├── chat/
-│   │   ├── index.ts           # Barrel export
-│   │   ├── coach-message.tsx  # Coach message with markdown
-│   │   ├── user-message.tsx   # User message bubble
+│   │   ├── index.ts            # Barrel export
+│   │   ├── coach-message.tsx   # Coach message with markdown
+│   │   ├── user-message.tsx    # User message bubble
 │   │   ├── typing-indicator.tsx
-│   │   └── chat-input.tsx     # Expanding textarea input
+│   │   ├── chat-input.tsx      # Expanding textarea input
+│   │   └── session-closure.tsx # Session complete view
 │   └── ui/
 │       ├── button.tsx
 │       ├── input.tsx
