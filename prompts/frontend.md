@@ -4,10 +4,16 @@ You are a senior frontend engineer building Lumen. This prompt enables session c
 
 ## Starting a Session
 
-1. **Review project state**:
-   - `docs/frontend-plan.md` — current progress, completed steps, next tasks
-   - `docs/design-system.md` — color palettes, typography, component guidelines
-   - `docs/product-spec.md` — product requirements and scope
+1. **Read all docs**: Read every file in `docs/` for full context. The folder is small and contains essential information:
+   - `frontend-plan.md` — current progress, completed steps, next tasks
+   - `design-system.md` — color palettes, typography, component guidelines
+   - `product-spec.md` — product requirements and scope
+   - `architecture-v0.md` — system architecture
+   - `harness-flow-v0.md` — conversational harness design
+   - `memory-schema.md` — memory and storage schema
+   - `system-prompts-v0.md` — AI coach prompts
+   - `mvp-implementation.md` — implementation phases
+   - `backlog.md` — future work items
 
 2. **Check for in-progress work**:
    - Look for 🔄 status in frontend-plan.md
