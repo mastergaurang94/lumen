@@ -1,10 +1,12 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, Sun, Moon, Monitor, X } from 'lucide-react';
 import { useTimeOfDay } from '@/components/theme-provider';
+import { clearKey } from '@/lib/crypto/key-context';
 import { cn } from '@/lib/utils';
 import { Z_INDEX } from '@/lib/z-index';
 
@@ -28,7 +30,15 @@ const sidebarVariants = {
 };
 
 export function Sidebar() {
+  const router = useRouter();
   const [open, setOpen] = React.useState(false);
+
+  // Clears the in-memory key and returns to the unlock screen.
+  const handleLock = () => {
+    clearKey();
+    setOpen(false);
+    router.push('/unlock');
+  };
 
   return (
     <>
@@ -92,7 +102,14 @@ export function Sidebar() {
           </div>
 
           {/* Footer */}
-          <div className="p-6 pt-4">
+          <div className="p-6 pt-4 space-y-4">
+            <button
+              type="button"
+              onClick={handleLock}
+              className="w-full rounded-lg border border-border/40 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+            >
+              Lock vault
+            </button>
             <p className="text-sm text-muted-foreground/50 leading-relaxed">
               Your data stays on your device.
             </p>
