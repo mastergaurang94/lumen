@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Lato, Fraunces } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
+import { VaultProvider } from '@/components/vault-provider';
 import './globals.css';
 
 const lato = Lato({
@@ -26,7 +27,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${lato.variable} ${fraunces.variable}`} suppressHydrationWarning>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <VaultProvider>{children}</VaultProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

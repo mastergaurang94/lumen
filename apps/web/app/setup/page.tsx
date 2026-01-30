@@ -9,6 +9,17 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { AuthPageLayout, PrivacyFooter } from '@/components/auth-page-layout';
 import { cn } from '@/lib/utils';
+import { deriveKey, generateSalt } from '@/lib/crypto';
+import { setKey } from '@/lib/crypto/key-context';
+import { createStorageService } from '@/lib/storage/dexie-storage';
+import {
+  buildVaultMetadata,
+  createKeyCheck,
+  DEFAULT_ENCRYPTION_VERSION,
+  DEFAULT_KDF_ITERATIONS,
+} from '@/lib/storage/metadata';
+import { getOrCreateUserId } from '@/lib/storage/user';
+import type { UserProfile } from '@/types/storage';
 
 type PasswordStrength = 'weak' | 'fair' | 'good' | 'strong';
 
@@ -37,12 +48,14 @@ const strengthConfig: Record<PasswordStrength, { label: string; color: string; w
 
 export default function SetupPage() {
   const router = useRouter();
+  const storageRef = React.useRef(createStorageService());
   const [passphrase, setPassphrase] = React.useState('');
   const [confirmPassphrase, setConfirmPassphrase] = React.useState('');
   const [showPassphrase, setShowPassphrase] = React.useState(false);
   const [showConfirm, setShowConfirm] = React.useState(false);
   const [touched, setTouched] = React.useState({ passphrase: false, confirm: false });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isCheckingVault, setIsCheckingVault] = React.useState(true);
 
   const strength = getPasswordStrength(passphrase);
   const strengthInfo = strengthConfig[strength];
@@ -55,18 +68,66 @@ export default function SetupPage() {
   const showMismatchError = touched.confirm && hasConfirm && !passwordsMatch;
   const canSubmit = hasPassphrase && hasConfirm && passwordsMatch && isMinLength && !isSubmitting;
 
+  React.useEffect(() => {
+    // Redirect returning users to unlock instead of re-initializing.
+    const checkVault = async () => {
+      const metadata = await storageRef.current.getVaultMetadata();
+      if (metadata?.vault_initialized) {
+        router.replace('/unlock');
+        return;
+      }
+      setIsCheckingVault(false);
+    };
+
+    checkVault();
+  }, [router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
 
     setIsSubmitting(true);
 
-    // Simulate encryption setup (in future, this will derive key and setup storage)
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      // Derive and store vault metadata before entering the session.
+      const salt = generateSalt();
+      const iterations = DEFAULT_KDF_ITERATIONS;
+      const version = DEFAULT_ENCRYPTION_VERSION;
+      const key = await deriveKey(passphrase, salt, iterations);
+      const keyCheck = await createKeyCheck(key, salt, iterations, version);
+      const metadata = buildVaultMetadata({ salt, iterations, version, keyCheck });
+      await storageRef.current.saveVaultMetadata(metadata);
 
-    // Navigate to session page
-    router.push('/session');
+      const userId = getOrCreateUserId();
+      const now = new Date().toISOString();
+      const profile: UserProfile = {
+        user_id: userId,
+        preferred_name: null,
+        goals: [],
+        recurring_themes: [],
+        coach_preferences: [],
+        created_at: now,
+        updated_at: now,
+      };
+      await storageRef.current.saveProfile(profile);
+
+      setKey(key);
+      router.push('/session');
+    } catch (error) {
+      console.error('Failed to initialize vault', error);
+      setIsSubmitting(false);
+    }
   };
+
+  if (isCheckingVault) {
+    return (
+      <AuthPageLayout>
+        <div className="flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
+        </div>
+      </AuthPageLayout>
+    );
+  }
 
   return (
     <AuthPageLayout
