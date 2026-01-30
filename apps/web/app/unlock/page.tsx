@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { AuthPageLayout, PrivacyFooter } from '@/components/auth-page-layout';
+import { cn } from '@/lib/utils';
 import { deriveKey } from '@/lib/crypto';
 import { isUnlocked, setKey } from '@/lib/crypto/key-context';
 import { createStorageService } from '@/lib/storage/dexie-storage';
@@ -124,7 +125,7 @@ export default function UnlockPage() {
                 value={passphrase}
                 onChange={(event) => setPassphrase(event.target.value)}
                 disabled={isSubmitting}
-                className="pr-10"
+                className={cn('pr-10', error && 'border-destructive focus-visible:ring-destructive')}
                 autoComplete="current-password"
               />
               <button
