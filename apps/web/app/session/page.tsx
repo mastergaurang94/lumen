@@ -17,7 +17,6 @@ import type { SessionGate } from '@/types/session';
 // Mock toggles - use env vars in production
 const MOCK_UNLOCKED = process.env.NEXT_PUBLIC_MOCK_SESSION_UNLOCKED !== 'false';
 const MOCK_ACTIVE_SESSION = process.env.NEXT_PUBLIC_MOCK_ACTIVE_SESSION === 'true';
-const MOCK_SESSION_PREVIEW = "You were exploring what's holding you back at work...";
 
 function getMockSessionGate(): SessionGate {
   if (MOCK_UNLOCKED) {
@@ -25,8 +24,7 @@ function getMockSessionGate(): SessionGate {
       state: 'unlocked',
       nextAvailable: null,
       lastSessionDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
-      hasActiveSession: MOCK_ACTIVE_SESSION,
-      sessionPreview: MOCK_ACTIVE_SESSION ? MOCK_SESSION_PREVIEW : null,
+      hasActiveSession: MOCK_ACTIVE_SESSION
     };
   }
 
@@ -40,7 +38,6 @@ function getMockSessionGate(): SessionGate {
     nextAvailable,
     lastSessionDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
     hasActiveSession: false,
-    sessionPreview: null,
   };
 }
 

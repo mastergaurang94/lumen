@@ -11,7 +11,6 @@ export interface SessionGate {
   nextAvailable: Date | null;
   lastSessionDate: Date | null;
   hasActiveSession: boolean;
-  sessionPreview: string | null;
 }
 
 export type MessageRole = 'coach' | 'user';

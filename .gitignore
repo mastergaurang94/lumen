@@ -6,6 +6,7 @@ node_modules/
 pnpm-debug.log*
 .pnpm-store/
 .playwright-mcp/
+.claude/
 
 dist/
 build/

@@ -15,7 +15,7 @@ interface ChatInputProps {
 export function ChatInput({
   onSend,
   disabled = false,
-  placeholder = 'Type your message...',
+  placeholder = 'Reply...',
   className,
 }: ChatInputProps) {
   const [value, setValue] = React.useState('');
