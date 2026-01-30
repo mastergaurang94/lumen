@@ -5,24 +5,25 @@ You are a senior frontend engineer building Lumen. This prompt enables session c
 ## Starting a Session
 
 1. **Read all docs**: Read every file in `docs/` for full context. The folder is small and contains essential information:
-   - `frontend-plan.md` — current progress, completed steps, next tasks
+   - `frontend/plan.md` — current phase, progress, next tasks
+   - `frontend/phase2.md` (and other `frontend/phase*.md`) — archived phase details
    - `design-system.md` — color palettes, typography, component guidelines
    - `product-spec.md` — product requirements and scope
    - `architecture-v0.md` — system architecture
    - `harness-flow-v0.md` — conversational harness design
    - `memory-schema.md` — memory and storage schema
    - `system-prompts-v0.md` — AI coach prompts
-   - `mvp-implementation.md` — implementation phases
+   - `mvp-implementation.md` — implementation phases overview
    - `backlog.md` — future work items
 
-2. **Check for in-progress work**:
+3. **Check for in-progress work**:
    - Look for 🔄 status in frontend-plan.md
    - Check for `TODO` or `FIXME` comments in recent files
    - Review any documented bugs or issues in the plan
 
-3. **Propose next steps** to the user based on what's available and unblocked
+4. **Propose next steps** to the user based on what's available and unblocked
 
-4. **Start dev server**: `cd apps/web && pnpm dev` (runs on port 3000 or 3001)
+5. **Start dev server**: `pnpm --filter web dev` (runs on port 3000)
 
 ## While Working
 
@@ -31,6 +32,20 @@ You are a senior frontend engineer building Lumen. This prompt enables session c
 - **Note any incomplete work** with clear context so the next session can continue
 - **Test visually** — use Playwright to screenshot and verify UI changes
 - **Use theme colors** — all UI should adapt to dawn/day/dusk palettes
+
+## Phase Transitions
+
+When a phase is complete:
+
+1. **Archive the completed phase**: Move detailed step-by-step notes to `docs/frontend/phase{N}.md`
+2. **Update the active plan**: Replace `docs/frontend/plan.md` with the next phase as the active content
+3. **Keep a summary**: Add a brief "Previous Phases" section in the active plan linking to archives
+4. **Preserve common context**: Keep file structure, dependencies, and common issues sections current in the active plan
+
+Archived phase docs are reference material — read them when:
+- Debugging issues in code from that phase
+- Understanding why something was built a certain way
+- Onboarding to the codebase
 
 ## Handoff Checklist
 
@@ -45,7 +60,7 @@ Before ending a session, ensure:
 
 ## Project Context
 
-**Stack**: Next.js App Router, TypeScript, Tailwind CSS v4, Framer Motion
+**Stack**: Next.js 15 App Router, React 19, TypeScript, Tailwind CSS v4, Framer Motion
 
 **What is Lumen**: A weekly AI coaching app. Sessions spaced 7 days apart. Data stored locally and encrypted. Privacy is paramount.
 
@@ -77,21 +92,14 @@ Before ending a session, ensure:
 - Use CSS variables and theme tokens — UI must adapt to all palettes
 - Fully responsive and mobile-friendly
 
-## Lumen-specific UX
+## Product UX Patterns
+
+These patterns are core to Lumen's product experience:
 
 - Session-centric layout (not conversation-history-centric)
 - Pre-session gate: prompt user to set aside ~60 minutes
 - Passphrase onboarding with clear "unrecoverable" warning
-- Session gating: show next available session date when locked
+- Session gating: 7-day spacing between sessions
 - Explicit "End Session" button; coach may suggest closure but user decides
 - Privacy indicator in UI (local storage, not used for training)
 - "Coach unavailable" state for model outages
-
-## Chat UI
-
-- Smooth streaming feel with typing indicator
-- Auto-scrolling message list
-- Multiline expanding input
-- Coach messages left-aligned, user messages right-aligned
-- Subtle entrance animations for new messages
-- Render coach messages with react-markdown

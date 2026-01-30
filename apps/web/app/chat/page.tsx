@@ -1,9 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, ArrowLeft } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sidebar } from '@/components/sidebar';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -297,17 +296,6 @@ function ChatPageInner() {
       {/* Hamburger menu - top left */}
       <div className="fixed top-4 left-4" style={{ zIndex: Z_INDEX.navigation }}>
         <Sidebar />
-      </div>
-
-      {/* Back to session link - for exiting without ending */}
-      <div className="fixed top-4 left-16" style={{ zIndex: Z_INDEX.navigation }}>
-        <Link
-          href="/session"
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span className="hidden sm:inline">Back</span>
-        </Link>
       </div>
 
       {/* End Session button - top right */}

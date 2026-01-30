@@ -1,28 +1,26 @@
-# Frontend Implementation Plan (Phase 2)
+# Frontend Phase 2: Web App Shell (Archived)
 
-Date: 2026-01-28
-Status: In Progress
-Last Updated: 2026-01-29
+**Status: Complete**
+**Completed: 2026-01-29**
 
 ## Overview
 
-Phase 2 of the MVP: Build the web app shell with Next.js + TypeScript, Tailwind, and shadcn/ui. This phase is UI-only — no backend integration, no encryption, no real auth.
-
-See `design-system.md` for palette, typography, and visual direction.
+Phase 2 of the MVP: Build the web app shell with Next.js + TypeScript, Tailwind, and shadcn/ui. This phase was UI-only — no backend integration, no encryption, no real auth.
 
 ## Progress Summary
 
-| Step                     | Status         | Notes                             |
-| ------------------------ | -------------- | --------------------------------- |
-| 1. Foundation Setup      | ✅ Complete    | Tailwind v4, theming, palettes    |
-| 2. Layout Shell          | ✅ Complete    | Sidebar, floating menu            |
-| 3. Auth Entry            | ✅ Complete    | Email form + confirmation         |
-| 4. Passphrase Gate       | ✅ Complete    |                                   |
-| 4.5 Persistence + Polish | ✅ Complete    | localStorage + a11y + UX polish   |
-| 5. Session Gating        | ✅ Complete    | Locked/unlocked states            |
-| 6. Chat UI Core          | ✅ Complete    | Messages, input, streaming        |
-| 7. Session Closure       | ✅ Complete    | Recognition moment + action steps |
-| 8. Edge States           | ✅ Complete    | Unavailable, error, loading       |
+| Step                     | Status      | Notes                             |
+| ------------------------ | ----------- | --------------------------------- |
+| 1. Foundation Setup      | ✅ Complete | Tailwind v4, theming, palettes    |
+| 2. Layout Shell          | ✅ Complete | Sidebar, floating menu            |
+| 3. Auth Entry            | ✅ Complete | Email form + confirmation         |
+| 4. Passphrase Gate       | ✅ Complete |                                   |
+| 4.5 Persistence + Polish | ✅ Complete | localStorage + a11y + UX polish   |
+| 5. Session Gating        | ✅ Complete | Locked/unlocked states            |
+| 6. Chat UI Core          | ✅ Complete | Messages, input, streaming        |
+| 7. Session Closure       | ✅ Complete | Recognition moment + action steps |
+| 8. Edge States           | ✅ Complete | Unavailable, error, loading       |
+| 9. Polish & Refinements  | ✅ Complete | Navigation, shared layouts, DRY   |
 
 ---
 
@@ -209,11 +207,6 @@ Completed items:
 - `components/ui/spinner.tsx` — New shared loading spinner component
 - `app/login/page.tsx` — Added Mail icon, sr-only label, aria-describedby, hover underline
 - `app/setup/page.tsx` — Added aria-labels, improved strength animation, aria-describedby
-
-**Optional (deferred):**
-
-- [ ] Abstract shared auth page layout pattern (atmosphere + back link + centered content + footer)
-- [ ] More robust email validation regex
 
 ---
 
@@ -412,98 +405,6 @@ Edge states should feel grounded and reassuring, not alarming:
 
 ---
 
-## Dependencies (Installed)
-
-```
-tailwindcss@4.1.18
-@tailwindcss/postcss
-postcss
-next-themes
-lucide-react
-clsx
-tailwind-merge
-class-variance-authority
-framer-motion
-@radix-ui/react-dialog (installed but sidebar uses custom implementation)
-@radix-ui/react-dropdown-menu
-@radix-ui/react-slot
-react-markdown
-remark-gfm
-@tailwindcss/typography
-```
-
-## Dependencies (To Install Later)
-
-```
-(none currently)
-```
-
----
-
-## Technical Notes for Future Context
-
-### Package Manager
-
-Using **pnpm** for the monorepo. Run commands from `apps/web/`:
-
-```bash
-pnpm dev    # Start dev server
-pnpm build  # Build for production
-```
-
-### Common Issues Encountered
-
-1. **Webpack module error on hard refresh**: Clear `.next` cache and restart:
-
-   ```bash
-   rm -rf .next && pnpm dev
-   ```
-
-2. **Tailwind classes not applying**: Ensure `@source` directives in `globals.css` point to all component directories.
-
-3. **Palette preference not persisting**: Currently palette selection is stored in React state and resets on navigation. Future enhancement: persist to localStorage.
-
-### File Structure
-
-```
-apps/web/
-├── app/
-│   ├── globals.css      # Tailwind + palettes
-│   ├── layout.tsx       # Root layout
-│   ├── page.tsx         # Home page
-│   ├── login/
-│   │   └── page.tsx     # Email login
-│   ├── setup/
-│   │   └── page.tsx     # Passphrase setup
-│   ├── session/
-│   │   └── page.tsx     # Session gating
-│   └── chat/
-│       └── page.tsx     # Chat interface with edge state handling
-├── components/
-│   ├── layout-shell.tsx     # Main layout wrapper
-│   ├── sidebar.tsx          # Slide-out sidebar
-│   ├── theme-provider.tsx
-│   ├── coach-unavailable.tsx  # Coach unavailable state
-│   ├── error-boundary.tsx     # Error boundary + fallback
-│   ├── chat/
-│   │   ├── index.ts            # Barrel export
-│   │   ├── coach-message.tsx   # Coach message with markdown
-│   │   ├── user-message.tsx    # User message bubble
-│   │   ├── typing-indicator.tsx
-│   │   ├── chat-input.tsx      # Expanding textarea input
-│   │   └── session-closure.tsx # Session complete view
-│   └── ui/
-│       ├── button.tsx
-│       ├── input.tsx
-│       ├── spinner.tsx
-│       ├── skeleton.tsx   # Skeleton loading components
-│       └── ...
-└── lib/
-    └── utils.ts         # cn() helper
-```
-
----
-
 ### Step 9: Polish & Refinements ✅
 
 **Status: Complete**
@@ -514,7 +415,6 @@ Code review identified UX and technical polish items. Implemented in priority or
 
 - [x] P0: Wire up navigation — Setup → Session redirect after passphrase creation
 - [x] P1: Differentiate login copy — "Get started" vs "Welcome back" based on context
-- [ ] P1: Add progress breadcrumb — Visual indicator of journey step (deferred - assess need later)
 - [x] P2: Add "back to session" from chat — Exit without ending session
 - [x] P2: Session duration indicator — Subtle "started X min ago" display
 
@@ -543,15 +443,24 @@ Code review identified UX and technical polish items. Implemented in priority or
 - `app/session/page.tsx` — Now uses AuthPageLayout, centralized format utilities, env vars for mocks
 - `app/chat/page.tsx` — Uses centralized types/format/z-index, extracted dialog, abort controller, elapsed time display, back link
 
-**Deferred:**
-
-- [ ] Extract `useSessionState` hook from chat page (further decomposition if needed)
-- [ ] Progress breadcrumb indicator (assess need after real user testing)
-
 ---
 
-## Out of Scope (Later Phases)
+## Dependencies Installed
 
-- Actual auth integration (Phase 4 - Go service)
-- Local storage + encryption (Phase 3 - Dexie + WebCrypto)
-- Real LLM streaming (Phase 4/5 - API + harness)
+```
+tailwindcss@4.1.18
+@tailwindcss/postcss
+postcss
+next-themes
+lucide-react
+clsx
+tailwind-merge
+class-variance-authority
+framer-motion
+@radix-ui/react-dialog (installed but sidebar uses custom implementation)
+@radix-ui/react-dropdown-menu
+@radix-ui/react-slot
+react-markdown
+remark-gfm
+@tailwindcss/typography
+```

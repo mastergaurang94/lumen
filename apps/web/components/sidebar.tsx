@@ -41,7 +41,7 @@ export function Sidebar() {
         <span className="sr-only">Open menu</span>
       </button>
 
-      {/* Overlay for click-to-close - covers navigation elements */}
+      {/* Overlay for click-to-close */}
       <AnimatePresence>
         {open && (
           <motion.div
