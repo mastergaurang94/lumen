@@ -6,6 +6,17 @@ import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, Sun, Moon, Monitor, X } from 'lucide-react';
 import { useTimeOfDay } from '@/components/theme-provider';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { clearKey } from '@/lib/crypto/key-context';
 import { cn } from '@/lib/utils';
 import { Z_INDEX } from '@/lib/z-index';
@@ -103,13 +114,28 @@ export function Sidebar() {
 
           {/* Footer */}
           <div className="p-6 pt-4 space-y-4">
-            <button
-              type="button"
-              onClick={handleLock}
-              className="w-full rounded-lg border border-border/40 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-border transition-colors"
-            >
-              Lock vault
-            </button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  type="button"
+                  className="w-full rounded-lg border border-border/40 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-border transition-colors"
+                >
+                  Lock vault
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Lock your vault?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You&apos;ll need to enter your passphrase again to access your sessions.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleLock}>Lock vault</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <p className="text-sm text-muted-foreground/50 leading-relaxed">
               Your data stays on your device.
             </p>
