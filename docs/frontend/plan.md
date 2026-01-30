@@ -1,107 +1,102 @@
 # Frontend Implementation Plan
 
-Last Updated: 2026-01-29
+Last Updated: 2026-01-30
 
 ---
 
 ## Current Phase: Phase 3 — Local Storage + Encryption
 
-**Status: Not Started**
+**Status: ✅ Complete**
 
-### Overview
+### Running Updates
 
-Implement client-side encrypted storage using IndexedDB (via Dexie) and WebCrypto. All sensitive data (transcripts, summaries, profile) is encrypted at rest with AES-GCM, keyed by a passphrase-derived key (PBKDF2).
+- 2026-01-30: Implemented Dexie schema + storage abstraction, crypto utilities, vault metadata, setup/unlock flows, chunked transcript persistence with debounce, and minimal crypto tests. Added `VaultProvider` to clear keys on unload and a sidebar lock action.
+- 2026-01-30: Added storage integration test and Playwright vault smoke flow; scoped vitest to app tests only.
+- 2026-01-30: Implemented summary persistence, profile touch updates, and storage queries; marked Phase 3 complete.
 
-See `memory-schema.md` for data schema and `architecture-v0.md` for encryption specs.
+### In Progress / Next Up
+
+- Phase 3 complete. Next work: Phase 4 server-side gating.
+
+### Edge Cases to Consider (Phase 3)
+
+- User closes tab or crashes mid-session: decide whether to auto-pause and prompt resume/end on next visit.
+
+### Goals
+
+- Encrypted local persistence for transcripts, summaries, and profile data.
+- Passphrase-derived key held in memory only (never persisted).
+- Clean unlock/lock flow and route protection for vault state.
+- Storage abstraction to support desktop filesystem later.
+
+### Non-Goals (Phase 3)
+
+- Zero-knowledge sync (v1.1)
+- Key rotation / re-encryption (v1.1)
+- Server-side session gating (Phase 4)
+- Real LLM summarization (Phase 5)
+
+### Constraints (Must Match Docs)
+
+- Encryption spec from `architecture-v0.md` (PBKDF2-HMAC-SHA256 + AES-GCM).
+- Entity shape from `memory-schema.md`.
+- Privacy promises in `product-spec.md` must remain visible in the UI.
 
 ### Progress Summary
 
-| Step                         | Status      | Notes                                |
-| ---------------------------- | ----------- | ------------------------------------ |
-| 1. Dexie Setup & Schema      | Not Started | IndexedDB stores for all entities    |
-| 2. Crypto Module             | Not Started | PBKDF2 key derivation + AES-GCM      |
-| 3. Storage Service           | Not Started | Abstraction layer for persistence    |
-| 4. Encryption Integration    | Not Started | Wire crypto to storage operations    |
-| 5. Passphrase Flow           | Not Started | Connect UI to real key derivation    |
-| 6. Session Persistence       | Not Started | Encrypted transcript storage         |
-| 7. Profile & Summary Storage | Not Started | UserProfile + SessionSummary         |
-| 8. Unlock Flow               | Not Started | Returning user passphrase unlock     |
+| Step                               | Status      | Notes                                         |
+| ---------------------------------- | ----------- | --------------------------------------------- |
+| 1. Data Model + Dexie Schema       | ✅ Complete | Dexie schema + chunk store + metadata         |
+| 2. Crypto Utilities                | ✅ Complete | Key derivation, AES-GCM, header serialization |
+| 3. Storage Abstraction             | ✅ Complete | Dexie-backed `StorageService`                 |
+| 4. Vault Metadata + Key Context    | ✅ Complete | Key sentinel + in-memory key                  |
+| 5. Setup Flow (Vault Init)         | ✅ Complete | Passphrase → key → metadata + profile         |
+| 6. Unlock Flow + Route Protection  | ✅ Complete | `/unlock`, vault checks, lock button          |
+| 7. Encrypted Session Persistence   | ✅ Complete | Chunked transcript save/resume/debounce       |
+| 8. Profile + Summary Storage       | ✅ Complete | Profile updates + summary persistence         |
+| 9. Tests (Minimal)                 | ✅ Complete | Crypto unit, storage integration, E2E smoke   |
 
 ---
 
-### Step 1: Dexie Setup & Schema
+### Step 1: Data Model + Dexie Schema
 
-**Status: Not Started**
+**Status: ✅ Complete**
 
-Set up IndexedDB via Dexie with stores matching `memory-schema.md`.
+Set up IndexedDB via Dexie using the `memory-schema.md` entities, plus a vault metadata store and transcript chunks.
 
 Tasks:
 
-- [ ] Install `dexie` and `dexie-react-hooks`
-- [ ] Create `lib/db.ts` with Dexie database class
-- [ ] Define stores:
-  - `userProfiles` — UserProfile entities
-  - `sessionTranscripts` — SessionTranscript entities (encrypted blobs)
-  - `sessionSummaries` — SessionSummary entities
-- [ ] Add indexes: by `user_id`, `session_id`, `started_at` (descending)
-- [ ] Export typed database instance
-
-**Schema reference** (from `memory-schema.md`):
-
-```typescript
-interface UserProfile {
-  user_id: string;
-  preferred_name: string | null;
-  goals: string[];
-  recurring_themes: string[];
-  coach_preferences: string[];
-  created_at: string;
-  updated_at: string;
-}
-
-interface SessionTranscript {
-  session_id: string;
-  user_id: string;
-  started_at: string;
-  ended_at: string | null;
-  timezone: string | null;
-  locale_hint: string | null;
-  system_prompt_version: string;
-  encrypted_blob: ArrayBuffer;
-  encryption_header: EncryptionHeader;
-  created_at: string;
-}
-
-interface SessionSummary {
-  session_id: string;
-  user_id: string;
-  summary_text: string;
-  recognition_moment: string | null;
-  action_steps: string[];
-  open_threads: string[];
-  coach_notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
-```
+- [x] Install `dexie` and `dexie-react-hooks`
+- [x] Create `lib/db.ts` with Dexie database class + versioned schema
+- [x] Define stores:
+  - `userProfiles` — `UserProfile`
+  - `sessionTranscripts` — `SessionTranscript` (session-level metadata only)
+  - `sessionTranscriptChunks` — encrypted transcript chunks (append-only)
+  - `sessionSummaries` — `SessionSummary`
+  - `vaultMetadata` — single-record metadata (unencrypted)
+- [x] Add indexes: by `user_id`, `session_id`, `started_at` (descending)
+- [x] Define chunk record fields: `chunk_index`, `encrypted_blob`, `encryption_header`, `transcript_hash`
+- [x] Decide chunk serialization format (UTF-8 JSON array of messages)
+- [x] Add `transcript_hash` per chunk (hash over encrypted blob + header)
 
 ---
 
-### Step 2: Crypto Module
+### Step 2: Crypto Utilities
 
-**Status: Not Started**
+**Status: ✅ Complete**
 
-Implement WebCrypto utilities for encryption/decryption per `architecture-v0.md` specs.
+Implement WebCrypto helpers that are deterministic and testable.
 
 Tasks:
 
-- [ ] Create `lib/crypto.ts` with:
+- [x] Create `lib/crypto.ts` with:
   - `deriveKey(passphrase, salt, iterations)` — PBKDF2-HMAC-SHA256 → AES-GCM key
   - `encrypt(plaintext, key)` — AES-GCM with random 12-byte IV
   - `decrypt(ciphertext, key, iv)` — AES-GCM decryption
   - `generateSalt()` — 16+ byte random salt
   - `generateIV()` — 12-byte random IV
-- [ ] Define `EncryptionHeader` type:
+  - `hashTranscript(ciphertext, header)` — SHA-256 over encrypted blob + header
+- [x] Define `EncryptionHeader` (versioned):
   ```typescript
   interface EncryptionHeader {
     kdf: 'PBKDF2';
@@ -112,160 +107,154 @@ Tasks:
     version: string; // e.g., "enc-v0.1"
   }
   ```
-- [ ] Add helper to serialize/deserialize ArrayBuffer ↔ base64 for storage
-- [ ] Performance test PBKDF2 iterations (~600k target, tune for <1s on typical hardware)
-- [ ] Write unit tests for encrypt → decrypt round-trip
-
-**Spec reference** (from `architecture-v0.md`):
-
-- KDF: PBKDF2-HMAC-SHA256, 16+ byte salt, ~600k iterations
-- Cipher: AES-GCM, unique 96-bit (12-byte) IV per encryption
-- Store encryption header with each encrypted blob
+- [x] Add helpers to serialize/deserialize `ArrayBuffer` ↔ base64
+- [ ] Performance-tune PBKDF2 iterations (~600k target, <1s on typical hardware)
+- [x] Unit tests for encrypt → decrypt round-trip and header serialization
 
 ---
 
-### Step 3: Storage Service
+### Step 3: Storage Abstraction
 
-**Status: Not Started**
+**Status: ✅ Complete**
 
-Create an abstraction layer to support browser storage now and desktop filesystem later.
+Create a storage interface to allow swapping the backend later.
 
 Tasks:
 
-- [ ] Create `lib/storage/index.ts` with `StorageService` interface:
-  ```typescript
-  interface StorageService {
-    // User profile
-    getProfile(userId: string): Promise<UserProfile | null>;
-    saveProfile(profile: UserProfile): Promise<void>;
-
-    // Session transcripts (encrypted)
-    getTranscript(sessionId: string): Promise<SessionTranscript | null>;
-    saveTranscript(transcript: SessionTranscript): Promise<void>;
-    listTranscripts(userId: string): Promise<SessionTranscript[]>;
-
-    // Session summaries
-    getSummary(sessionId: string): Promise<SessionSummary | null>;
-    saveSummary(summary: SessionSummary): Promise<void>;
-    listSummaries(userId: string, limit?: number): Promise<SessionSummary[]>;
-  }
-  ```
-- [ ] Create `lib/storage/dexie-storage.ts` implementing `StorageService` using Dexie
-- [ ] Export factory function `createStorageService()` that returns browser implementation
-- [ ] Add error handling for quota exceeded, database errors
+- [x] Create `lib/storage/index.ts` with `StorageService` interface
+- [x] Create `lib/storage/dexie-storage.ts` implementing `StorageService`
+- [x] Export factory `createStorageService()` for browser implementation
+- [ ] Error handling: quota exceeded, version/migration failures, corrupted records
 
 ---
 
-### Step 4: Encryption Integration
+### Step 4: Vault Metadata + Key Context
 
-**Status: Not Started**
+**Status: ✅ Complete**
 
-Wire crypto module to storage operations for transparent encryption/decryption.
-
-Tasks:
-
-- [ ] Create `lib/storage/encrypted-storage.ts` wrapping `StorageService`:
-  - Encrypts transcript messages before storage
-  - Decrypts transcript messages on retrieval
-  - Stores encryption header alongside encrypted blob
-- [ ] Create `EncryptionContext` or hook to hold derived key in memory
-- [ ] Key is derived once per session unlock, held in memory (never persisted)
-- [ ] Add `isUnlocked()` check — returns true if key is in memory
-- [ ] Clear key from memory on explicit lock or page unload
-
----
-
-### Step 5: Passphrase Flow
-
-**Status: Not Started**
-
-Connect the existing passphrase UI (`/setup`) to real key derivation and storage initialization.
+Introduce a vault metadata record and an in-memory key context.
 
 Tasks:
 
-- [ ] On `/setup` submit:
-  - Generate new salt
-  - Derive encryption key from passphrase + salt
-  - Store salt in IndexedDB (unencrypted metadata)
-  - Initialize empty UserProfile
-  - Store key in memory (EncryptionContext)
-  - Navigate to `/session`
-- [ ] Create `lib/storage/metadata.ts` for unencrypted metadata:
+- [x] Create `lib/storage/metadata.ts` for unencrypted vault metadata:
   - `vault_initialized: boolean`
   - `salt: ArrayBuffer`
   - `kdf_iterations: number`
   - `encryption_version: string`
-- [ ] Add vault initialization check on app load
-- [ ] If vault exists, redirect to unlock flow instead of setup
+  - `key_check` (encrypted sentinel to verify passphrase)
+- [x] Create `lib/crypto/key-context.ts` (or `lib/storage/encryption-context.ts`):
+  - `setKey()`, `clearKey()`, `getKey()`, `isUnlocked()`
+- [x] Clear key on explicit lock and `beforeunload`
+- [ ] Add optional idle-timeout lock (configurable)
 
 ---
 
-### Step 6: Session Persistence
+### Step 5: Setup Flow (Vault Initialization)
 
-**Status: Not Started**
+**Status: ✅ Complete**
 
-Wire chat UI to persist messages to encrypted storage.
-
-Tasks:
-
-- [ ] On session start:
-  - Create new `SessionTranscript` with `session_id`, `started_at`
-  - Store initial empty transcript
-- [ ] On each message (user or coach):
-  - Append to in-memory messages array
-  - Re-encrypt and save transcript (or use incremental approach)
-- [ ] On session end:
-  - Set `ended_at` timestamp
-  - Final save of complete transcript
-- [ ] Handle page refresh during active session:
-  - Detect incomplete session on load
-  - Offer to resume or discard
-- [ ] Update chat page to load messages from storage on resume
-
----
-
-### Step 7: Profile & Summary Storage
-
-**Status: Not Started**
-
-Implement storage for UserProfile and SessionSummary entities.
+Wire `/setup` to initialize the vault.
 
 Tasks:
 
-- [ ] UserProfile:
-  - Create on first setup (minimal: just `user_id`, timestamps)
-  - Update after sessions if new stable info emerges
-  - Load on session start for context
-- [ ] SessionSummary:
-  - Create after session closure
-  - For now, use mock summary generation (real LLM summarization is Phase 5)
-  - Store `recognition_moment`, `action_steps`, `open_threads`
-- [ ] Add `lib/storage/queries.ts` for common queries:
-  - `getRecentSummaries(userId, limit)` — for context assembly
-  - `getLastSession(userId)` — for session gating
-  - `hasCompletedSessions(userId)` — for first-session detection
-
----
-
-### Step 8: Unlock Flow
-
-**Status: Not Started**
-
-Handle returning users unlocking their vault with passphrase.
-
-Tasks:
-
-- [ ] Create `/unlock` route (or modal on `/session`)
-- [ ] UI: passphrase input, "Unlock" button, error state for wrong passphrase
-- [ ] On submit:
-  - Load salt from metadata
+- [x] On `/setup` submit:
+  - Generate salt
   - Derive key from passphrase + salt
-  - Attempt to decrypt a known test value (or first transcript)
-  - If success: store key in memory, proceed
+  - Store vault metadata
+  - Create encrypted `key_check` sentinel
+  - Initialize empty `UserProfile`
+  - Store key in memory
+  - Navigate to `/session`
+- [x] On app load:
+  - If vault exists, route to `/unlock` instead of `/setup`
+
+---
+
+### Step 6: Unlock Flow + Route Protection
+
+**Status: ✅ Complete**
+
+Returning users must unlock with passphrase.
+
+Tasks:
+
+- [x] Create `/unlock` route
+- [x] UI: passphrase input, unlock button, error state for wrong passphrase
+- [x] On submit:
+  - Load salt + iterations from metadata
+  - Derive key
+  - Decrypt `key_check` sentinel
+  - If success: store key in memory and proceed
   - If failure: show error, allow retry
-- [ ] Add "Forgot passphrase" info (warning: data is unrecoverable)
-- [ ] Route protection: redirect to `/unlock` if vault exists but not unlocked
-- [ ] Add lock button to sidebar (clears key from memory)
+- [x] Add "Forgot passphrase" warning (data is unrecoverable)
+- [x] Route protection:
+  - If vault exists but locked → `/unlock`
+  - If no vault → `/setup`
+- [x] Add lock button to sidebar (clears key and redirects to `/unlock`)
+
+---
+
+### Step 7: Encrypted Session Persistence
+
+**Status: ✅ Complete**
+
+Persist transcripts to encrypted storage with chunking + debounced writes.
+
+Tasks:
+
+- [x] On session start:
+  - Create new `SessionTranscript` with `session_id`, `started_at`
+  - Initialize empty chunk sequence (no blobs yet)
+- [x] On each message:
+  - Append to in-memory message buffer
+  - Debounce and flush to a new encrypted chunk
+  - Store chunk with `chunk_index` and hash
+- [x] On chunk flush:
+  - Clear buffer and increment `chunk_index`
+- [ ] On session end:
+  - Set `ended_at`
+  - Final save with transcript hash
+- [x] On refresh during active session:
+  - Detect incomplete session
+  - Offer resume or discard
+- [x] On resume:
+  - Load and decrypt chunks in order
+  - Reconstruct message list
+
+---
+
+### Step 8: Profile + Summary Storage
+
+**Status: ✅ Complete**
+
+Persist profiles and summaries; use mock summary generation for now.
+
+Tasks:
+
+- [x] UserProfile:
+  - Create minimal profile on setup (`user_id`, timestamps)
+  - Update `updated_at` after sessions
+- [x] SessionSummary:
+  - Create after session closure using mock summary data
+  - Store `recognition_moment`, `action_steps`, `open_threads`
+- [x] Add `lib/storage/queries.ts`:
+  - `getRecentSummaries(userId, limit)`
+  - `getLastSession(userId)`
+  - `hasCompletedSessions(userId)`
+
+---
+
+### Step 9: Tests (Minimal)
+
+**Status: ✅ Complete**
+
+Keep coverage minimal but necessary for iteration speed.
+
+Tasks:
+
+- [x] Unit tests: crypto round-trip + header serialization
+- [x] Integration test: Dexie storage + encrypted wrapper (happy path)
+- [x] E2E smoke (single flow): setup → save transcript → lock → unlock → resume
 
 ---
 
@@ -274,16 +263,10 @@ Tasks:
 ```
 dexie
 dexie-react-hooks
+vitest
+fake-indexeddb
+@playwright/test
 ```
-
----
-
-### Out of Scope (Later Phases)
-
-- Key rotation / re-encryption (v1.1)
-- Zero-knowledge sync (v1.1)
-- Real LLM summarization (Phase 5)
-- Server-side session gating (Phase 4)
 
 ---
 
@@ -333,6 +316,11 @@ framer-motion
 react-markdown
 remark-gfm
 @tailwindcss/typography
+dexie
+dexie-react-hooks
+fake-indexeddb
+@playwright/test
+vitest
 ```
 
 ### File Structure

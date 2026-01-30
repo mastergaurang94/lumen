@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Sun, Calendar, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,8 @@ import {
   formatDaysAgo,
   getTimeGreeting,
 } from '@/lib/format';
+import { isUnlocked } from '@/lib/crypto/key-context';
+import { createStorageService } from '@/lib/storage/dexie-storage';
 import type { SessionGate } from '@/types/session';
 
 // Mock toggles - use env vars in production
@@ -42,18 +45,36 @@ function getMockSessionGate(): SessionGate {
 }
 
 export default function SessionPage() {
+  const router = useRouter();
+  const storageRef = React.useRef(createStorageService());
   const [sessionGate, setSessionGate] = React.useState<SessionGate | null>(null);
   const [mounted, setMounted] = React.useState(false);
+  const [vaultReady, setVaultReady] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
-    // Simulate API call
-    const gate = getMockSessionGate();
-    setSessionGate(gate);
-  }, []);
+    const checkVault = async () => {
+      // Gate access until the vault is initialized and unlocked.
+      const metadata = await storageRef.current.getVaultMetadata();
+      if (!metadata?.vault_initialized) {
+        router.replace('/setup');
+        return;
+      }
+      if (!isUnlocked()) {
+        router.replace('/unlock');
+        return;
+      }
+      setVaultReady(true);
+      // Simulate API call
+      const gate = getMockSessionGate();
+      setSessionGate(gate);
+    };
+
+    checkVault();
+  }, [router]);
 
   // Loading state
-  if (!mounted || !sessionGate) {
+  if (!mounted || !vaultReady || !sessionGate) {
     return (
       <AuthPageLayout
         footer={
