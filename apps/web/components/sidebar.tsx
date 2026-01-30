@@ -106,7 +106,7 @@ export function Sidebar() {
             <button
               type="button"
               onClick={handleLock}
-              className="w-full rounded-lg border border-border/40 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+              className="w-full rounded-lg border border-border/40 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-border transition-colors"
             >
               Lock vault
             </button>
