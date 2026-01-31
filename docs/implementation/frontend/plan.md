@@ -4,214 +4,189 @@ Last Updated: 2026-01-31
 
 ---
 
-## Current Phase: Phase 4 — Conversational Session Spacing + Backend Foundation
+## Current Phase: Phase 5 — Backend Foundation (Auth + Session Metadata + LLM Proxy)
 
-**Status: ✅ Complete**
+**Status: 🔄 Not Started**
 
 ### Running Updates
 
-- 2026-01-30: Phase 4 scaffold initialized.
-- 2026-01-30: Revised approach — session spacing enforced conversationally by coach, not hard server-side gating. Server records timestamps but doesn't block access.
-- 2026-01-31: Step 1 complete — session page now shows soft advisory for early returns, button always enabled, wired to real storage. Added `SessionSpacing` type, `getDaysSinceLastSession` + related query helpers. Fixed `registerLockHandler` return type. Also updated end-session dialog and session closure copy to use softer "suggested" language.
-- 2026-01-31: Step 5 complete — added spacing query helpers in storage.
-- 2026-01-31: Step 4 complete — added deterministic `buildSessionContext()` with Markdown + YAML metadata and tests.
-- 2026-01-31: Step 6 complete — wired context assembly into chat start and stored `session_number`.
-- 2026-01-31: Context assembly tuned — transcript-first (up to 10), model-aware token budgeting with 60K reserve.
+- 2026-01-31: Phase 5 plan drafted.
 
 ### In Progress / Next Up
 
-- Phase 4 complete. Next: follow-up backend foundation work.
-
-### Edge Cases to Consider (Phase 4)
-
-- User returns after 2 days: coach should acknowledge and gently redirect, not block
-- User returns after 7+ days with no action steps completed: coach should explore what happened
-- User's first session: no spacing context, intake flow only
-- Active session exists: resume flow unchanged (no spacing check needed)
-- Clock manipulation: accept client timestamp, reconcile server-side later if needed
+- Step 1: API scaffolding + config.
 
 ### Goals
 
-- Replace hard UI gate with soft advisory nudge
-- Enable coach to enforce session spacing conversationally (via system prompt + context injection)
-- Inject `days_since_last_session` and `last_session_action_steps` into context assembly
-- Update `coaching/system-prompts.md` with spacing enforcement instructions
-- Update `coaching/harness-flow.md` to remove server-side gating requirement
+- Stand up a Go API with chi/v5 and versioned `/v1` routes.
+- Add magic link auth foundations (request + verify endpoints).
+- Record session metadata (start/end timestamps, transcript hash) with no transcripts stored server-side.
+- Add an LLM proxy endpoint with a provider interface and policy layer separation.
+- Propagate request IDs and add structured logs + OpenTelemetry hooks.
 
-### Non-Goals (Phase 4)
+### Non-Goals (Phase 5)
 
-- Hard server-side session blocking (removed from scope)
-- Privacy-preserving metadata collection (backlogged)
-- Auth implementation (separate backend phase)
-- LLM proxy implementation (separate backend phase)
+- Server-side session spacing enforcement (conversational only).
+- Server-side transcript or summary storage.
+- Zero-knowledge sync.
+- Full email deliverability hardening (DKIM/DMARC) beyond MVP.
 
 ### Constraints (Must Match Docs)
 
-- System prompt must strongly encourage 7-day spacing without being preachy
-- Coach acknowledges early returns, may name the pattern, and proceeds if the user insists
-- Context assembly must be deterministic and testable
-- Context assembly uses model-aware token budgeting (default 200K window, 60K reserve)
-- Prefer raw transcripts; default to up to 10 recent sessions
-- Privacy promises in UI remain unchanged
+- No PII in logs; only timings, token counts, status, and error class.
+- Metadata only: `session_id`, `user_id`, timestamps, `transcript_hash`.
+- Keep API contracts versioned under `/v1`.
+- Keep governance/policy logic separate from provider proxy logic.
+- Magic link delivery can be stubbed in MVP (dev-only link capture), but prod requires a real provider.
 
 ### Progress Summary
 
-| Step | Status | Notes                                          |
-| ---- | ------ | ---------------------------------------------- |
-| 1    | ✅     | Update session page: soft gate                 |
-| 2    | ✅     | Update system prompts: spacing enforcement     |
-| 3    | ✅     | Update harness flow doc: remove server gating  |
-| 4    | ✅     | Context assembly: inject spacing data          |
-| 5    | ✅     | Storage queries: add `getDaysSinceLastSession` |
-| 6    | ✅     | Chat page: pass spacing context to LLM         |
+| Step | Status | Notes                                        |
+| ---- | ------ | -------------------------------------------- |
+| 1    | ⬜     | API scaffolding + config                     |
+| 2    | ⬜     | Magic link auth foundation                   |
+| 3    | ⬜     | Session metadata endpoints + DB schema       |
+| 4    | ⬜     | LLM proxy foundation + provider abstraction  |
+| 5    | ⬜     | Observability (request IDs + OTel hooks)     |
+| 6    | ⬜     | Integration tests for auth + sessions + LLM  |
 
 ---
 
-### Step 1: Update Session Page — Soft Gate
+### Step 1: API Scaffolding + Config
 
-**Status: ✅ Complete**
+**Status: ⬜ Not Started**
 
-Convert `/session` page from hard locked/unlocked states to soft advisory.
+Set up the Go service structure and core middleware.
 
 Tasks:
 
-- [x] Remove `LockedState` component (replaced with soft advisory)
-- [x] Replace `SessionGateState` type: added `SessionSpacingState` = 'early_return' | 'ready'
-- [x] Update interface: new `SessionSpacing` with `daysSinceLastSession`, `isFirstSession`
-- [x] Show advisory message when `daysSinceLastSession < 7` (not a blocker)
-- [x] Keep "Begin session" button enabled regardless of spacing
-- [x] Update footer copy to soften "spaced 7 days apart" to "designed for weekly rhythm"
-- [x] Wire to real storage: compute days from `getLastSession().ended_at`
+- [ ] Create `/v1` router group with health endpoint (`GET /v1/health`).
+- [ ] Add config loading (env + defaults) for API, DB, Redis, and provider keys.
+- [ ] Add CORS config for the web app origin.
+- [ ] Add request ID middleware (generate if missing, echo in response).
+- [ ] Add JSON error helpers (consistent error envelope).
 
-Files to modify:
+Files to modify/create:
 
-- `apps/web/app/session/page.tsx`
-- `apps/web/types/session.ts`
-- `apps/web/lib/storage/queries.ts` (add helper)
+- `apps/api/cmd/api/main.go`
+- `apps/api/internal/server/router.go`
+- `apps/api/internal/middleware/request_id.go`
+- `apps/api/internal/config/config.go`
 
 ---
 
-### Step 2: Update System Prompts — Spacing Enforcement
+### Step 2: Magic Link Auth Foundation
 
-**Status: ✅ Complete**
+**Status: ⬜ Not Started**
 
-Add spacing awareness to coaching prompts in `docs/coaching/system-prompts.md`.
+Implement minimal auth endpoints and token verification.
 
 Tasks:
 
-- [x] Add new section: "Session Spacing Awareness"
-- [x] Define behavior when `days_since_last_session < 7`:
-  - Acknowledge the early return warmly
-  - Ask what prompted returning early
-  - Gently suggest waiting ("I'm here, but the space between sessions is where growth happens")
-  - If user insists, proceed but note the pattern
-- [x] Define behavior when `days_since_last_session >= 7`:
-  - Normal session start
-  - Reference last session's action steps if available
-  - Ask what they tried, noticed, or learned in the gap
-- [x] Add to "Ongoing Prompt" key moves: check action step follow-through
-- [x] Add "Modeling Healthy Boundaries" guidance (no examples; keep language flexible)
+- [ ] `POST /v1/auth/request-link` to issue a login token.
+- [ ] `POST /v1/auth/verify` to exchange token for a session.
+- [ ] Store auth tokens with expiry; invalidate on use.
+- [ ] Email provider stub (log link for now; swap in real provider later).
+- [ ] Dev-only link capture (optional): return the magic link in response when `APP_ENV=development`.
+- [ ] Issue a session cookie or JWT on verify (HTTP-only, short TTL).
 
-Files modified:
+Files to modify/create:
 
-- `docs/coaching/system-prompts.md`
+- `apps/api/internal/handlers/auth.go`
+- `apps/api/internal/store/auth_tokens.go`
+- `apps/api/internal/email/provider.go`
 
 ---
 
-### Step 3: Update Harness Flow Doc
+### Step 3: Session Metadata API + Schema
 
-**Status: ✅ Complete**
+**Status: ⬜ Not Started**
 
-Remove server-side gating requirement from `docs/coaching/harness-flow.md`.
+Record session start/end without storing transcripts or summaries.
 
 Tasks:
 
-- [x] Remove "Enforce 7-day session spacing gate server-side" from Safety & Governance
-- [x] Add "Session spacing enforced conversationally via system prompt" to Safety & Governance
-- [x] Update Context Selection inputs to include:
-  - `days_since_last_session: number | null`
-  - `last_session_action_steps: string[]`
-  - `session_number: number`
+- [ ] Create DB table for `sessions` (ids + timestamps + transcript hash).
+- [ ] `POST /v1/sessions/start` (record `started_at`).
+- [ ] `POST /v1/sessions/end` (record `ended_at`, `transcript_hash`).
+- [ ] Ensure auth context is required for session writes.
 
-Files modified:
+Files to modify/create:
 
-- `docs/coaching/harness-flow.md`
+- `apps/api/internal/store/sessions.go`
+- `apps/api/internal/handlers/sessions.go`
+- `apps/api/migrations/` (new migration)
 
 ---
 
-### Step 4: Context Assembly — Inject Spacing Data
+### Step 4: LLM Proxy Foundation
 
-**Status: ✅ Complete**
+**Status: ⬜ Not Started**
 
-Build context assembly logic that injects spacing-related data for the LLM.
+Add a proxy endpoint with provider abstraction and policy hook points.
 
 Tasks:
 
-- [x] Create `lib/context/assembly.ts` with `buildSessionContext()` function
-- [x] Include in context object:
-  - `days_since_last_session: number | null`
-  - `last_session_action_steps: string[]` (from last summary)
-  - `last_session_open_threads: string[]` (from last summary)
-  - `session_number: number` (1 for intake, 2+ for ongoing)
-  - `current_date: string` (ISO date for seasonal awareness)
-- [x] Format context as structured preamble for system prompt injection (Markdown + YAML front matter)
-- [x] Add unit tests for context assembly (deterministic output for given inputs)
+- [ ] `POST /v1/llm/chat` endpoint.
+- [ ] Provider interface + single provider implementation (Opus 4.5).
+- [ ] Policy pre-check hook and response post-check hook (no-op for now).
+- [ ] Forward request IDs to provider logs where possible.
 
-Files to create:
+Files to modify/create:
 
-- `apps/web/lib/context/assembly.ts`
-- `apps/web/lib/context/assembly.test.ts`
+- `apps/api/internal/handlers/llm.go`
+- `apps/api/internal/llm/provider.go`
+- `apps/api/internal/llm/opus.go`
+- `apps/api/internal/policy/policy.go`
 
 ---
 
-### Step 5: Storage Queries — Add Spacing Helpers
+### Step 5: Observability
 
-**Status: ✅ Complete**
+**Status: ⬜ Not Started**
 
-Add query helpers for spacing-related data.
+Add structured logs and OpenTelemetry hooks.
 
 Tasks:
 
-- [x] Add `getDaysSinceLastSession(storage, userId): Promise<number | null>`
-  - Returns `null` if no completed sessions
-  - Computes days from `last_session.ended_at` to now
-- [x] Add `getLastSessionActionSteps(storage, userId): Promise<string[]>`
-  - Returns action steps from most recent summary, or empty array
-- [x] Add `getSessionNumber(storage, userId): Promise<number>`
-  - Returns count of completed sessions + 1
+- [ ] Structured logging with request ID + route + status.
+- [ ] OTel spans for session start/end and LLM calls.
+- [ ] Ensure no PII is logged.
 
-Files to modify:
+Files to modify/create:
 
-- `apps/web/lib/storage/queries.ts`
+- `apps/api/internal/observability/logger.go`
+- `apps/api/internal/observability/otel.go`
 
 ---
 
-### Step 6: Chat Page — Pass Spacing Context to LLM
+### Step 6: Integration Tests
 
-**Status: ✅ Complete**
+**Status: ⬜ Not Started**
 
-Wire context assembly into the chat flow.
+Add smoke-level integration tests for the API.
 
 Tasks:
 
-- [x] On session start, call `buildSessionContext()` with storage data
-- [x] Prepare context as the system prompt payload for the server LLM call
-- [x] Store `session_number` in `SessionTranscript` for future reference
-- [x] Log context assembly decisions for debugging (non-PII only)
+- [ ] Auth request/verify flow tests.
+- [ ] Session start/end API tests.
+- [ ] LLM proxy test with stubbed provider.
 
-Files to modify:
+Files to modify/create:
 
-- `apps/web/app/chat/page.tsx` (or relevant chat hook/service)
-- `apps/web/types/storage.ts` (add `session_number` to `SessionTranscript` if needed)
+- `apps/api/internal/handlers/auth_test.go`
+- `apps/api/internal/handlers/sessions_test.go`
+- `apps/api/internal/handlers/llm_test.go`
 
 ---
 
 ## Previous Phases
 
-| Phase | Status      | Description                    | Archive     |
-| ----- | ----------- | ------------------------------ | ----------- |
-| 2     | ✅ Complete | Web app shell (UI-only)        | `phase2.md` |
-| 3     | ✅ Complete | Local storage + encryption MVP | `phase3.md` |
+| Phase | Status      | Description                                       | Archive     |
+| ----- | ----------- | ------------------------------------------------- | ----------- |
+| 2     | ✅ Complete | Web app shell (UI-only)                           | `phase2.md` |
+| 3     | ✅ Complete | Local storage + encryption MVP                    | `phase3.md` |
+| 4     | ✅ Complete | Conversational spacing + context assembly         | `phase4.md` |
 
 ---
 
@@ -222,8 +197,14 @@ Files to modify:
 Using **pnpm** for the monorepo:
 
 ```bash
-pnpm --filter web dev     # Start dev server
-pnpm --filter web build   # Build for production
+pnpm lint
+pnpm --filter web test -- --run
+```
+
+### API Commands
+
+```bash
+cd apps/api && go run ./cmd/api
 ```
 
 ### Common Issues
@@ -236,67 +217,20 @@ pnpm --filter web build   # Build for production
 
 2. **Tailwind classes not applying**: Ensure `@source` directives in `globals.css` point to all component directories.
 
-### Dependencies (Installed)
+### File Structure (Backend)
 
 ```
-tailwindcss@4.1.18
-@tailwindcss/postcss
-postcss
-next-themes
-lucide-react
-clsx
-tailwind-merge
-class-variance-authority
-framer-motion
-@radix-ui/react-dialog
-@radix-ui/react-dropdown-menu
-@radix-ui/react-slot
-react-markdown
-remark-gfm
-@tailwindcss/typography
-dexie
-dexie-react-hooks
-fake-indexeddb
-@playwright/test
-vitest
-```
-
-### File Structure
-
-```
-apps/web/
-├── app/
-│   ├── globals.css      # Tailwind + palettes
-│   ├── layout.tsx       # Root layout
-│   ├── page.tsx         # Home page
-│   ├── login/page.tsx   # Email login
-│   ├── setup/page.tsx   # Passphrase setup
-│   ├── session/page.tsx # Session spacing
-│   └── chat/page.tsx    # Chat interface
-├── components/
-│   ├── layout-shell.tsx
-│   ├── sidebar.tsx
-│   ├── theme-provider.tsx
-│   ├── auth-page-layout.tsx
-│   ├── coach-unavailable.tsx
-│   ├── error-boundary.tsx
-│   ├── chat/
-│   │   ├── index.ts
-│   │   ├── coach-message.tsx
-│   │   ├── user-message.tsx
-│   │   ├── typing-indicator.tsx
-│   │   ├── chat-input.tsx
-│   │   ├── session-closure.tsx
-│   │   └── end-session-dialog.tsx
-│   └── ui/
-│       ├── button.tsx
-│       ├── input.tsx
-│       ├── spinner.tsx
-│       └── skeleton.tsx
-├── lib/
-│   ├── utils.ts
-│   ├── format.ts
-│   └── z-index.ts
-└── types/
-    └── session.ts
+apps/api/
+├── cmd/
+│   └── api/
+│       └── main.go
+├── internal/
+│   ├── config/
+│   ├── handlers/
+│   ├── llm/
+│   ├── middleware/
+│   ├── observability/
+│   ├── policy/
+│   └── store/
+└── migrations/
 ```
