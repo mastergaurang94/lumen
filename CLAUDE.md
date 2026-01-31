@@ -24,7 +24,7 @@ cd apps/api && go run ./cmd/api
 **Monorepo Structure**: pnpm workspaces with two packages:
 
 - `apps/web` - Next.js 15 + React 19 frontend (main development focus)
-- `apps/api` - Go chi/v5 backend (auth, session gating, LLM proxy)
+- `apps/api` - Go chi/v5 backend (auth, LLM proxy)
 
 **Product**: Privacy-first AI coaching app. Client-side encryption (PBKDF2 + AES-GCM) is a core requirement, not an afterthought. All sensitive data stored locally in IndexedDB.
 
@@ -97,7 +97,7 @@ These patterns are core to Lumen's product experience:
 - Session-centric layout (not conversation-history-centric)
 - Pre-session gate: prompt user to set aside ~60 minutes
 - Passphrase onboarding with clear "unrecoverable" warning
-- Session gating: 7-day spacing between sessions
+- Session spacing: 7-day rhythm encouraged conversationally by coach
 - Explicit "End Session" button; coach may suggest closure but user decides
 - Privacy indicator in UI (local storage, not used for training)
 - "Coach unavailable" state for model outages

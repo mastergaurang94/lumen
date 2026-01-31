@@ -40,8 +40,10 @@ Lumen offers weekly coaching that builds self-trust -- not dependence -- through
 
 ### Session Spacing
 
-- Hard constraint: next session cannot start until 7 days have passed.
-- Enforced server-side.
+- Strong encouragement: sessions are designed for a 7-day rhythm.
+- Enforced conversationally by the coach, not hard-blocked by the system.
+- Coach acknowledges early returns, gently redirects, and models healthy boundaries.
+- If user insists on proceeding early, the coach may note the pattern but continues.
 
 ### Privacy and Data Ownership
 

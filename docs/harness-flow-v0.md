@@ -55,7 +55,7 @@ Determinism (MVP):
 
 ## Safety & Governance
 
-- Enforce 7-day session spacing gate server-side.
+- Session spacing enforced conversationally via system prompt (not server-blocked).
 - Do not use user data for training.
 - Store data locally (encrypted).
 - Maintain a clear user-facing privacy line in the UI.

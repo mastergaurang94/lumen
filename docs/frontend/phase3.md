@@ -18,7 +18,7 @@ Last Updated: 2026-01-30
 
 ### In Progress / Next Up
 
-- Phase 3 complete. Next work: Phase 4 server-side gating.
+- Phase 3 complete. Next work: Phase 4 conversational session spacing + backend foundation.
 
 ### Edge Cases to Consider (Phase 3)
 
@@ -35,7 +35,7 @@ Last Updated: 2026-01-30
 
 - Zero-knowledge sync (v1.1)
 - Key rotation / re-encryption (v1.1)
-- Server-side session gating (Phase 4)
+- Conversational session spacing (Phase 4)
 - Real LLM summarization (Phase 5)
 
 ### Constraints (Must Match Docs)
@@ -338,7 +338,7 @@ apps/web/
 │   ├── page.tsx         # Home page
 │   ├── login/page.tsx   # Email login
 │   ├── setup/page.tsx   # Passphrase setup
-│   ├── session/page.tsx # Session gating
+│   ├── session/page.tsx # Session spacing
 │   └── chat/page.tsx    # Chat interface
 ├── components/
 │   ├── layout-shell.tsx

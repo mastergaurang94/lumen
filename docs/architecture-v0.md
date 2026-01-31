@@ -7,13 +7,13 @@ Status: Draft (MVP)
 
 - Browser-first, local-first data storage (MVP) with a path to zero-knowledge encrypted sync.
 - Simple, production-ready separation of concerns.
-- Enforce 7-day session spacing.
+- Encourage 7-day session spacing (coach-enforced, not system-blocked).
 - Maintain privacy (no training use).
 
 ## Components
 
 - **Web App (Next.js + React + TS)**
-  - Chat UI, session gating UX, summaries.
+  - Chat UI, session spacing advisory, summaries.
   - Pre-session UI prompt to set aside ~60 minutes.
   - Explicit session-closure UX (e.g., "Ready to wrap?" prompt + End Session action).
   - Local storage via IndexedDB + Dexie (encrypted with WebCrypto AES-GCM + PBKDF2).
@@ -22,7 +22,7 @@ Status: Draft (MVP)
 
 - **Go Service (API + Governance)**
   - Auth (email magic link).
-  - Session spacing enforcement.
+  - Session timestamp recording (for sync/insights, not blocking).
   - LLM proxy + policy layer (separate from governance logic).
   - Provider abstraction (single provider now, fallback-ready interface).
   - API versioning (e.g., `/v1`) for stable client-server contracts.
@@ -31,7 +31,7 @@ Status: Draft (MVP)
   - Structured logs with trace IDs; observability scope.
 
 - **Redis**
-  - Session gating state and rate-limits.
+  - Rate-limits and caching.
 
 - **Postgres**
   - Minimal user metadata (auth, session timestamps).
@@ -41,7 +41,7 @@ Status: Draft (MVP)
 ## Data Flow
 
 1. User authenticates via magic link.
-2. Web app checks session eligibility (7-day gate via Go service).
+2. Web app computes days since last session locally; coach handles spacing conversationally.
 3. Web app loads local memory and builds context.
 4. Web app sends prompt + context to Go service.
 5. Go service applies governance/policy, forwards to LLM.
@@ -67,7 +67,7 @@ Status: Draft (MVP)
   - LLM calls
   - governance decisions
   - session closure decisions
-  - session gating responses
+  - session spacing context (days since last session)
   - model unavailability events
   - evaluation harness runs (summary + closure checks)
 

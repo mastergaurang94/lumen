@@ -4,41 +4,192 @@ Last Updated: 2026-01-30
 
 ---
 
-## Current Phase: Phase 4 — Server-side Gating
+## Current Phase: Phase 4 — Conversational Session Spacing + Backend Foundation
 
 **Status: 🔄 Not Started**
 
 ### Running Updates
 
 - 2026-01-30: Phase 4 scaffold initialized.
+- 2026-01-30: Revised approach — session spacing enforced conversationally by coach, not hard server-side gating. Server records timestamps but doesn't block access.
 
 ### In Progress / Next Up
 
-- TBD
+- Step 1: Update Phase 2-3 components for soft gating
 
 ### Edge Cases to Consider (Phase 4)
 
-- TBD
+- User returns after 2 days: coach should acknowledge and gently redirect, not block
+- User returns after 7+ days with no action steps completed: coach should explore what happened
+- User's first session: no spacing context, intake flow only
+- Active session exists: resume flow unchanged (no spacing check needed)
+- Clock manipulation: accept client timestamp, reconcile server-side later if needed
 
 ### Goals
 
-- TBD
+- Replace hard UI gate with soft advisory nudge
+- Enable coach to enforce session spacing conversationally (via system prompt + context injection)
+- Inject `days_since_last_session` and `last_session_action_steps` into context assembly
+- Update `system-prompts-v0.md` with spacing enforcement instructions
+- Update `harness-flow-v0.md` to remove server-side gating requirement
 
 ### Non-Goals (Phase 4)
 
-- TBD
+- Hard server-side session blocking (removed from scope)
+- Privacy-preserving metadata collection (backlogged)
+- Auth implementation (separate backend phase)
+- LLM proxy implementation (separate backend phase)
 
 ### Constraints (Must Match Docs)
 
-- TBD
+- System prompt must strongly encourage 7-day spacing without being preachy
+- Coach may decline to proceed if user returns too early, but framed as coaching, not enforcement
+- Context assembly must be deterministic and testable
+- Privacy promises in UI remain unchanged
 
 ### Progress Summary
 
-| Step | Status | Notes |
-| ---- | ------ | ----- |
-| 1    | ⬜     |       |
-| 2    | ⬜     |       |
-| 3    | ⬜     |       |
+| Step | Status | Notes                                                  |
+| ---- | ------ | ------------------------------------------------------ |
+| 1    | ⬜     | Update session page: soft gate                         |
+| 2    | ⬜     | Update system prompts: spacing enforcement             |
+| 3    | ⬜     | Update harness flow doc: remove server gating          |
+| 4    | ⬜     | Context assembly: inject spacing data                  |
+| 5    | ⬜     | Storage queries: add `getDaysSinceLastSession`         |
+| 6    | ⬜     | Chat page: pass spacing context to LLM                 |
+
+---
+
+### Step 1: Update Session Page — Soft Gate
+
+**Status: ⬜ Not Started**
+
+Convert `/session` page from hard locked/unlocked states to soft advisory.
+
+Tasks:
+
+- [ ] Remove `LockedState` component (or repurpose as advisory)
+- [ ] Replace `SessionGateState` type: remove 'locked', add 'early_return' | 'ready'
+- [ ] Update `SessionGate` interface: add `daysSinceLastSession: number | null`
+- [ ] Show advisory message when `daysSinceLastSession < 7` (not a blocker)
+- [ ] Keep "Begin session" button enabled regardless of spacing
+- [ ] Update footer copy to soften "spaced 7 days apart" to "designed for weekly rhythm"
+- [ ] Wire to real storage: compute days from `getLastSession().ended_at`
+
+Files to modify:
+- `apps/web/app/session/page.tsx`
+- `apps/web/types/session.ts`
+- `apps/web/lib/storage/queries.ts` (add helper)
+
+---
+
+### Step 2: Update System Prompts — Spacing Enforcement
+
+**Status: ⬜ Not Started**
+
+Add spacing awareness to coaching prompts in `docs/system-prompts-v0.md`.
+
+Tasks:
+
+- [ ] Add new section: "Session Spacing Awareness"
+- [ ] Define behavior when `days_since_last_session < 7`:
+  - Acknowledge the early return warmly
+  - Ask what prompted returning early
+  - Gently suggest waiting ("I'm here, but the space between sessions is where growth happens")
+  - If user insists, proceed but note the pattern
+- [ ] Define behavior when `days_since_last_session >= 7`:
+  - Normal session start
+  - Reference last session's action steps if available
+  - Ask what they tried, noticed, or learned in the gap
+- [ ] Add to "Ongoing Prompt" key moves: check action step follow-through
+- [ ] Add example coach responses for early-return scenarios
+
+Files to modify:
+- `docs/system-prompts-v0.md`
+
+---
+
+### Step 3: Update Harness Flow Doc
+
+**Status: ⬜ Not Started**
+
+Remove server-side gating requirement from `docs/harness-flow-v0.md`.
+
+Tasks:
+
+- [ ] Remove "Enforce 7-day session spacing gate server-side" from Safety & Governance
+- [ ] Add "Session spacing enforced conversationally via system prompt" to Safety & Governance
+- [ ] Update Context Selection inputs to include:
+  - `days_since_last_session: number | null`
+  - `last_session_action_steps: string[]`
+- [ ] Note that server records session timestamps for future sync/insights (not for blocking)
+
+Files to modify:
+- `docs/harness-flow-v0.md`
+
+---
+
+### Step 4: Context Assembly — Inject Spacing Data
+
+**Status: ⬜ Not Started**
+
+Build context assembly logic that injects spacing-related data for the LLM.
+
+Tasks:
+
+- [ ] Create `lib/context/assembly.ts` with `buildSessionContext()` function
+- [ ] Include in context object:
+  - `days_since_last_session: number | null`
+  - `last_session_action_steps: string[]` (from last summary)
+  - `last_session_open_threads: string[]` (from last summary)
+  - `session_number: number` (1 for intake, 2+ for ongoing)
+  - `current_date: string` (ISO date for seasonal awareness)
+- [ ] Format context as structured preamble for system prompt injection
+- [ ] Add unit tests for context assembly (deterministic output for given inputs)
+
+Files to create:
+- `apps/web/lib/context/assembly.ts`
+- `apps/web/lib/context/assembly.test.ts`
+
+---
+
+### Step 5: Storage Queries — Add Spacing Helpers
+
+**Status: ⬜ Not Started**
+
+Add query helpers for spacing-related data.
+
+Tasks:
+
+- [ ] Add `getDaysSinceLastSession(storage, userId): Promise<number | null>`
+  - Returns `null` if no completed sessions
+  - Computes days from `last_session.ended_at` to now
+- [ ] Add `getLastSessionActionSteps(storage, userId): Promise<string[]>`
+  - Returns action steps from most recent summary, or empty array
+- [ ] Add `getSessionNumber(storage, userId): Promise<number>`
+  - Returns count of completed sessions + 1
+
+Files to modify:
+- `apps/web/lib/storage/queries.ts`
+
+---
+
+### Step 6: Chat Page — Pass Spacing Context to LLM
+
+**Status: ⬜ Not Started**
+
+Wire context assembly into the chat flow.
+
+Tasks:
+
+- [ ] On session start, call `buildSessionContext()` with storage data
+- [ ] Include context in system prompt sent to LLM
+- [ ] Store `session_number` in `SessionTranscript` for future reference
+- [ ] Log context assembly decisions for debugging (non-PII only)
+
+Files to modify:
+- `apps/web/app/chat/page.tsx` (or relevant chat hook/service)
+- `apps/web/types/storage.ts` (add `session_number` to `SessionTranscript` if needed)
 
 ---
 
@@ -107,7 +258,7 @@ apps/web/
 │   ├── page.tsx         # Home page
 │   ├── login/page.tsx   # Email login
 │   ├── setup/page.tsx   # Passphrase setup
-│   ├── session/page.tsx # Session gating
+│   ├── session/page.tsx # Session spacing
 │   └── chat/page.tsx    # Chat interface
 ├── components/
 │   ├── layout-shell.tsx
@@ -156,7 +307,7 @@ Last Updated: 2026-01-30
 
 ### In Progress / Next Up
 
-- Phase 3 complete. Next work: Phase 4 server-side gating.
+- Phase 3 complete. Next work: Phase 4 conversational session spacing + backend foundation.
 
 ### Edge Cases to Consider (Phase 3)
 
@@ -173,7 +324,7 @@ Last Updated: 2026-01-30
 
 - Zero-knowledge sync (v1.1)
 - Key rotation / re-encryption (v1.1)
-- Server-side session gating (Phase 4)
+- Conversational session spacing (Phase 4)
 - Real LLM summarization (Phase 5)
 
 ### Constraints (Must Match Docs)
@@ -476,7 +627,7 @@ apps/web/
 │   ├── page.tsx         # Home page
 │   ├── login/page.tsx   # Email login
 │   ├── setup/page.tsx   # Passphrase setup
-│   ├── session/page.tsx # Session gating
+│   ├── session/page.tsx # Session spacing
 │   └── chat/page.tsx    # Chat interface
 ├── components/
 │   ├── layout-shell.tsx

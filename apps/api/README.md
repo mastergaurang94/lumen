@@ -1,6 +1,6 @@
 # Lumen API
 
-Go service for auth, session gating, and model orchestration.
+Go service for auth and model orchestration.
 
 ## Dev
 
