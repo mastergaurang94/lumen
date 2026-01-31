@@ -92,6 +92,8 @@ export default function SessionPage() {
 
   return (
     <AuthPageLayout
+      showMenu
+      showBack={false}
       footer={
         <p className="text-sm text-muted-foreground/70">
           Sessions are spaced 7 days apart to give you time to reflect and act.
