@@ -144,9 +144,7 @@ describe('buildSessionContext', () => {
       userId: 'user-2',
       startedAt: '2026-01-01T10:00:00.000Z',
       endedAt: '2026-01-01T11:00:00.000Z',
-      messages: [
-        { id: 'm1', role: 'user', content: longContent, timestamp: new Date() },
-      ],
+      messages: [{ id: 'm1', role: 'user', content: longContent, timestamp: new Date() }],
       key,
     });
 
