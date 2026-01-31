@@ -16,7 +16,7 @@ Last Updated: 2026-01-30
 
 ### In Progress / Next Up
 
-- Step 1 complete. Next: Step 2 (update system prompts)
+- Step 2 complete. Next: Step 3 (update harness flow doc)
 
 ### Edge Cases to Consider (Phase 4)
 
@@ -53,7 +53,7 @@ Last Updated: 2026-01-30
 | Step | Status | Notes                                                  |
 | ---- | ------ | ------------------------------------------------------ |
 | 1    | ✅     | Update session page: soft gate                         |
-| 2    | ⬜     | Update system prompts: spacing enforcement             |
+| 2    | ✅     | Update system prompts: spacing enforcement             |
 | 3    | ⬜     | Update harness flow doc: remove server gating          |
 | 4    | ⬜     | Context assembly: inject spacing data                  |
 | 5    | ⬜     | Storage queries: add `getDaysSinceLastSession`         |
@@ -86,26 +86,26 @@ Files to modify:
 
 ### Step 2: Update System Prompts — Spacing Enforcement
 
-**Status: ⬜ Not Started**
+**Status: ✅ Complete**
 
 Add spacing awareness to coaching prompts in `docs/system-prompts-v0.md`.
 
 Tasks:
 
-- [ ] Add new section: "Session Spacing Awareness"
-- [ ] Define behavior when `days_since_last_session < 7`:
+- [x] Add new section: "Session Spacing Awareness"
+- [x] Define behavior when `days_since_last_session < 7`:
   - Acknowledge the early return warmly
   - Ask what prompted returning early
   - Gently suggest waiting ("I'm here, but the space between sessions is where growth happens")
   - If user insists, proceed but note the pattern
-- [ ] Define behavior when `days_since_last_session >= 7`:
+- [x] Define behavior when `days_since_last_session >= 7`:
   - Normal session start
   - Reference last session's action steps if available
   - Ask what they tried, noticed, or learned in the gap
-- [ ] Add to "Ongoing Prompt" key moves: check action step follow-through
-- [ ] Add example coach responses for early-return scenarios
+- [x] Add to "Ongoing Prompt" key moves: check action step follow-through
+- [x] Add "Modeling Healthy Boundaries" section with example coach responses
 
-Files to modify:
+Files modified:
 - `docs/system-prompts-v0.md`
 
 ---
