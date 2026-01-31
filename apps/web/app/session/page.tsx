@@ -57,7 +57,8 @@ export default function SessionPage() {
       const isFirstSession = !lastSession && !hasActiveSession;
 
       // Determine spacing state (mock override for testing)
-      const isEarlyReturn = MOCK_EARLY_RETURN || (daysSince !== null && daysSince < SESSION_SPACING_DAYS);
+      const isEarlyReturn =
+        MOCK_EARLY_RETURN || (daysSince !== null && daysSince < SESSION_SPACING_DAYS);
       const state: SessionSpacing['state'] = isEarlyReturn ? 'early_return' : 'ready';
 
       setSpacing({
@@ -143,11 +144,7 @@ function SessionContent({ spacing }: { spacing: SessionSpacing }) {
       {/* Header */}
       <div className="space-y-3">
         <h1 className="font-display text-4xl font-light tracking-tight text-foreground">
-          {hasActiveSession
-            ? 'Welcome back'
-            : isFirstSession
-              ? 'Welcome'
-              : greeting || 'Welcome'}
+          {hasActiveSession ? 'Welcome back' : isFirstSession ? 'Welcome' : greeting || 'Welcome'}
         </h1>
         <p className="text-lg text-muted-foreground">
           {hasActiveSession

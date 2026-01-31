@@ -53,10 +53,7 @@ export async function getLastSessionActionSteps(
 }
 
 // Returns the session number (count of completed sessions + 1 for the upcoming session).
-export async function getSessionNumber(
-  storage: StorageService,
-  userId: string,
-): Promise<number> {
+export async function getSessionNumber(storage: StorageService, userId: string): Promise<number> {
   const transcripts = await storage.listTranscripts(userId);
   const completedCount = transcripts.filter((t) => t.ended_at !== null).length;
   return completedCount + 1;

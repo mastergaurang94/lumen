@@ -26,6 +26,10 @@ Inputs:
 - Last N session summaries (default N=3)
 - Open threads from most recent summary
 - Current time/seasonal context
+- Session spacing context:
+  - `days_since_last_session: number | null` (null if first session)
+  - `last_session_action_steps: string[]` (for follow-up)
+  - `session_number: number` (1 = intake, 2+ = ongoing)
 
 Rules:
 

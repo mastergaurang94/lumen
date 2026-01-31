@@ -16,7 +16,7 @@ Last Updated: 2026-01-30
 
 ### In Progress / Next Up
 
-- Step 2 complete. Next: Step 3 (update harness flow doc)
+- Step 3 complete. Next: Step 4 (context assembly code)
 
 ### Edge Cases to Consider (Phase 4)
 
@@ -50,14 +50,14 @@ Last Updated: 2026-01-30
 
 ### Progress Summary
 
-| Step | Status | Notes                                                  |
-| ---- | ------ | ------------------------------------------------------ |
-| 1    | ✅     | Update session page: soft gate                         |
-| 2    | ✅     | Update system prompts: spacing enforcement             |
-| 3    | ⬜     | Update harness flow doc: remove server gating          |
-| 4    | ⬜     | Context assembly: inject spacing data                  |
-| 5    | ⬜     | Storage queries: add `getDaysSinceLastSession`         |
-| 6    | ⬜     | Chat page: pass spacing context to LLM                 |
+| Step | Status | Notes                                          |
+| ---- | ------ | ---------------------------------------------- |
+| 1    | ✅     | Update session page: soft gate                 |
+| 2    | ✅     | Update system prompts: spacing enforcement     |
+| 3    | ✅     | Update harness flow doc: remove server gating  |
+| 4    | ⬜     | Context assembly: inject spacing data          |
+| 5    | ⬜     | Storage queries: add `getDaysSinceLastSession` |
+| 6    | ⬜     | Chat page: pass spacing context to LLM         |
 
 ---
 
@@ -78,6 +78,7 @@ Tasks:
 - [x] Wire to real storage: compute days from `getLastSession().ended_at`
 
 Files to modify:
+
 - `apps/web/app/session/page.tsx`
 - `apps/web/types/session.ts`
 - `apps/web/lib/storage/queries.ts` (add helper)
@@ -106,26 +107,28 @@ Tasks:
 - [x] Add "Modeling Healthy Boundaries" section with example coach responses
 
 Files modified:
+
 - `docs/system-prompts-v0.md`
 
 ---
 
 ### Step 3: Update Harness Flow Doc
 
-**Status: ⬜ Not Started**
+**Status: ✅ Complete**
 
 Remove server-side gating requirement from `docs/harness-flow-v0.md`.
 
 Tasks:
 
-- [ ] Remove "Enforce 7-day session spacing gate server-side" from Safety & Governance
-- [ ] Add "Session spacing enforced conversationally via system prompt" to Safety & Governance
-- [ ] Update Context Selection inputs to include:
+- [x] Remove "Enforce 7-day session spacing gate server-side" from Safety & Governance
+- [x] Add "Session spacing enforced conversationally via system prompt" to Safety & Governance
+- [x] Update Context Selection inputs to include:
   - `days_since_last_session: number | null`
   - `last_session_action_steps: string[]`
-- [ ] Note that server records session timestamps for future sync/insights (not for blocking)
+  - `session_number: number`
 
-Files to modify:
+Files modified:
+
 - `docs/harness-flow-v0.md`
 
 ---
@@ -149,6 +152,7 @@ Tasks:
 - [ ] Add unit tests for context assembly (deterministic output for given inputs)
 
 Files to create:
+
 - `apps/web/lib/context/assembly.ts`
 - `apps/web/lib/context/assembly.test.ts`
 
@@ -171,6 +175,7 @@ Tasks:
   - Returns count of completed sessions + 1
 
 Files to modify:
+
 - `apps/web/lib/storage/queries.ts`
 
 ---
@@ -189,6 +194,7 @@ Tasks:
 - [ ] Log context assembly decisions for debugging (non-PII only)
 
 Files to modify:
+
 - `apps/web/app/chat/page.tsx` (or relevant chat hook/service)
 - `apps/web/types/storage.ts` (add `session_number` to `SessionTranscript` if needed)
 
@@ -196,10 +202,10 @@ Files to modify:
 
 ## Previous Phases
 
-| Phase | Status      | Description                     | Archive     |
-| ----- | ----------- | ------------------------------- | ----------- |
-| 2     | ✅ Complete | Web app shell (UI-only)         | `phase2.md` |
-| 3     | ✅ Complete | Local storage + encryption MVP  | `phase3.md` |
+| Phase | Status      | Description                    | Archive     |
+| ----- | ----------- | ------------------------------ | ----------- |
+| 2     | ✅ Complete | Web app shell (UI-only)        | `phase2.md` |
+| 3     | ✅ Complete | Local storage + encryption MVP | `phase3.md` |
 
 ---
 
@@ -288,6 +294,7 @@ apps/web/
 └── types/
     └── session.ts
 ```
+
 # Frontend Implementation Plan
 
 Last Updated: 2026-01-30
