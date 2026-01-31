@@ -1,5 +1,6 @@
 // Key is held in memory only; never persisted.
 let cachedKey: CryptoKey | null = null;
+const lockHandlers = new Set<() => Promise<void> | void>();
 
 export function setKey(key: CryptoKey) {
   cachedKey = key;
@@ -15,4 +16,18 @@ export function clearKey() {
 
 export function isUnlocked(): boolean {
   return cachedKey !== null;
+}
+
+// Registers handlers to run before the vault is locked.
+export function registerLockHandler(handler: () => Promise<void> | void) {
+  lockHandlers.add(handler);
+  return () => lockHandlers.delete(handler);
+}
+
+// Flushes registered handlers before clearing the in-memory key.
+export async function lockVault() {
+  for (const handler of lockHandlers) {
+    await handler();
+  }
+  clearKey();
 }

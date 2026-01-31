@@ -1,11 +1,4 @@
-import {
-  decodeJson,
-  encodeJson,
-  encrypt,
-  decrypt,
-  generateIV,
-  hashTranscript,
-} from '@/lib/crypto';
+import { decodeJson, encodeJson, encrypt, decrypt, generateIV, hashTranscript } from '@/lib/crypto';
 import type { EncryptionHeader, VaultKeyCheck, VaultMetadata } from '@/types/storage';
 
 export const VAULT_METADATA_ID = 'vault';
@@ -45,11 +38,7 @@ export async function createKeyCheck(
 // Validates the key by decrypting the sentinel payload.
 export async function verifyKeyCheck(key: CryptoKey, keyCheck: VaultKeyCheck): Promise<boolean> {
   try {
-    const decrypted = await decrypt(
-      keyCheck.encrypted_blob,
-      key,
-      keyCheck.encryption_header.iv,
-    );
+    const decrypted = await decrypt(keyCheck.encrypted_blob, key, keyCheck.encryption_header.iv);
     const payload = decodeJson<{ sentinel: string }>(decrypted);
     return payload.sentinel === KEY_CHECK_SENTINEL;
   } catch {

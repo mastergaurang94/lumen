@@ -13,6 +13,7 @@ Last Updated: 2026-01-30
 - 2026-01-30: Implemented Dexie schema + storage abstraction, crypto utilities, vault metadata, setup/unlock flows, chunked transcript persistence with debounce, and minimal crypto tests. Added `VaultProvider` to clear keys on unload and a sidebar lock action.
 - 2026-01-30: Added storage integration test and Playwright vault smoke flow; scoped vitest to app tests only.
 - 2026-01-30: Implemented summary persistence, profile touch updates, and storage queries; marked Phase 3 complete.
+- 2026-01-30: Consolidated storage so `StorageService` handles encryption internally (no separate secure wrapper).
 
 ### In Progress / Next Up
 
@@ -27,7 +28,7 @@ Last Updated: 2026-01-30
 - Encrypted local persistence for transcripts, summaries, and profile data.
 - Passphrase-derived key held in memory only (never persisted).
 - Clean unlock/lock flow and route protection for vault state.
-- Storage abstraction to support desktop filesystem later.
+- Storage abstraction to support desktop filesystem later (single service, encryption handled internally).
 
 ### Non-Goals (Phase 3)
 
@@ -44,17 +45,17 @@ Last Updated: 2026-01-30
 
 ### Progress Summary
 
-| Step                               | Status      | Notes                                         |
-| ---------------------------------- | ----------- | --------------------------------------------- |
-| 1. Data Model + Dexie Schema       | ✅ Complete | Dexie schema + chunk store + metadata         |
-| 2. Crypto Utilities                | ✅ Complete | Key derivation, AES-GCM, header serialization |
-| 3. Storage Abstraction             | ✅ Complete | Dexie-backed `StorageService`                 |
-| 4. Vault Metadata + Key Context    | ✅ Complete | Key sentinel + in-memory key                  |
-| 5. Setup Flow (Vault Init)         | ✅ Complete | Passphrase → key → metadata + profile         |
-| 6. Unlock Flow + Route Protection  | ✅ Complete | `/unlock`, vault checks, lock button          |
-| 7. Encrypted Session Persistence   | ✅ Complete | Chunked transcript save/resume/debounce       |
-| 8. Profile + Summary Storage       | ✅ Complete | Profile updates + summary persistence         |
-| 9. Tests (Minimal)                 | ✅ Complete | Crypto unit, storage integration, E2E smoke   |
+| Step                              | Status      | Notes                                         |
+| --------------------------------- | ----------- | --------------------------------------------- |
+| 1. Data Model + Dexie Schema      | ✅ Complete | Dexie schema + chunk store + metadata         |
+| 2. Crypto Utilities               | ✅ Complete | Key derivation, AES-GCM, header serialization |
+| 3. Storage Abstraction            | ✅ Complete | Dexie-backed `StorageService`                 |
+| 4. Vault Metadata + Key Context   | ✅ Complete | Key sentinel + in-memory key                  |
+| 5. Setup Flow (Vault Init)        | ✅ Complete | Passphrase → key → metadata + profile         |
+| 6. Unlock Flow + Route Protection | ✅ Complete | `/unlock`, vault checks, lock button          |
+| 7. Encrypted Session Persistence  | ✅ Complete | Chunked transcript save/resume/debounce       |
+| 8. Profile + Summary Storage      | ✅ Complete | Profile updates + summary persistence         |
+| 9. Tests (Minimal)                | ✅ Complete | Crypto unit, storage integration, E2E smoke   |
 
 ---
 
@@ -69,10 +70,10 @@ Tasks:
 - [x] Install `dexie` and `dexie-react-hooks`
 - [x] Create `lib/db.ts` with Dexie database class + versioned schema
 - [x] Define stores:
-  - `userProfiles` — `UserProfile`
+  - `userProfiles` — encrypted `UserProfile` blobs (stored as `EncryptedUserProfile`)
   - `sessionTranscripts` — `SessionTranscript` (session-level metadata only)
   - `sessionTranscriptChunks` — encrypted transcript chunks (append-only)
-  - `sessionSummaries` — `SessionSummary`
+  - `sessionSummaries` — encrypted `SessionSummary` blobs (stored as `EncryptedSessionSummary`)
   - `vaultMetadata` — single-record metadata (unencrypted)
 - [x] Add indexes: by `user_id`, `session_id`, `started_at` (descending)
 - [x] Define chunk record fields: `chunk_index`, `encrypted_blob`, `encryption_header`, `transcript_hash`
@@ -122,7 +123,7 @@ Create a storage interface to allow swapping the backend later.
 Tasks:
 
 - [x] Create `lib/storage/index.ts` with `StorageService` interface
-- [x] Create `lib/storage/dexie-storage.ts` implementing `StorageService`
+- [x] Create `lib/storage/dexie-storage.ts` implementing `StorageService` with internal encryption
 - [x] Export factory `createStorageService()` for browser implementation
 - [ ] Error handling: quota exceeded, version/migration failures, corrupted records
 
@@ -162,7 +163,7 @@ Tasks:
   - Derive key from passphrase + salt
   - Store vault metadata
   - Create encrypted `key_check` sentinel
-  - Initialize empty `UserProfile`
+  - Initialize empty `UserProfile` (stored encrypted)
   - Store key in memory
   - Navigate to `/session`
 - [x] On app load:
@@ -211,9 +212,9 @@ Tasks:
   - Store chunk with `chunk_index` and hash
 - [x] On chunk flush:
   - Clear buffer and increment `chunk_index`
-- [ ] On session end:
+- [x] On session end:
   - Set `ended_at`
-  - Final save with transcript hash
+  - Final save with transcript metadata
 - [x] On refresh during active session:
   - Detect incomplete session
   - Offer resume or discard
@@ -234,9 +235,11 @@ Tasks:
 - [x] UserProfile:
   - Create minimal profile on setup (`user_id`, timestamps)
   - Update `updated_at` after sessions
+  - Stored as encrypted blob at rest
 - [x] SessionSummary:
   - Create after session closure using mock summary data
   - Store `recognition_moment`, `action_steps`, `open_threads`
+  - Stored as encrypted blob at rest
 - [x] Add `lib/storage/queries.ts`:
   - `getRecentSummaries(userId, limit)`
   - `getLastSession(userId)`
@@ -253,7 +256,7 @@ Keep coverage minimal but necessary for iteration speed.
 Tasks:
 
 - [x] Unit tests: crypto round-trip + header serialization
-- [x] Integration test: Dexie storage + encrypted wrapper (happy path)
+- [x] Integration test: Dexie storage + encrypted profile/summary payloads
 - [x] E2E smoke (single flow): setup → save transcript → lock → unlock → resume
 
 ---
@@ -272,9 +275,9 @@ fake-indexeddb
 
 ## Previous Phases
 
-| Phase | Status      | Description             | Archive      |
-| ----- | ----------- | ----------------------- | ------------ |
-| 2     | ✅ Complete | Web app shell (UI-only) | `phase2.md`  |
+| Phase | Status      | Description             | Archive     |
+| ----- | ----------- | ----------------------- | ----------- |
+| 2     | ✅ Complete | Web app shell (UI-only) | `phase2.md` |
 
 ---
 
@@ -292,6 +295,7 @@ pnpm --filter web build   # Build for production
 ### Common Issues
 
 1. **Webpack module error on hard refresh**: Clear `.next` cache and restart:
+
    ```bash
    rm -rf apps/web/.next && pnpm --filter web dev
    ```

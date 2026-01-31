@@ -19,7 +19,7 @@ import {
 import { formatSessionDate, formatElapsedTime } from '@/lib/format';
 import { Z_INDEX } from '@/lib/z-index';
 import { decrypt, encrypt, generateIV, hashTranscript } from '@/lib/crypto';
-import { getKey, isUnlocked } from '@/lib/crypto/key-context';
+import { getKey, isUnlocked, registerLockHandler } from '@/lib/crypto/key-context';
 import { createStorageService } from '@/lib/storage/dexie-storage';
 import { getOrCreateUserId } from '@/lib/storage/user';
 import { deserializeMessages, serializeMessages } from '@/lib/storage/transcript';
@@ -201,13 +201,26 @@ function ChatPageInner() {
         router.replace('/unlock');
         return;
       }
+      const key = getKey();
+      if (!key) {
+        router.replace('/unlock');
+        return;
+      }
       vaultMetadataRef.current = metadata;
+      storageRef.current.setVaultContext({ key, metadata });
       userIdRef.current = getOrCreateUserId();
       setVaultReady(true);
     };
 
     checkVault();
   }, [router]);
+
+  React.useEffect(() => {
+    // Flush buffered messages before vault lock clears the key.
+    return registerLockHandler(async () => {
+      await flushPendingMessages();
+    });
+  }, [flushPendingMessages]);
 
   // Check coach availability and initialize session
   const initializeSession = React.useCallback(async () => {
@@ -267,7 +280,8 @@ function ChatPageInner() {
       if (!userId) return;
 
       const transcripts = await storageRef.current.listTranscripts(userId);
-      const activeTranscript = transcripts.find((transcript) => transcript.ended_at === null) ?? null;
+      const activeTranscript =
+        transcripts.find((transcript) => transcript.ended_at === null) ?? null;
 
       if (activeTranscript) {
         // Resume the active transcript by replaying chunked payloads.
@@ -284,11 +298,7 @@ function ChatPageInner() {
 
         const restoredMessages: Message[] = [];
         for (const chunk of chunks) {
-          const decrypted = await decrypt(
-            chunk.encrypted_blob,
-            key,
-            chunk.encryption_header.iv,
-          );
+          const decrypted = await decrypt(chunk.encrypted_blob, key, chunk.encryption_header.iv);
           restoredMessages.push(...deserializeMessages(decrypted));
         }
 
@@ -367,54 +377,57 @@ function ChatPageInner() {
   }, [messages, streamingContent, isTyping]);
 
   // Handle sending a message
-  const handleSend = React.useCallback(async (content: string) => {
-    // Add user message
-    const userMessage: Message = {
-      id: generateId(),
-      role: 'user',
-      content,
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    queueMessageForChunk(userMessage);
-
-    // Show typing indicator
-    setIsTyping(true);
-
-    // Simulate thinking delay
-    await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 1000));
-
-    // Hide typing indicator, start streaming
-    setIsTyping(false);
-
-    // Get next mock response (cycle through them)
-    const responseText = MOCK_RESPONSES[responseIndexRef.current % MOCK_RESPONSES.length];
-    responseIndexRef.current++;
-
-    // Create abort controller for this stream
-    abortControllerRef.current = new AbortController();
-
-    // Stream the response
-    setStreamingContent('');
-    try {
-      for await (const partial of streamText(responseText, abortControllerRef.current.signal)) {
-        setStreamingContent(partial);
-      }
-
-      // Finalize the message
-      const coachMessage: Message = {
+  const handleSend = React.useCallback(
+    async (content: string) => {
+      // Add user message
+      const userMessage: Message = {
         id: generateId(),
-        role: 'coach',
-        content: responseText,
+        role: 'user',
+        content,
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, coachMessage]);
-      queueMessageForChunk(coachMessage);
-    } finally {
-      setStreamingContent(null);
-      abortControllerRef.current = null;
-    }
-  }, [queueMessageForChunk]);
+      setMessages((prev) => [...prev, userMessage]);
+      queueMessageForChunk(userMessage);
+
+      // Show typing indicator
+      setIsTyping(true);
+
+      // Simulate thinking delay
+      await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 1000));
+
+      // Hide typing indicator, start streaming
+      setIsTyping(false);
+
+      // Get next mock response (cycle through them)
+      const responseText = MOCK_RESPONSES[responseIndexRef.current % MOCK_RESPONSES.length];
+      responseIndexRef.current++;
+
+      // Create abort controller for this stream
+      abortControllerRef.current = new AbortController();
+
+      // Stream the response
+      setStreamingContent('');
+      try {
+        for await (const partial of streamText(responseText, abortControllerRef.current.signal)) {
+          setStreamingContent(partial);
+        }
+
+        // Finalize the message
+        const coachMessage: Message = {
+          id: generateId(),
+          role: 'coach',
+          content: responseText,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, coachMessage]);
+        queueMessageForChunk(coachMessage);
+      } finally {
+        setStreamingContent(null);
+        abortControllerRef.current = null;
+      }
+    },
+    [queueMessageForChunk],
+  );
 
   // Handle end session
   const handleEndSession = React.useCallback(() => {

@@ -41,7 +41,12 @@ function loadPalettePreference(): PalettePreference {
   if (typeof window === 'undefined') return 'auto';
   try {
     const stored = localStorage.getItem(PALETTE_STORAGE_KEY);
-    if (stored === 'morning' || stored === 'afternoon' || stored === 'evening' || stored === 'auto') {
+    if (
+      stored === 'morning' ||
+      stored === 'afternoon' ||
+      stored === 'evening' ||
+      stored === 'auto'
+    ) {
       return stored;
     }
   } catch {

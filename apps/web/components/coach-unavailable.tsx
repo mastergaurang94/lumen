@@ -82,11 +82,7 @@ export function CoachUnavailable({ onRetry, isRetrying = false }: CoachUnavailab
           {/* Actions */}
           <div className="space-y-3">
             {onRetry && (
-              <Button
-                onClick={onRetry}
-                disabled={isRetrying}
-                className="w-full h-12 text-base"
-              >
+              <Button onClick={onRetry} disabled={isRetrying} className="w-full h-12 text-base">
                 {isRetrying ? (
                   <>
                     <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
