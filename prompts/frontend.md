@@ -61,46 +61,4 @@ Before ending a session, ensure:
 
 ## Project Context
 
-**Stack**: Next.js 15 App Router, React 19, TypeScript, Tailwind CSS v4, Framer Motion
-
-**What is Lumen**: A weekly AI coaching app. Sessions spaced 7 days apart. Data stored locally and encrypted. Privacy is paramount.
-
-## Design Direction
-
-**Aesthetic**: Warm, grounded, and clear — never stark or cold. Inspired by OmmWriter's distraction-free focus and claude.ai's clean structure, but with more warmth and atmosphere.
-
-**Design system** (see `docs/design-system.md`):
-
-- Three time-based color palettes (morning/afternoon/evening) that shift with the day
-- Fraunces display font for headings, Lato for body text
-- Atmospheric backgrounds with subtle radial gradients
-- Generous whitespace, soft rounded corners, subtle animations
-
-**Principles**:
-
-- Warm: Soft, natural tones
-- Grounded: Earthy palette, generous whitespace, nothing flashy
-- Clear: Clean typography, no clutter, distraction-free
-- Human: Rounded shapes, friendly type, subtle warmth
-
-## Technical Rules
-
-- Use Tailwind CSS exclusively — no inline styles
-- Use shadcn/ui primitives for standard UI (Button, Input, Dialog, ScrollArea, etc.)
-- Build custom components when the design requires something specific
-- Support dark/light mode via next-themes
-- Use lucide-react for icons
-- Use CSS variables and theme tokens — UI must adapt to all palettes
-- Fully responsive and mobile-friendly
-
-## Product UX Patterns
-
-These patterns are core to Lumen's product experience:
-
-- Session-centric layout (not conversation-history-centric)
-- Pre-session gate: prompt user to set aside ~60 minutes
-- Passphrase onboarding with clear "unrecoverable" warning
-- Session gating: 7-day spacing between sessions
-- Explicit "End Session" button; coach may suggest closure but user decides
-- Privacy indicator in UI (local storage, not used for training)
-- "Coach unavailable" state for model outages
+See `CLAUDE.md` for shared product context, design direction, technical rules, and UX patterns.
