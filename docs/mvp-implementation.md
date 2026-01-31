@@ -15,7 +15,7 @@ Status: Draft
 
 - App shell with auth entry, pre-session gate, and chat UI.
 - Passphrase onboarding gate before first session (with warning copy).
-- Session gating UI (7-day restriction).
+- Session spacing advisory UI (7-day rhythm, soft nudge).
 - End Session UI + 24-hour auto-close handling.
 
 3. Local storage + encryption
@@ -28,7 +28,7 @@ Status: Draft
 4. API / Go service
 
 - Auth (magic link).
-- Session spacing enforcement (7-day gate).
+- Session timestamp recording (for sync/insights).
 - LLM proxy + policy layer (separate).
 - Request ID propagation + OpenTelemetry.
 
@@ -48,7 +48,7 @@ Status: Draft
 7. Observability
 
 - Structured logs with trace IDs.
-- OTel spans for session start/stop, LLM calls, sync, gating.
+- OTel spans for session start/stop, LLM calls, sync.
 
 8. Tests & QA
 
