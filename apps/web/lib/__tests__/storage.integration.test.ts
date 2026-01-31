@@ -59,6 +59,7 @@ describe('storage integration', () => {
       user_id: 'user-1',
       started_at: new Date().toISOString(),
       ended_at: null,
+      session_number: null,
       timezone: 'UTC',
       locale_hint: 'en-US',
       system_prompt_version: 'intake-v0.1',

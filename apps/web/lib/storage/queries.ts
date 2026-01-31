@@ -40,7 +40,7 @@ export async function getDaysSinceLastSession(
   const now = new Date();
   const diffMs = now.getTime() - endedAt.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  return diffDays;
+  return Math.max(0, diffDays);
 }
 
 // Returns action steps from the most recent session summary, or empty array.

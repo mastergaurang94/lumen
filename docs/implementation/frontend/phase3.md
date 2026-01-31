@@ -40,9 +40,9 @@ Last Updated: 2026-01-30
 
 ### Constraints (Must Match Docs)
 
-- Encryption spec from `architecture-v0.md` (PBKDF2-HMAC-SHA256 + AES-GCM).
-- Entity shape from `memory-schema.md`.
-- Privacy promises in `product-spec.md` must remain visible in the UI.
+- Encryption spec from `docs/architecture/overview.md` (PBKDF2-HMAC-SHA256 + AES-GCM).
+- Entity shape from `docs/architecture/memory-schema.md`.
+- Privacy promises in `docs/product/spec.md` must remain visible in the UI.
 
 ### Progress Summary
 
@@ -64,7 +64,7 @@ Last Updated: 2026-01-30
 
 **Status: ✅ Complete**
 
-Set up IndexedDB via Dexie using the `memory-schema.md` entities, plus a vault metadata store and transcript chunks.
+Set up IndexedDB via Dexie using the `docs/architecture/memory-schema.md` entities, plus a vault metadata store and transcript chunks.
 
 Tasks:
 

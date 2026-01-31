@@ -33,14 +33,15 @@ Inputs:
 
 Rules:
 
-- Prefer summaries over raw transcripts unless within budget.
-- Use raw transcripts for the last 2–3 sessions if budget allows.
+- Prefer raw transcripts unless they exceed budget, then fall back to summaries.
+- Use raw transcripts for the last 10 sessions if budget allows.
 - Include only what directly informs the next move.
 - If the session number is 1, do not include prior sessions.
 
-Token budget (MVP heuristic):
+Token budget (MVP heuristic, model-aware):
 
-- Reserve room for system prompt and model response.
+- Default context window: 200K tokens (model-aware, override per model).
+- Reserve room for system prompt and model response (default reserve: 60K tokens).
 - Target ~70–75% of the context window for input.
 - If raw transcripts exceed budget, fall back to summaries.
 
