@@ -133,6 +133,7 @@ export default function SetupPage() {
   return (
     <AuthPageLayout
       backHref="/login"
+      progress={{ current: 2, total: 2, label: 'Onboarding' }}
       footer={
         <PrivacyFooter>
           Your passphrase encrypts your data locally.

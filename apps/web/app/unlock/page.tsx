@@ -75,7 +75,7 @@ export default function UnlockPage() {
 
   if (isCheckingVault) {
     return (
-      <AuthPageLayout>
+      <AuthPageLayout showBack={false}>
         <div className="flex items-center justify-center">
           <div className="w-8 h-8 rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
         </div>
@@ -85,6 +85,7 @@ export default function UnlockPage() {
 
   return (
     <AuthPageLayout
+      showBack={false}
       backHref="/login"
       footer={
         <PrivacyFooter>
@@ -168,6 +169,9 @@ export default function UnlockPage() {
               'Unlock'
             )}
           </Button>
+          <p className="text-xs text-muted-foreground/70 text-center">
+            Forgot your passphrase? It can&apos;t be recovered yet.
+          </p>
         </form>
       </motion.div>
     </AuthPageLayout>

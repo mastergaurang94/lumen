@@ -34,7 +34,10 @@ export default function LoginPage() {
   };
 
   return (
-    <AuthPageLayout footer={<PrivacyFooter />}>
+    <AuthPageLayout
+      progress={{ current: 1, total: 2, label: 'Onboarding' }}
+      footer={<PrivacyFooter />}
+    >
       <div className="relative z-10 w-full max-w-sm">
         <AnimatePresence mode="wait">
           {viewState === 'form' || viewState === 'loading' ? (
