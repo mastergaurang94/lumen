@@ -62,7 +62,7 @@ export function EndSessionDialog({ onConfirm, onCancel }: EndSessionDialogProps)
             End this session?
           </h2>
           <p id="dialog-description" className="text-muted-foreground text-sm mb-6">
-            Your conversation will be saved locally. You can start a new session in 7 days.
+            Your conversation will be saved locally. Take time to reflect and act on what came up.
           </p>
           <div className="flex gap-3">
             <Button ref={cancelButtonRef} variant="outline" onClick={onCancel} className="flex-1">

@@ -12,10 +12,11 @@ Last Updated: 2026-01-30
 
 - 2026-01-30: Phase 4 scaffold initialized.
 - 2026-01-30: Revised approach — session spacing enforced conversationally by coach, not hard server-side gating. Server records timestamps but doesn't block access.
+- 2026-01-31: Step 1 complete — session page now shows soft advisory for early returns, button always enabled, wired to real storage. Added `SessionSpacing` type, `getDaysSinceLastSession` + related query helpers. Fixed `registerLockHandler` return type. Also updated end-session dialog and session closure copy to use softer "suggested" language.
 
 ### In Progress / Next Up
 
-- Step 1: Update Phase 2-3 components for soft gating
+- Step 1 complete. Next: Step 2 (update system prompts)
 
 ### Edge Cases to Consider (Phase 4)
 
@@ -51,7 +52,7 @@ Last Updated: 2026-01-30
 
 | Step | Status | Notes                                                  |
 | ---- | ------ | ------------------------------------------------------ |
-| 1    | ⬜     | Update session page: soft gate                         |
+| 1    | ✅     | Update session page: soft gate                         |
 | 2    | ⬜     | Update system prompts: spacing enforcement             |
 | 3    | ⬜     | Update harness flow doc: remove server gating          |
 | 4    | ⬜     | Context assembly: inject spacing data                  |
@@ -62,19 +63,19 @@ Last Updated: 2026-01-30
 
 ### Step 1: Update Session Page — Soft Gate
 
-**Status: ⬜ Not Started**
+**Status: ✅ Complete**
 
 Convert `/session` page from hard locked/unlocked states to soft advisory.
 
 Tasks:
 
-- [ ] Remove `LockedState` component (or repurpose as advisory)
-- [ ] Replace `SessionGateState` type: remove 'locked', add 'early_return' | 'ready'
-- [ ] Update `SessionGate` interface: add `daysSinceLastSession: number | null`
-- [ ] Show advisory message when `daysSinceLastSession < 7` (not a blocker)
-- [ ] Keep "Begin session" button enabled regardless of spacing
-- [ ] Update footer copy to soften "spaced 7 days apart" to "designed for weekly rhythm"
-- [ ] Wire to real storage: compute days from `getLastSession().ended_at`
+- [x] Remove `LockedState` component (replaced with soft advisory)
+- [x] Replace `SessionGateState` type: added `SessionSpacingState` = 'early_return' | 'ready'
+- [x] Update interface: new `SessionSpacing` with `daysSinceLastSession`, `isFirstSession`
+- [x] Show advisory message when `daysSinceLastSession < 7` (not a blocker)
+- [x] Keep "Begin session" button enabled regardless of spacing
+- [x] Update footer copy to soften "spaced 7 days apart" to "designed for weekly rhythm"
+- [x] Wire to real storage: compute days from `getLastSession().ended_at`
 
 Files to modify:
 - `apps/web/app/session/page.tsx`

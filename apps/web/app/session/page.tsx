@@ -3,59 +3,36 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Sun, Calendar, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Clock, Sun, Sparkles, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthPageLayout } from '@/components/auth-page-layout';
-import {
-  formatSessionDate,
-  formatRelativeTime,
-  formatDaysAgo,
-  getTimeGreeting,
-} from '@/lib/format';
+import { formatDaysAgo, getTimeGreeting } from '@/lib/format';
 import { isUnlocked } from '@/lib/crypto/key-context';
 import { createStorageService } from '@/lib/storage/dexie-storage';
-import type { SessionGate } from '@/types/session';
+import { getLastSession, getDaysSinceLastSession } from '@/lib/storage/queries';
+import type { SessionSpacing } from '@/types/session';
 
-// Mock toggles - use env vars in production
-const MOCK_UNLOCKED = process.env.NEXT_PUBLIC_MOCK_SESSION_UNLOCKED !== 'false';
-const MOCK_ACTIVE_SESSION = process.env.NEXT_PUBLIC_MOCK_ACTIVE_SESSION === 'true';
+const SESSION_SPACING_DAYS = 7;
+const DEFAULT_USER_ID = 'local-user';
 
-function getMockSessionGate(): SessionGate {
-  if (MOCK_UNLOCKED) {
-    return {
-      state: 'unlocked',
-      nextAvailable: null,
-      lastSessionDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
-      hasActiveSession: MOCK_ACTIVE_SESSION,
-    };
-  }
-
-  // Locked state - next session in 3 days
-  const nextAvailable = new Date();
-  nextAvailable.setDate(nextAvailable.getDate() + 3);
-  nextAvailable.setHours(10, 0, 0, 0);
-
-  return {
-    state: 'locked',
-    nextAvailable,
-    lastSessionDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
-    hasActiveSession: false,
-  };
-}
+// Mock toggle for testing early return state
+const MOCK_EARLY_RETURN = process.env.NEXT_PUBLIC_MOCK_EARLY_RETURN === 'true';
 
 export default function SessionPage() {
   const router = useRouter();
   const storageRef = React.useRef(createStorageService());
-  const [sessionGate, setSessionGate] = React.useState<SessionGate | null>(null);
+  const [spacing, setSpacing] = React.useState<SessionSpacing | null>(null);
   const [mounted, setMounted] = React.useState(false);
   const [vaultReady, setVaultReady] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
-    const checkVault = async () => {
+    const checkVaultAndLoadSpacing = async () => {
+      const storage = storageRef.current;
+
       // Gate access until the vault is initialized and unlocked.
-      const metadata = await storageRef.current.getVaultMetadata();
+      const metadata = await storage.getVaultMetadata();
       if (!metadata?.vault_initialized) {
         router.replace('/setup');
         return;
@@ -65,21 +42,43 @@ export default function SessionPage() {
         return;
       }
       setVaultReady(true);
-      // Simulate API call
-      const gate = getMockSessionGate();
-      setSessionGate(gate);
+
+      // Load session spacing data from storage
+      const [lastSession, daysSince] = await Promise.all([
+        getLastSession(storage, DEFAULT_USER_ID),
+        getDaysSinceLastSession(storage, DEFAULT_USER_ID),
+      ]);
+
+      // Check for active (incomplete) session
+      const transcripts = await storage.listTranscripts(DEFAULT_USER_ID);
+      const hasActiveSession = transcripts.some((t) => t.ended_at === null);
+
+      const lastSessionDate = lastSession?.ended_at ? new Date(lastSession.ended_at) : null;
+      const isFirstSession = !lastSession && !hasActiveSession;
+
+      // Determine spacing state (mock override for testing)
+      const isEarlyReturn = MOCK_EARLY_RETURN || (daysSince !== null && daysSince < SESSION_SPACING_DAYS);
+      const state: SessionSpacing['state'] = isEarlyReturn ? 'early_return' : 'ready';
+
+      setSpacing({
+        state,
+        daysSinceLastSession: MOCK_EARLY_RETURN ? 3 : daysSince, // Mock 3 days for testing
+        lastSessionDate,
+        hasActiveSession,
+        isFirstSession,
+      });
     };
 
-    checkVault();
+    checkVaultAndLoadSpacing();
   }, [router]);
 
   // Loading state
-  if (!mounted || !vaultReady || !sessionGate) {
+  if (!mounted || !vaultReady || !spacing) {
     return (
       <AuthPageLayout
         footer={
           <p className="text-sm text-muted-foreground/70">
-            Sessions are spaced 7 days apart to give you time to reflect and act.
+            Sessions are designed for a weekly rhythm — space to reflect and act.
           </p>
         }
       >
@@ -96,118 +95,31 @@ export default function SessionPage() {
       showBack={false}
       footer={
         <p className="text-sm text-muted-foreground/70">
-          Sessions are spaced 7 days apart to give you time to reflect and act.
+          Sessions are designed for a weekly rhythm — space to reflect and act.
         </p>
       }
     >
       <div className="relative z-10 w-full max-w-md">
-        <AnimatePresence mode="wait">
-          {sessionGate.state === 'locked' ? (
-            <LockedState
-              key="locked"
-              nextAvailable={sessionGate.nextAvailable!}
-              lastSessionDate={sessionGate.lastSessionDate}
-            />
-          ) : (
-            <UnlockedState
-              key="unlocked"
-              lastSessionDate={sessionGate.lastSessionDate}
-              hasActiveSession={sessionGate.hasActiveSession}
-            />
-          )}
-        </AnimatePresence>
+        <SessionContent spacing={spacing} />
       </div>
     </AuthPageLayout>
   );
 }
 
-function LockedState({
-  nextAvailable,
-  lastSessionDate,
-}: {
-  nextAvailable: Date;
-  lastSessionDate: Date | null;
-}) {
-  const relativeTime = formatRelativeTime(nextAvailable);
-  const formattedDate = formatSessionDate(nextAvailable);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="space-y-8 text-center"
-    >
-      {/* Icon */}
-      <div className="flex justify-center">
-        <div className="relative">
-          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
-            <Calendar className="h-9 w-9 text-muted-foreground" />
-          </div>
-          {/* Subtle ring animation */}
-          <div className="absolute inset-0 rounded-full border-2 border-muted-foreground/20 animate-[gentle-pulse_3s_ease-in-out_infinite]" />
-        </div>
-      </div>
-
-      {/* Header */}
-      <div className="space-y-3">
-        <h1 className="font-display text-4xl font-light tracking-tight text-foreground">
-          Your next session
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          Available in <span className="text-foreground font-medium">{relativeTime}</span>
-        </p>
-      </div>
-
-      {/* Date card */}
-      <div className="bg-muted/50 rounded-xl p-6 space-y-1">
-        <p className="text-sm text-muted-foreground uppercase tracking-wide">Opens on</p>
-        <p className="text-xl font-display text-foreground">{formattedDate}</p>
-      </div>
-
-      {/* Context about last session */}
-      {lastSessionDate && (
-        <p className="text-sm text-muted-foreground/70">
-          Your last session was {formatDaysAgo(lastSessionDate)}
-        </p>
-      )}
-
-      {/* Disabled button */}
-      <Button disabled className="w-full h-12 text-base opacity-50 cursor-not-allowed">
-        <Clock className="h-4 w-4 mr-2" />
-        Session locked
-      </Button>
-
-      {/* Encouragement */}
-      <p className="text-sm text-muted-foreground/80 leading-relaxed max-w-sm mx-auto">
-        This space between sessions is intentional — use it to act on what came up, notice patterns,
-        and return with fresh perspective.
-      </p>
-    </motion.div>
-  );
-}
-
-function UnlockedState({
-  lastSessionDate,
-  hasActiveSession,
-}: {
-  lastSessionDate: Date | null;
-  hasActiveSession: boolean;
-}) {
-  // Only compute greeting on client to avoid hydration mismatch
+function SessionContent({ spacing }: { spacing: SessionSpacing }) {
   const [greeting, setGreeting] = React.useState('');
-  const isFirstSession = !lastSessionDate && !hasActiveSession;
 
   React.useEffect(() => {
     setGreeting(getTimeGreeting());
   }, []);
 
+  const { isFirstSession, hasActiveSession, state, daysSinceLastSession, lastSessionDate } =
+    spacing;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className="space-y-8 text-center"
     >
@@ -217,6 +129,8 @@ function UnlockedState({
           <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center">
             {isFirstSession ? (
               <Sparkles className="h-9 w-9 text-accent" />
+            ) : state === 'early_return' ? (
+              <Calendar className="h-9 w-9 text-accent" />
             ) : (
               <Sun className="h-9 w-9 text-accent" />
             )}
@@ -229,7 +143,11 @@ function UnlockedState({
       {/* Header */}
       <div className="space-y-3">
         <h1 className="font-display text-4xl font-light tracking-tight text-foreground">
-          {hasActiveSession ? 'Welcome back' : isFirstSession ? 'Welcome' : greeting || 'Welcome'}
+          {hasActiveSession
+            ? 'Welcome back'
+            : isFirstSession
+              ? 'Welcome'
+              : greeting || 'Welcome'}
         </h1>
         <p className="text-lg text-muted-foreground">
           {hasActiveSession
@@ -240,13 +158,38 @@ function UnlockedState({
         </p>
       </div>
 
-      {/* Pre-session prompt card - only show for new sessions */}
-      {!hasActiveSession && (
+      {/* Early return advisory - soft nudge, not a block */}
+      {state === 'early_return' && !hasActiveSession && daysSinceLastSession !== null && (
+        <div className="bg-muted/50 border border-muted-foreground/10 rounded-xl p-5 space-y-3 text-left">
+          <div className="flex items-start gap-3">
+            <Clock className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+            <div className="space-y-2">
+              <p className="font-medium text-foreground">
+                It&apos;s been{' '}
+                {daysSinceLastSession === 0
+                  ? 'less than a day'
+                  : daysSinceLastSession === 1
+                    ? '1 day'
+                    : `${daysSinceLastSession} days`}{' '}
+                since your last session.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Your coach suggests waiting about a week. The space in between is where growth
+                happens — time to act on what came up, notice patterns, and return with fresh
+                perspective.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pre-session prompt card - only show for new sessions when ready */}
+      {!hasActiveSession && state === 'ready' && !isFirstSession && (
         <div className="bg-accent/5 border border-accent/10 rounded-xl p-6 space-y-4">
           <div className="flex items-start gap-3 text-left">
             <Clock className="h-5 w-5 text-accent shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <p className="font-medium text-foreground">Set aside about 60 minutes</p>
+              <p className="font-medium text-foreground">Set aside about 60 minutes.</p>
               <p className="text-sm text-muted-foreground">
                 Find a quiet space where you can reflect without interruption.
               </p>
@@ -255,7 +198,22 @@ function UnlockedState({
         </div>
       )}
 
-      {/* Begin/Resume button */}
+      {/* First session prompt */}
+      {isFirstSession && (
+        <div className="bg-accent/5 border border-accent/10 rounded-xl p-6 space-y-4">
+          <div className="flex items-start gap-3 text-left">
+            <Clock className="h-5 w-5 text-accent shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-medium text-foreground">Set aside about 60 minutes.</p>
+              <p className="text-sm text-muted-foreground">
+                Find a quiet space where you can reflect without interruption.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Begin/Resume button - always enabled */}
       <Link href="/chat" className="block">
         <Button className="w-full h-14 text-lg font-medium">
           {hasActiveSession ? 'Resume session' : 'Begin session'}
@@ -263,9 +221,9 @@ function UnlockedState({
       </Link>
 
       {/* Context text */}
-      {!hasActiveSession && !isFirstSession && lastSessionDate && (
+      {!hasActiveSession && !isFirstSession && lastSessionDate && state === 'ready' && (
         <p className="text-sm text-muted-foreground/70">
-          It&apos;s been a week since we last spoke.
+          Your last session was {formatDaysAgo(lastSessionDate)}.
           <br />
           What&apos;s been on your mind?
         </p>
