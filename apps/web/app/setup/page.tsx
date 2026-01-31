@@ -109,6 +109,7 @@ export default function SetupPage() {
         created_at: now,
         updated_at: now,
       };
+      storageRef.current.setVaultContext({ key, metadata });
       await storageRef.current.saveProfile(profile);
 
       setKey(key);

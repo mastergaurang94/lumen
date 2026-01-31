@@ -1,18 +1,18 @@
 import Dexie, { type Table } from 'dexie';
 import type {
-  UserProfile,
+  EncryptedUserProfile,
   SessionTranscript,
   SessionTranscriptChunk,
-  SessionSummary,
+  EncryptedSessionSummary,
   VaultMetadata,
 } from '@/types/storage';
 
 // Dexie schema for local encrypted storage (chunked transcripts).
 export class LumenDB extends Dexie {
-  userProfiles!: Table<UserProfile, string>;
+  userProfiles!: Table<EncryptedUserProfile, string>;
   sessionTranscripts!: Table<SessionTranscript, string>;
   sessionTranscriptChunks!: Table<SessionTranscriptChunk, [string, number]>;
-  sessionSummaries!: Table<SessionSummary, string>;
+  sessionSummaries!: Table<EncryptedSessionSummary, string>;
   vaultMetadata!: Table<VaultMetadata, string>;
 
   constructor() {

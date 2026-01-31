@@ -18,7 +18,8 @@ We store three primary objects per user:
 - User profile (minimal, stable)
 
 All data is stored locally in the browser via IndexedDB, encrypted at rest with
-WebCrypto AES-GCM + PBKDF2.
+WebCrypto AES-GCM + PBKDF2. Transcripts are stored as encrypted chunks; profiles
+and summaries are stored as encrypted blobs.
 
 ## Entities
 
@@ -36,9 +37,15 @@ Fields:
 - created_at: string (ISO8601)
 - updated_at: string (ISO8601)
 
+Stored at rest as an encrypted blob with associated encryption metadata:
+
+- encrypted_blob: bytes (ciphertext)
+- encryption_header: object
+- transcript_hash: bytes (SHA-256 over header + encrypted blob)
+
 ### 2) SessionTranscript
 
-Raw session content. Immutable once written. Stored encrypted at rest.
+Session-level metadata. Message content lives in chunk records.
 
 Fields:
 
@@ -49,8 +56,20 @@ Fields:
 - timezone: string | null (IANA, e.g., "America/Los_Angeles")
 - locale_hint: string | null (e.g., "en-US")
 - system_prompt_version: string (e.g., "intake-v0.1")
+- created_at: string (ISO8601)
+- updated_at: string (ISO8601)
+
+### 2a) SessionTranscriptChunk
+
+Append-only encrypted chunks for transcript content.
+
+Fields:
+
+- session_id: string (uuid)
+- chunk_index: number (0-based)
 - encrypted_blob: bytes (ciphertext)
 - encryption_header: object
+- transcript_hash: bytes (SHA-256 over header + encrypted blob)
 - created_at: string (ISO8601)
 
 encryption_header:
@@ -62,8 +81,8 @@ encryption_header:
 - iv: bytes (12 bytes)
 - version: string (e.g., "enc-v0.1")
 
-Note: Decrypted messages live in memory during an active session only. The
-encrypted blob contains the serialized message array and any per-message metadata.
+Note: Decrypted messages live in memory during an active session only. Each
+encrypted blob contains a serialized message array and any per-message metadata.
 
 ### 3) SessionSummary
 
@@ -81,10 +100,17 @@ Fields:
 - created_at: string (ISO8601)
 - updated_at: string (ISO8601)
 
+Stored at rest as an encrypted blob with associated encryption metadata:
+
+- encrypted_blob: bytes (ciphertext)
+- encryption_header: object
+- transcript_hash: bytes (SHA-256 over header + encrypted blob)
+
 ## Relationships
 
 - One UserProfile per user.
 - One SessionTranscript per session.
+- One or more SessionTranscriptChunks per session (ordered by chunk_index).
 - One SessionSummary per session.
 - SessionSummary references its SessionTranscript via session_id.
 
@@ -98,3 +124,4 @@ Fields:
 - By user_id.
 - By session_id.
 - By started_at (descending for recent-first lists).
+- By session_id + chunk_index (for ordered transcript reconstruction).

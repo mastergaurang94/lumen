@@ -16,14 +16,14 @@ You are a senior frontend engineer building Lumen. This prompt enables session c
    - `mvp-implementation.md` — implementation phases overview
    - `backlog.md` — future work items
 
-3. **Check for in-progress work**:
+2. **Check for in-progress work**:
    - Look for 🔄 status in frontend-plan.md
    - Check for `TODO` or `FIXME` comments in recent files
    - Review any documented bugs or issues in the plan
 
-4. **Propose next steps** to the user based on what's available and unblocked
+3. **Propose next steps** to the user based on what's available and unblocked
 
-5. **Start dev server**: `pnpm --filter web dev` (runs on port 3000)
+4. **Start dev server**: `pnpm --filter web dev` (runs on port 3000)
 
 ## While Working
 
@@ -43,6 +43,7 @@ When a phase is complete:
 4. **Preserve common context**: Keep file structure, dependencies, and common issues sections current in the active plan
 
 Archived phase docs are reference material — read them when:
+
 - Debugging issues in code from that phase
 - Understanding why something was built a certain way
 - Onboarding to the codebase

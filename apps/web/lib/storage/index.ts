@@ -6,8 +6,10 @@ import type {
   VaultMetadata,
 } from '@/types/storage';
 
-// StorageService abstracts persistence so we can swap backends later.
+// StorageService handles encrypted payloads internally and exposes decrypted data.
 export interface StorageService {
+  setVaultContext(params: { key: CryptoKey; metadata: VaultMetadata }): void;
+
   getProfile(userId: string): Promise<UserProfile | null>;
   saveProfile(profile: UserProfile): Promise<void>;
 

@@ -1,13 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { clearKey } from '@/lib/crypto/key-context';
+import { lockVault } from '@/lib/crypto/key-context';
 
 // Clears sensitive keys on page unload to reduce exposure window.
 export function VaultProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     const handleUnload = () => {
-      clearKey();
+      void lockVault();
     };
 
     window.addEventListener('beforeunload', handleUnload);

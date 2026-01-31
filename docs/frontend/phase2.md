@@ -355,6 +355,7 @@ Completed items:
 **Design philosophy:**
 
 The closure view intentionally avoids overwhelming the user after an emotional session:
+
 - Single recognition moment (seed to carry forward) instead of a full summary
 - Action steps are opt-in, not forced
 - Generous whitespace and breathing room
@@ -397,6 +398,7 @@ Completed items:
 **Design philosophy:**
 
 Edge states should feel grounded and reassuring, not alarming:
+
 - "Taking a moment" instead of "Error" or "Unavailable"
 - "Connection interrupted" instead of "Network error"
 - Always reassure users their data is safe

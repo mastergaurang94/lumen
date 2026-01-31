@@ -8,6 +8,7 @@ export interface EncryptionHeader {
   version: string;
 }
 
+// UserProfile is the decrypted runtime shape used by the app.
 export interface UserProfile {
   user_id: string;
   preferred_name: string | null;
@@ -41,6 +42,7 @@ export interface SessionTranscriptChunk {
   created_at: string;
 }
 
+// SessionSummary is the decrypted runtime shape used by the app.
 export interface SessionSummary {
   session_id: string;
   user_id: string;
@@ -49,6 +51,27 @@ export interface SessionSummary {
   action_steps: string[];
   open_threads: string[];
   coach_notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// EncryptedUserProfile is the on-disk shape stored in IndexedDB.
+export interface EncryptedUserProfile {
+  user_id: string;
+  encrypted_blob: ArrayBuffer;
+  encryption_header: EncryptionHeader;
+  transcript_hash: ArrayBuffer;
+  created_at: string;
+  updated_at: string;
+}
+
+// EncryptedSessionSummary is the on-disk shape stored in IndexedDB.
+export interface EncryptedSessionSummary {
+  session_id: string;
+  user_id: string;
+  encrypted_blob: ArrayBuffer;
+  encryption_header: EncryptionHeader;
+  transcript_hash: ArrayBuffer;
   created_at: string;
   updated_at: string;
 }

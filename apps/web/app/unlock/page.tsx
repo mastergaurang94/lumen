@@ -125,7 +125,10 @@ export default function UnlockPage() {
                 value={passphrase}
                 onChange={(event) => setPassphrase(event.target.value)}
                 disabled={isSubmitting}
-                className={cn('pr-10', error && 'border-destructive focus-visible:ring-destructive')}
+                className={cn(
+                  'pr-10',
+                  error && 'border-destructive focus-visible:ring-destructive',
+                )}
                 autoComplete="current-password"
               />
               <button
@@ -151,7 +154,11 @@ export default function UnlockPage() {
             </div>
           </div>
 
-          <Button type="submit" disabled={!passphrase || isSubmitting} className="w-full h-12 text-base">
+          <Button
+            type="submit"
+            disabled={!passphrase || isSubmitting}
+            className="w-full h-12 text-base"
+          >
             {isSubmitting ? (
               <span className="flex items-center gap-2">
                 <Spinner size="md" />

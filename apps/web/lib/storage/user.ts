@@ -13,3 +13,9 @@ export function getOrCreateUserId(): string {
   window.localStorage.setItem(USER_ID_KEY, created);
   return created;
 }
+
+// Clears the local-only user id (dev reset utility).
+export function clearLocalUserId() {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(USER_ID_KEY);
+}

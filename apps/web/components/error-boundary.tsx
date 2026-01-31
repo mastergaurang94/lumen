@@ -40,12 +40,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
         return this.props.fallback;
       }
 
-      return (
-        <ErrorFallback
-          error={this.state.error}
-          onRetry={this.handleRetry}
-        />
-      );
+      return <ErrorFallback error={this.state.error} onRetry={this.handleRetry} />;
     }
 
     return this.props.children;
@@ -83,17 +78,13 @@ export function ErrorFallback({
           <h1 className="font-display text-3xl font-light tracking-tight text-foreground">
             {title}
           </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            {message}
-          </p>
+          <p className="text-lg text-muted-foreground leading-relaxed">{message}</p>
         </div>
 
         {/* Error details (development only) */}
         {process.env.NODE_ENV === 'development' && error && (
           <div className="bg-muted/50 rounded-xl p-4 text-left overflow-auto">
-            <p className="text-xs text-muted-foreground font-mono break-all">
-              {error.message}
-            </p>
+            <p className="text-xs text-muted-foreground font-mono break-all">{error.message}</p>
           </div>
         )}
 

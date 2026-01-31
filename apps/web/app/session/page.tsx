@@ -27,7 +27,7 @@ function getMockSessionGate(): SessionGate {
       state: 'unlocked',
       nextAvailable: null,
       lastSessionDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
-      hasActiveSession: MOCK_ACTIVE_SESSION
+      hasActiveSession: MOCK_ACTIVE_SESSION,
     };
   }
 
