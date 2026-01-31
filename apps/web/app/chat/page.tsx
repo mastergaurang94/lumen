@@ -530,16 +530,11 @@ function ChatPageInner() {
 
   // Show session closure when complete
   if (sessionState === 'complete') {
-    // Calculate next session date (7 days from now)
-    const nextSessionDate = new Date();
-    nextSessionDate.setDate(nextSessionDate.getDate() + 7);
-
     return (
       <SessionClosure
         sessionDate={sessionDateRef.current}
         recognitionMoment={MOCK_RECOGNITION_MOMENT}
         actionSteps={MOCK_ACTION_STEPS}
-        nextSessionDate={nextSessionDate}
       />
     );
   }

@@ -11,16 +11,21 @@ interface SessionClosureProps {
   sessionDate: Date;
   recognitionMoment: string;
   actionSteps: string[];
-  nextSessionDate: Date;
 }
 
 export function SessionClosure({
   sessionDate,
   recognitionMoment,
   actionSteps,
-  nextSessionDate,
 }: SessionClosureProps) {
   const [showActionSteps, setShowActionSteps] = React.useState(false);
+
+  // Calculate suggested next session (7 days from session date)
+  const suggestedNextSession = React.useMemo(() => {
+    const date = new Date(sessionDate);
+    date.setDate(date.getDate() + 7);
+    return date;
+  }, [sessionDate]);
 
   return (
     <div className="atmosphere min-h-screen flex flex-col">
@@ -80,7 +85,7 @@ export function SessionClosure({
             </div>
           </motion.div>
 
-          {/* Next session info */}
+          {/* Next session suggestion */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -89,8 +94,8 @@ export function SessionClosure({
           >
             <Calendar className="h-4 w-4" />
             <p className="text-sm">
-              Next session available{' '}
-              <span className="text-foreground">{formatSessionDate(nextSessionDate)}</span>
+              Suggested next session:{' '}
+              <span className="text-foreground">{formatSessionDate(suggestedNextSession)}</span>
             </p>
           </motion.div>
 
