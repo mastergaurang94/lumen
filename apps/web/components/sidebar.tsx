@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -137,9 +138,12 @@ export function Sidebar() {
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 pb-4">
-            <span className="font-display text-3xl font-light tracking-wide text-foreground">
+            <Link
+              href="/"
+              className="font-display text-3xl font-light tracking-wide text-foreground hover:text-foreground/90 transition-colors"
+            >
               Lumen
-            </span>
+            </Link>
             <button
               onClick={() => setOpen(false)}
               className="p-2 -m-2 text-muted-foreground hover:text-foreground transition-colors duration-200"
