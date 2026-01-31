@@ -1,22 +1,26 @@
 # Frontend Implementation Plan
 
-Last Updated: 2026-01-30
+Last Updated: 2026-01-31
 
 ---
 
 ## Current Phase: Phase 4 — Conversational Session Spacing + Backend Foundation
 
-**Status: 🔄 Not Started**
+**Status: ✅ Complete**
 
 ### Running Updates
 
 - 2026-01-30: Phase 4 scaffold initialized.
 - 2026-01-30: Revised approach — session spacing enforced conversationally by coach, not hard server-side gating. Server records timestamps but doesn't block access.
 - 2026-01-31: Step 1 complete — session page now shows soft advisory for early returns, button always enabled, wired to real storage. Added `SessionSpacing` type, `getDaysSinceLastSession` + related query helpers. Fixed `registerLockHandler` return type. Also updated end-session dialog and session closure copy to use softer "suggested" language.
+- 2026-01-31: Step 5 complete — added spacing query helpers in storage.
+- 2026-01-31: Step 4 complete — added deterministic `buildSessionContext()` with Markdown + YAML metadata and tests.
+- 2026-01-31: Step 6 complete — wired context assembly into chat start and stored `session_number`.
+- 2026-01-31: Context assembly tuned — transcript-first (up to 10), model-aware token budgeting with 60K reserve.
 
 ### In Progress / Next Up
 
-- Step 3 complete. Next: Step 4 (context assembly code)
+- Phase 4 complete. Next: follow-up backend foundation work.
 
 ### Edge Cases to Consider (Phase 4)
 
@@ -31,8 +35,8 @@ Last Updated: 2026-01-30
 - Replace hard UI gate with soft advisory nudge
 - Enable coach to enforce session spacing conversationally (via system prompt + context injection)
 - Inject `days_since_last_session` and `last_session_action_steps` into context assembly
-- Update `system-prompts-v0.md` with spacing enforcement instructions
-- Update `harness-flow-v0.md` to remove server-side gating requirement
+- Update `coaching/system-prompts.md` with spacing enforcement instructions
+- Update `coaching/harness-flow.md` to remove server-side gating requirement
 
 ### Non-Goals (Phase 4)
 
@@ -44,8 +48,10 @@ Last Updated: 2026-01-30
 ### Constraints (Must Match Docs)
 
 - System prompt must strongly encourage 7-day spacing without being preachy
-- Coach may decline to proceed if user returns too early, but framed as coaching, not enforcement
+- Coach acknowledges early returns, may name the pattern, and proceeds if the user insists
 - Context assembly must be deterministic and testable
+- Context assembly uses model-aware token budgeting (default 200K window, 60K reserve)
+- Prefer raw transcripts; default to up to 10 recent sessions
 - Privacy promises in UI remain unchanged
 
 ### Progress Summary
@@ -55,9 +61,9 @@ Last Updated: 2026-01-30
 | 1    | ✅     | Update session page: soft gate                 |
 | 2    | ✅     | Update system prompts: spacing enforcement     |
 | 3    | ✅     | Update harness flow doc: remove server gating  |
-| 4    | ⬜     | Context assembly: inject spacing data          |
-| 5    | ⬜     | Storage queries: add `getDaysSinceLastSession` |
-| 6    | ⬜     | Chat page: pass spacing context to LLM         |
+| 4    | ✅     | Context assembly: inject spacing data          |
+| 5    | ✅     | Storage queries: add `getDaysSinceLastSession` |
+| 6    | ✅     | Chat page: pass spacing context to LLM         |
 
 ---
 
@@ -89,7 +95,7 @@ Files to modify:
 
 **Status: ✅ Complete**
 
-Add spacing awareness to coaching prompts in `docs/system-prompts-v0.md`.
+Add spacing awareness to coaching prompts in `docs/coaching/system-prompts.md`.
 
 Tasks:
 
@@ -104,11 +110,11 @@ Tasks:
   - Reference last session's action steps if available
   - Ask what they tried, noticed, or learned in the gap
 - [x] Add to "Ongoing Prompt" key moves: check action step follow-through
-- [x] Add "Modeling Healthy Boundaries" section with example coach responses
+- [x] Add "Modeling Healthy Boundaries" guidance (no examples; keep language flexible)
 
 Files modified:
 
-- `docs/system-prompts-v0.md`
+- `docs/coaching/system-prompts.md`
 
 ---
 
@@ -116,7 +122,7 @@ Files modified:
 
 **Status: ✅ Complete**
 
-Remove server-side gating requirement from `docs/harness-flow-v0.md`.
+Remove server-side gating requirement from `docs/coaching/harness-flow.md`.
 
 Tasks:
 
@@ -129,27 +135,27 @@ Tasks:
 
 Files modified:
 
-- `docs/harness-flow-v0.md`
+- `docs/coaching/harness-flow.md`
 
 ---
 
 ### Step 4: Context Assembly — Inject Spacing Data
 
-**Status: ⬜ Not Started**
+**Status: ✅ Complete**
 
 Build context assembly logic that injects spacing-related data for the LLM.
 
 Tasks:
 
-- [ ] Create `lib/context/assembly.ts` with `buildSessionContext()` function
-- [ ] Include in context object:
+- [x] Create `lib/context/assembly.ts` with `buildSessionContext()` function
+- [x] Include in context object:
   - `days_since_last_session: number | null`
   - `last_session_action_steps: string[]` (from last summary)
   - `last_session_open_threads: string[]` (from last summary)
   - `session_number: number` (1 for intake, 2+ for ongoing)
   - `current_date: string` (ISO date for seasonal awareness)
-- [ ] Format context as structured preamble for system prompt injection
-- [ ] Add unit tests for context assembly (deterministic output for given inputs)
+- [x] Format context as structured preamble for system prompt injection (Markdown + YAML front matter)
+- [x] Add unit tests for context assembly (deterministic output for given inputs)
 
 Files to create:
 
@@ -160,18 +166,18 @@ Files to create:
 
 ### Step 5: Storage Queries — Add Spacing Helpers
 
-**Status: ⬜ Not Started**
+**Status: ✅ Complete**
 
 Add query helpers for spacing-related data.
 
 Tasks:
 
-- [ ] Add `getDaysSinceLastSession(storage, userId): Promise<number | null>`
+- [x] Add `getDaysSinceLastSession(storage, userId): Promise<number | null>`
   - Returns `null` if no completed sessions
   - Computes days from `last_session.ended_at` to now
-- [ ] Add `getLastSessionActionSteps(storage, userId): Promise<string[]>`
+- [x] Add `getLastSessionActionSteps(storage, userId): Promise<string[]>`
   - Returns action steps from most recent summary, or empty array
-- [ ] Add `getSessionNumber(storage, userId): Promise<number>`
+- [x] Add `getSessionNumber(storage, userId): Promise<number>`
   - Returns count of completed sessions + 1
 
 Files to modify:
@@ -182,16 +188,16 @@ Files to modify:
 
 ### Step 6: Chat Page — Pass Spacing Context to LLM
 
-**Status: ⬜ Not Started**
+**Status: ✅ Complete**
 
 Wire context assembly into the chat flow.
 
 Tasks:
 
-- [ ] On session start, call `buildSessionContext()` with storage data
-- [ ] Include context in system prompt sent to LLM
-- [ ] Store `session_number` in `SessionTranscript` for future reference
-- [ ] Log context assembly decisions for debugging (non-PII only)
+- [x] On session start, call `buildSessionContext()` with storage data
+- [x] Prepare context as the system prompt payload for the server LLM call
+- [x] Store `session_number` in `SessionTranscript` for future reference
+- [x] Log context assembly decisions for debugging (non-PII only)
 
 Files to modify:
 

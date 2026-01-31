@@ -14,6 +14,7 @@ pnpm format:check      # Check formatting without modifying
 pnpm --filter web dev      # Next.js dev server on port 3000
 pnpm --filter web build    # Production build
 pnpm --filter web start    # Production server
+pnpm --filter web test -- --run  # Vitest non-watch run (preferred for CI/verification)
 
 # API (apps/api)
 cd apps/api && go run ./cmd/api
@@ -47,6 +48,7 @@ cd apps/api && go run ./cmd/api
 - Clean up temporary files; leave repo organized
 - Use conventional commits
 - Add high-signal comments that explain intent, invariants, and non-obvious decisions
+- Comments should let a reader quickly understand what a file or function does; balance concise and deliberate
 
 ## Frontend Details
 
@@ -66,7 +68,7 @@ cd apps/api && go run ./cmd/api
 
 **Aesthetic**: Warm, grounded, and clear — never stark or cold. Inspired by OmmWriter's distraction-free focus and claude.ai's clean structure, but with more warmth and atmosphere.
 
-**Design system** (see `docs/design-system.md`):
+**Design system** (see `docs/design/system.md`):
 
 - Three time-based color palettes (morning/afternoon/evening) that shift with the day
 - Fraunces display font for headings, Lato for body text
@@ -110,8 +112,8 @@ These patterns are core to Lumen's product experience:
 
 ## Key Documentation
 
-- `docs/frontend-plan.md` - Implementation roadmap with progress tracking
-- `docs/design-system.md` - Palettes, typography, component guidelines
-- `docs/product-spec.md` - Product requirements (locked for MVP)
-- `docs/architecture-v0.md` - System architecture and data flow
-- `docs/mvp-implementation.md` - MVP Implementation Planning
+- `docs/product/spec.md` - Product requirements (locked for MVP)
+- `docs/design/system.md` - Palettes, typography, component guidelines
+- `docs/architecture/overview.md` - System architecture and data flow
+- `docs/coaching/` - Harness flow and system prompts
+- `docs/implementation/` - MVP and frontend implementation plans

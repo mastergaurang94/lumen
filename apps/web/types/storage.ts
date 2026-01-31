@@ -25,6 +25,7 @@ export interface SessionTranscript {
   user_id: string;
   started_at: string;
   ended_at: string | null;
+  session_number?: number | null;
   timezone: string | null;
   locale_hint: string | null;
   system_prompt_version: string;

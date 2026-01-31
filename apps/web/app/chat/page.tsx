@@ -20,8 +20,11 @@ import { formatSessionDate, formatElapsedTime } from '@/lib/format';
 import { Z_INDEX } from '@/lib/z-index';
 import { decrypt, encrypt, generateIV, hashTranscript } from '@/lib/crypto';
 import { getKey, isUnlocked, registerLockHandler } from '@/lib/crypto/key-context';
+import { buildSessionContext } from '@/lib/context/assembly';
 import { createStorageService } from '@/lib/storage/dexie-storage';
+import { getSessionNumber } from '@/lib/storage/queries';
 import { getOrCreateUserId } from '@/lib/storage/user';
+import { DEFAULT_MODEL_ID } from '@/lib/llm/model-config';
 import { deserializeMessages, serializeMessages } from '@/lib/storage/transcript';
 import type {
   VaultMetadata,
@@ -106,6 +109,7 @@ function ChatPageInner() {
   const userIdRef = React.useRef<string | null>(null);
   const sessionIdRef = React.useRef<string | null>(null);
   const transcriptRef = React.useRef<SessionTranscript | null>(null);
+  const sessionContextRef = React.useRef<string | null>(null);
   const chunkIndexRef = React.useRef(0);
   const pendingMessagesRef = React.useRef<Message[]>([]);
   const flushTimeoutRef = React.useRef<number | null>(null);
@@ -279,6 +283,9 @@ function ChatPageInner() {
       const userId = userIdRef.current;
       if (!userId) return;
 
+      const key = getKey();
+      if (!key) return;
+
       const transcripts = await storageRef.current.listTranscripts(userId);
       const activeTranscript =
         transcripts.find((transcript) => transcript.ended_at === null) ?? null;
@@ -289,9 +296,6 @@ function ChatPageInner() {
         sessionIdRef.current = activeTranscript.session_id;
         transcriptRef.current = activeTranscript;
         sessionDateRef.current = new Date(activeTranscript.started_at);
-
-        const key = getKey();
-        if (!key) return;
 
         const chunks = await storageRef.current.listTranscriptChunks(activeTranscript.session_id);
         chunkIndexRef.current = chunks.length;
@@ -306,10 +310,21 @@ function ChatPageInner() {
           setMessages(restoredMessages);
         }
         setStorageReady(true);
+        sessionContextRef.current = await buildSessionContext({
+          storage: storageRef.current,
+          userId,
+          key,
+          options: { modelId: DEFAULT_MODEL_ID },
+        });
+        console.info('context assembly complete', {
+          context_chars: sessionContextRef.current.length,
+          model_id: DEFAULT_MODEL_ID,
+        });
         return;
       }
 
       // Start a new transcript and mark it active.
+      const sessionNumber = await getSessionNumber(storageRef.current, userId);
       const now = new Date();
       const sessionId = crypto.randomUUID();
       const transcript: SessionTranscript = {
@@ -317,6 +332,7 @@ function ChatPageInner() {
         user_id: userId,
         started_at: now.toISOString(),
         ended_at: null,
+        session_number: sessionNumber,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? null,
         locale_hint: navigator.language ?? null,
         system_prompt_version: 'intake-v0.1',
@@ -329,6 +345,17 @@ function ChatPageInner() {
       chunkIndexRef.current = 0;
       await storageRef.current.saveTranscript(transcript);
       setStorageReady(true);
+      // Build context once per session start/resume; reuse for the full session.
+      sessionContextRef.current = await buildSessionContext({
+        storage: storageRef.current,
+        userId,
+        key,
+        options: { modelId: DEFAULT_MODEL_ID },
+      });
+      console.info('context assembly complete', {
+        context_chars: sessionContextRef.current.length,
+        model_id: DEFAULT_MODEL_ID,
+      });
     };
 
     initStorageSession();
@@ -397,6 +424,10 @@ function ChatPageInner() {
 
       // Hide typing indicator, start streaming
       setIsTyping(false);
+
+      const systemPrompt = sessionContextRef.current ?? '';
+      // Placeholder until LLM integration: context is prepared as system prompt input.
+      console.info('llm request prepared', { system_prompt_chars: systemPrompt.length });
 
       // Get next mock response (cycle through them)
       const responseText = MOCK_RESPONSES[responseIndexRef.current % MOCK_RESPONSES.length];

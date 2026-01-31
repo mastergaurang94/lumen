@@ -9,7 +9,7 @@ Lumen offers weekly coaching that builds self-trust -- not dependence -- through
 
 ## Core Principles
 
-- Autonomy by design: built-in spacing between sessions (7 days minimum).
+- Autonomy by design: sessions are designed for a weekly rhythm, encouraged conversationally.
 - Persistent memory: the coach knows the user's story across sessions.
 - Personalization: grounded in the user's influences and what resonates.
 - Privacy: no training usage of user data; local-first MVP with a path to zero-knowledge encrypted sync (v1.1).
@@ -96,6 +96,12 @@ behavior, and safety-aware governance.
 - Treat the harness as product-critical: tests, prompt versioning, and deterministic context assembly.
   - Minimal evaluation harness for summaries and session-closure quality.
 
+### Context Assembly (MVP)
+
+- Model-aware context budgeting (default 200K window, 60K reserved for live session + system prompt).
+- Prefer raw transcripts (up to 10 recent sessions) before falling back to summaries.
+- Context preamble uses Markdown with YAML front matter metadata for clarity and determinism.
+
 ## Auth
 
 - Email + magic link for MVP.
@@ -114,7 +120,7 @@ behavior, and safety-aware governance.
 - Local-first data storage, minimal server footprint.
 - Server responsibilities:
   - auth
-  - session spacing
+  - session metadata recording (timestamps/insights, no blocking)
   - model orchestration
   - governance/policy logic
   - observability scope -- specify what gets logged without violating privacy (timings, token counts, status, error class) and structured logs
