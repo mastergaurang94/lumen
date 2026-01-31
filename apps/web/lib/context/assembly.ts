@@ -28,7 +28,6 @@ type BuildSessionContextParams = {
 // This keeps selection deterministic and lets us tune per-model budgets later.
 const DEFAULT_TOTAL_CONTEXT_TOKENS = 200000;
 const DEFAULT_RESERVED_TOKENS = 60000;
-const DEFAULT_MAX_CHARS = 30000;
 const DEFAULT_MAX_TRANSCRIPTS = 10;
 const DEFAULT_MAX_SUMMARIES = 3;
 
