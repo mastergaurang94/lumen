@@ -4,24 +4,21 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/mastergaurang94/lumen/apps/api/internal/config"
+	"github.com/mastergaurang94/lumen/apps/api/internal/server"
 )
 
 func main() {
-	r := chi.NewRouter()
+	cfg := config.Load()
+	router := server.New(cfg)
 
-	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
-	})
-
-	server := &http.Server{
-		Addr:    ":8080",
-		Handler: r,
+	httpServer := &http.Server{
+		Addr:    cfg.Addr,
+		Handler: router,
 	}
 
-	log.Println("api listening on :8080")
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	log.Printf("api listening on %s", cfg.Addr)
+	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("server error: %v", err)
 	}
 }
