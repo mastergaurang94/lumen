@@ -43,13 +43,13 @@ Last Updated: 2026-01-31
 
 ### Progress Summary
 
-| Step | Status | Notes                                        |
-| ---- | ------ | -------------------------------------------- |
-| 1    | ✅     | API scaffolding + config                     |
-| 2    | ⬜     | Magic link auth foundation                   |
-| 3    | ⬜     | Session metadata endpoints + DB schema       |
-| 4    | ⬜     | Observability (request IDs + OTel hooks)     |
-| 5    | ⬜     | Integration tests for auth + sessions        |
+| Step | Status | Notes                                    |
+| ---- | ------ | ---------------------------------------- |
+| 1    | ✅     | API scaffolding + config                 |
+| 2    | ⬜     | Magic link auth foundation               |
+| 3    | ⬜     | Session metadata endpoints + DB schema   |
+| 4    | ⬜     | Observability (request IDs + OTel hooks) |
+| 5    | ⬜     | Integration tests for auth + sessions    |
 
 ---
 
@@ -117,6 +117,7 @@ Tasks:
 - [ ] Ensure auth context is required for session writes.
 
 Transcript hash contract (MVP):
+
 - Canonical payload is an ordered list of messages.
 - Each message string is: `${role}\n${normalized_content}`.
 - `normalized_content` trims leading/trailing whitespace, converts `\r\n` to `\n`,
@@ -126,6 +127,7 @@ Transcript hash contract (MVP):
   (note this explicitly to avoid drift across clients).
 
 Example (canonical payload string):
+
 ```
 system
 You are Lumen.
@@ -187,11 +189,12 @@ Files to modify/create:
 
 ## Previous Phases (Backend)
 
-| Phase | Status      | Description                        | Archive     |
-| ----- | ----------- | ---------------------------------- | ----------- |
-| 4     | ✅ Complete | LLM proxy foundation               | `phase4.md` |
+| Phase | Status      | Description          | Archive     |
+| ----- | ----------- | -------------------- | ----------- |
+| 4     | ✅ Complete | LLM proxy foundation | `phase4.md` |
 
 Phase 4 LLM proxy requirements (for reference):
+
 - Require auth for all LLM proxy calls.
 - Validate request payload shape (model, messages, max tokens).
 - Enforce per-user quotas and basic rate limiting.

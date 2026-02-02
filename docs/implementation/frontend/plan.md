@@ -28,11 +28,11 @@ Last Updated: 2026-01-31
 
 ## Previous Phases
 
-| Phase | Status      | Description                                | Archive     |
-| ----- | ----------- | ------------------------------------------ | ----------- |
-| 2     | ✅ Complete | Web app shell (UI-only)                    | `phase2.md` |
-| 3     | ✅ Complete | Local storage + encryption MVP             | `phase3.md` |
-| 4     | ✅ Complete | Conversational spacing + context assembly  | `phase4.md` |
+| Phase | Status      | Description                               | Archive     |
+| ----- | ----------- | ----------------------------------------- | ----------- |
+| 2     | ✅ Complete | Web app shell (UI-only)                   | `phase2.md` |
+| 3     | ✅ Complete | Local storage + encryption MVP            | `phase3.md` |
+| 4     | ✅ Complete | Conversational spacing + context assembly | `phase4.md` |
 
 ---
 
