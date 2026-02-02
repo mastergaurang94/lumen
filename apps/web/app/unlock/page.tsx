@@ -137,6 +137,7 @@ export default function UnlockPage() {
                 placeholder="Enter your passphrase"
                 value={passphrase}
                 onChange={(event) => setPassphrase(event.target.value)}
+                onInput={(event) => setPassphrase(event.currentTarget.value)}
                 disabled={isSubmitting}
                 className={cn(
                   'pr-10',

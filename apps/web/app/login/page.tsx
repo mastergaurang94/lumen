@@ -2,21 +2,51 @@
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { AuthPageLayout, PrivacyFooter } from '@/components/auth-page-layout';
-import { requestMagicLink } from '@/lib/api/auth';
+import { getAuthSession, requestMagicLink } from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
 
 type ViewState = 'form' | 'loading' | 'sent';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = React.useState('');
   const [viewState, setViewState] = React.useState<ViewState>('form');
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [magicLink, setMagicLink] = React.useState<string | null>(null);
+  const [isCheckingSession, setIsCheckingSession] = React.useState(true);
+
+  React.useEffect(() => {
+    let isActive = true;
+
+    const checkSession = async () => {
+      try {
+        const hasSession = await getAuthSession();
+        if (!isActive) return;
+        if (hasSession) {
+          router.replace('/session');
+          return;
+        }
+      } catch {
+        // Ignore errors; allow user to request a new link.
+      }
+
+      if (isActive) {
+        setIsCheckingSession(false);
+      }
+    };
+
+    void checkSession();
+
+    return () => {
+      isActive = false;
+    };
+  }, [router]);
 
   // In real app, this would be determined by checking if user exists
   // For now, we assume new user (could be passed as query param in future)
@@ -60,7 +90,21 @@ export default function LoginPage() {
     >
       <div className="relative z-10 w-full max-w-sm">
         <AnimatePresence mode="wait">
-          {viewState === 'form' || viewState === 'loading' ? (
+          {isCheckingSession ? (
+            <motion.div
+              key="checking"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6 text-center"
+            >
+              <div className="flex justify-center">
+                <Spinner size="lg" />
+              </div>
+              <p className="text-sm text-muted-foreground">Checking your session…</p>
+            </motion.div>
+          ) : viewState === 'form' || viewState === 'loading' ? (
             <motion.div
               key="form"
               initial={{ opacity: 0, y: 12 }}
@@ -99,6 +143,10 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
+                      if (errorMessage) setErrorMessage(null);
+                    }}
+                    onInput={(e) => {
+                      setEmail(e.currentTarget.value);
                       if (errorMessage) setErrorMessage(null);
                     }}
                     disabled={viewState === 'loading'}
@@ -166,10 +214,7 @@ export default function LoginPage() {
               {magicLink && (
                 <div className="rounded-lg border border-accent/30 bg-accent/5 px-4 py-3 text-left text-xs text-muted-foreground">
                   <p className="text-foreground/80">Dev shortcut</p>
-                  <a
-                    href={magicLink}
-                    className="mt-2 block break-all text-accent hover:underline"
-                  >
+                  <a href={magicLink} className="mt-2 block break-all text-accent hover:underline">
                     {magicLink}
                   </a>
                 </div>

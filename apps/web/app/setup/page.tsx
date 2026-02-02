@@ -187,6 +187,7 @@ export default function SetupPage() {
                 placeholder="Enter a passphrase"
                 value={passphrase}
                 onChange={(e) => setPassphrase(e.target.value)}
+                onInput={(e) => setPassphrase(e.currentTarget.value)}
                 onBlur={() => setTouched((t) => ({ ...t, passphrase: true }))}
                 disabled={isSubmitting}
                 className="pr-10"
@@ -247,6 +248,7 @@ export default function SetupPage() {
                 placeholder="Confirm your passphrase"
                 value={confirmPassphrase}
                 onChange={(e) => setConfirmPassphrase(e.target.value)}
+                onInput={(e) => setConfirmPassphrase(e.currentTarget.value)}
                 onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
                 disabled={isSubmitting}
                 className={cn(

@@ -14,6 +14,7 @@ Last Updated: 2026-01-31
 - 2026-02-02: Phase 5 drafted for client integration.
 - 2026-02-02: Step 1 complete — wired magic link request/verify with shared API client and login callback flow.
 - 2026-02-02: Added auth session check endpoint + client guards for setup/unlock/session/chat.
+- 2026-02-02: Step 2 complete — added session metadata outbox, retries, and API sync wiring.
 
 ### In Progress / Next Up
 
@@ -23,6 +24,8 @@ Last Updated: 2026-01-31
 
 - Add sidebar auth state (signed-in indicator) and logout action.
 - Add `POST /v1/auth/logout` endpoint to clear the session cookie.
+- Scope vaults by user/email so each login maps to its own local vault.
+- Reduce vault unlock churn (idle timeout + OS keychain / WebAuthN unlock).
 
 ### Goals (Frontend Focus)
 
@@ -63,25 +66,27 @@ Files to modify/create:
 
 #### Step 2: Session Metadata Sync
 
-**Status: ⬜ Not Started**
+**Status: ✅ Complete**
 
 Send start/end metadata to the API while keeping transcripts local.
 
 Tasks:
 
-- [ ] On session start, call `POST /v1/sessions/start` with `session_id`.
-- [ ] On session end, call `POST /v1/sessions/end` with `session_id` + `transcript_hash`
+- [x] On session start, call `POST /v1/sessions/start` with `session_id`.
+- [x] On session end, call `POST /v1/sessions/end` with `session_id` + `transcript_hash`
       (SHA-256 over `serialize(encryption_header) || encrypted_blob`).
-- [ ] Ensure calls do not include plaintext transcript content.
-- [ ] Retry on transient errors with backoff (UI should remain usable).
-- [ ] Add a lightweight client "outbox" queue (IndexedDB) for pending start/end
+- [x] Ensure calls do not include plaintext transcript content.
+- [x] Retry on transient errors with backoff (UI should remain usable).
+- [x] Add a lightweight client "outbox" queue (IndexedDB) for pending start/end
       events and flush on reconnect/app start.
 
 Files to modify/create:
 
 - `apps/web/app/chat/page.tsx`
 - `apps/web/lib/api/sessions.ts` (new)
-- `apps/web/lib/api/client.ts` (new)
+- `apps/web/lib/outbox/session-outbox.ts` (new)
+- `apps/web/lib/db.ts`
+- `apps/web/types/storage.ts`
 
 ---
 

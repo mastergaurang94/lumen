@@ -18,10 +18,15 @@ import {
 } from '@/components/chat';
 import { formatSessionDate, formatElapsedTime } from '@/lib/format';
 import { Z_INDEX } from '@/lib/z-index';
-import { decrypt, encrypt, generateIV, hashTranscript } from '@/lib/crypto';
+import { arrayBufferToHex, decrypt, encrypt, generateIV, hashTranscript } from '@/lib/crypto';
 import { getKey, isUnlocked, registerLockHandler } from '@/lib/crypto/key-context';
 import { useAuthSessionGuard } from '@/lib/hooks/use-auth-session-guard';
 import { buildSessionContext } from '@/lib/context/assembly';
+import {
+  enqueueSessionEnd,
+  enqueueSessionStart,
+  flushSessionOutbox,
+} from '@/lib/outbox/session-outbox';
 import { createStorageService } from '@/lib/storage/dexie-storage';
 import { getSessionNumber } from '@/lib/storage/queries';
 import { getOrCreateUserId } from '@/lib/storage/user';
@@ -112,6 +117,7 @@ function ChatPageInner() {
   const sessionIdRef = React.useRef<string | null>(null);
   const transcriptRef = React.useRef<SessionTranscript | null>(null);
   const sessionContextRef = React.useRef<string | null>(null);
+  const lastTranscriptHashRef = React.useRef<ArrayBuffer | null>(null);
   const chunkIndexRef = React.useRef(0);
   const pendingMessagesRef = React.useRef<Message[]>([]);
   const flushTimeoutRef = React.useRef<number | null>(null);
@@ -157,6 +163,7 @@ function ChatPageInner() {
     const plaintext = serializeMessages(pending);
     const ciphertext = await encrypt(plaintext, key, iv);
     const transcript_hash = await hashTranscript(ciphertext, header);
+    lastTranscriptHashRef.current = transcript_hash;
 
     const chunk: SessionTranscriptChunk = {
       session_id: sessionId,
@@ -229,6 +236,20 @@ function ChatPageInner() {
       await flushPendingMessages();
     });
   }, [flushPendingMessages]);
+
+  React.useEffect(() => {
+    if (!isAuthed) return;
+    void flushSessionOutbox();
+
+    const handleOnline = () => {
+      void flushSessionOutbox();
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [isAuthed]);
 
   // Check coach availability and initialize session
   const initializeSession = React.useCallback(async () => {
@@ -303,6 +324,11 @@ function ChatPageInner() {
 
         const chunks = await storageRef.current.listTranscriptChunks(activeTranscript.session_id);
         chunkIndexRef.current = chunks.length;
+        lastTranscriptHashRef.current =
+          chunks.length > 0 ? chunks[chunks.length - 1].transcript_hash : null;
+
+        await enqueueSessionStart(activeTranscript.session_id);
+        void flushSessionOutbox();
 
         const restoredMessages: Message[] = [];
         for (const chunk of chunks) {
@@ -348,6 +374,8 @@ function ChatPageInner() {
       transcriptRef.current = transcript;
       chunkIndexRef.current = 0;
       await storageRef.current.saveTranscript(transcript);
+      await enqueueSessionStart(sessionId);
+      void flushSessionOutbox();
       setStorageReady(true);
       // Build context once per session start/resume; reuse for the full session.
       sessionContextRef.current = await buildSessionContext({
@@ -505,6 +533,14 @@ function ChatPageInner() {
       const profile = await storageRef.current.getProfile(userId);
       if (profile) {
         await storageRef.current.saveProfile({ ...profile, updated_at: now });
+      }
+    }
+
+    if (sessionId) {
+      const transcriptHash = lastTranscriptHashRef.current;
+      if (transcriptHash) {
+        await enqueueSessionEnd(sessionId, arrayBufferToHex(transcriptHash));
+        void flushSessionOutbox();
       }
     }
 

@@ -96,3 +96,19 @@ export interface VaultMetadata {
   created_at: string;
   updated_at: string;
 }
+
+export type SessionOutboxEventType = 'session_start' | 'session_end';
+
+// SessionOutboxEvent stores pending metadata sync events for the API.
+export interface SessionOutboxEvent {
+  id: string;
+  type: SessionOutboxEventType;
+  session_id: string;
+  transcript_hash: string | null;
+  status: 'pending' | 'failed';
+  attempts: number;
+  available_at: string;
+  created_at: string;
+  updated_at: string;
+  last_error: string | null;
+}

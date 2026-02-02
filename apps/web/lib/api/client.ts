@@ -20,7 +20,10 @@ export class ApiError extends Error {
   }
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+const DEFAULT_DEV_API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  (process.env.NODE_ENV === 'development' ? DEFAULT_DEV_API_BASE_URL : '');
 
 /**
  * apiFetch wraps fetch with JSON parsing, error envelopes, and cookie credentials.
