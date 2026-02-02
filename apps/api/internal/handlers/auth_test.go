@@ -54,6 +54,25 @@ func TestAuthRequestAndVerifyFlow(t *testing.T) {
 	if len(cookies) == 0 {
 		t.Fatalf("expected auth session cookie")
 	}
+
+	sessionReq := httptest.NewRequest(http.MethodGet, "/v1/auth/session", nil)
+	sessionReq.AddCookie(cookies[0])
+	sessionResp := httptest.NewRecorder()
+
+	handler.ServeHTTP(sessionResp, sessionReq)
+
+	if sessionResp.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", sessionResp.Code)
+	}
+
+	unauthReq := httptest.NewRequest(http.MethodGet, "/v1/auth/session", nil)
+	unauthResp := httptest.NewRecorder()
+
+	handler.ServeHTTP(unauthResp, unauthReq)
+
+	if unauthResp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status 401, got %d", unauthResp.Code)
+	}
 }
 
 func newTestServer() http.Handler {

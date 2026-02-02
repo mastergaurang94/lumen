@@ -7,12 +7,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { AuthPageLayout, PrivacyFooter } from '@/components/auth-page-layout';
+import { requestMagicLink } from '@/lib/api/auth';
+import { ApiError } from '@/lib/api/client';
 
 type ViewState = 'form' | 'loading' | 'sent';
 
 export default function LoginPage() {
   const [email, setEmail] = React.useState('');
   const [viewState, setViewState] = React.useState<ViewState>('form');
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [magicLink, setMagicLink] = React.useState<string | null>(null);
 
   // In real app, this would be determined by checking if user exists
   // For now, we assume new user (could be passed as query param in future)
@@ -21,16 +25,32 @@ export default function LoginPage() {
   const isValidEmail = email.includes('@') && email.includes('.');
   const canSubmit = email.length > 0 && isValidEmail;
 
+  // Translate API errors into friendly copy for the auth UI.
+  const getErrorMessage = (error: unknown) => {
+    if (error instanceof ApiError) {
+      if (error.code === 'rate_limited') {
+        return 'Too many requests. Please wait a moment and try again.';
+      }
+      return error.message;
+    }
+    return 'Unable to send the link right now. Please try again.';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
 
+    setErrorMessage(null);
     setViewState('loading');
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    setViewState('sent');
+    try {
+      const response = await requestMagicLink(email);
+      setMagicLink(response.magic_link ?? null);
+      setViewState('sent');
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+      setViewState('form');
+    }
   };
 
   return (
@@ -77,7 +97,10 @@ export default function LoginPage() {
                     type="email"
                     placeholder="you@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errorMessage) setErrorMessage(null);
+                    }}
                     disabled={viewState === 'loading'}
                     autoFocus
                     autoComplete="email"
@@ -102,6 +125,9 @@ export default function LoginPage() {
                     'Continue with email'
                   )}
                 </Button>
+                {errorMessage && (
+                  <p className="text-sm text-destructive text-center">{errorMessage}</p>
+                )}
               </form>
             </motion.div>
           ) : (
@@ -137,12 +163,25 @@ export default function LoginPage() {
                 <br />
                 It may take a minute to arrive.
               </p>
+              {magicLink && (
+                <div className="rounded-lg border border-accent/30 bg-accent/5 px-4 py-3 text-left text-xs text-muted-foreground">
+                  <p className="text-foreground/80">Dev shortcut</p>
+                  <a
+                    href={magicLink}
+                    className="mt-2 block break-all text-accent hover:underline"
+                  >
+                    {magicLink}
+                  </a>
+                </div>
+              )}
 
               {/* Try again */}
               <button
                 onClick={() => {
                   setViewState('form');
                   setEmail('');
+                  setErrorMessage(null);
+                  setMagicLink(null);
                 }}
                 className="text-sm text-muted-foreground hover:text-foreground hover:underline transition-colors"
               >

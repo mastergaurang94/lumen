@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { AuthPageLayout } from '@/components/auth-page-layout';
 import { formatDaysAgo, getTimeGreeting } from '@/lib/format';
 import { isUnlocked } from '@/lib/crypto/key-context';
+import { useAuthSessionGuard } from '@/lib/hooks/use-auth-session-guard';
 import { createStorageService } from '@/lib/storage/dexie-storage';
 import { getLastSession, getDaysSinceLastSession } from '@/lib/storage/queries';
 import type { SessionSpacing } from '@/types/session';
@@ -22,6 +23,7 @@ const MOCK_EARLY_RETURN = process.env.NEXT_PUBLIC_MOCK_EARLY_RETURN === 'true';
 export default function SessionPage() {
   const router = useRouter();
   const storageRef = React.useRef(createStorageService());
+  const { isAuthed } = useAuthSessionGuard();
   const [spacing, setSpacing] = React.useState<SessionSpacing | null>(null);
   const [mounted, setMounted] = React.useState(false);
   const [vaultReady, setVaultReady] = React.useState(false);
@@ -29,6 +31,8 @@ export default function SessionPage() {
   React.useEffect(() => {
     setMounted(true);
     const checkVaultAndLoadSpacing = async () => {
+      if (!isAuthed) return;
+
       const storage = storageRef.current;
 
       // Gate access until the vault is initialized and unlocked.
@@ -71,10 +75,10 @@ export default function SessionPage() {
     };
 
     checkVaultAndLoadSpacing();
-  }, [router]);
+  }, [isAuthed, router]);
 
   // Loading state
-  if (!mounted || !vaultReady || !spacing) {
+  if (!mounted || !isAuthed || !vaultReady || !spacing) {
     return (
       <AuthPageLayout
         footer={

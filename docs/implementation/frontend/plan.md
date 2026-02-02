@@ -6,16 +6,23 @@ Last Updated: 2026-01-31
 
 ## Current Phase: Phase 5 — Client Integration (Auth + Session Metadata)
 
-**Status: ⬜ Not Started**
+**Status: 🔄 In Progress**
 
 ### Running Updates
 
 - 2026-01-31: Backend plan moved to `docs/implementation/backend/plan.md`.
 - 2026-02-02: Phase 5 drafted for client integration.
+- 2026-02-02: Step 1 complete — wired magic link request/verify with shared API client and login callback flow.
+- 2026-02-02: Added auth session check endpoint + client guards for setup/unlock/session/chat.
 
 ### In Progress / Next Up
 
-- Step 1: Wire login to the magic link API.
+- Step 2: Session metadata sync.
+
+### Deferred / If Time
+
+- Add sidebar auth state (signed-in indicator) and logout action.
+- Add `POST /v1/auth/logout` endpoint to clear the session cookie.
 
 ### Goals (Frontend Focus)
 
@@ -33,23 +40,24 @@ Last Updated: 2026-01-31
 
 #### Step 1: Magic Link Request + Verify
 
-**Status: ⬜ Not Started**
+**Status: ✅ Complete**
 
 Wire the login flow to the Go API.
 
 Tasks:
 
-- [ ] Call `POST /v1/auth/request-link` from `apps/web/app/login/page.tsx`.
-- [ ] Add a `/login` callback handler to exchange token via `POST /v1/auth/verify`.
-- [ ] Store session cookie (HTTP-only) implicitly; no client storage needed.
-- [ ] Ensure API fetches include `credentials: 'include'` for cookie auth.
-- [ ] Handle errors with friendly retry UX.
+- [x] Call `POST /v1/auth/request-link` from `apps/web/app/login/page.tsx`.
+- [x] Add a `/login` callback handler to exchange token via `POST /v1/auth/verify`.
+- [x] Store session cookie (HTTP-only) implicitly; no client storage needed.
+- [x] Ensure API fetches include `credentials: 'include'` for cookie auth.
+- [x] Handle errors with friendly retry UX.
 
 Files to modify/create:
 
 - `apps/web/app/login/page.tsx`
 - `apps/web/app/login/callback/page.tsx` (new)
 - `apps/web/lib/api/auth.ts` (new)
+- `apps/web/lib/api/client.ts` (new)
 
 ---
 
