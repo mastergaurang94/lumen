@@ -14,10 +14,11 @@ Last Updated: 2026-01-31
 - 2026-01-31: LLM proxy moved to Phase 4; observability promoted into Phase 5.
 - 2026-02-02: Step 1 scaffolding completed (router, config, CORS, request IDs).
 - 2026-02-02: Step 2 magic link auth foundation completed.
+- 2026-02-02: Step 3 session metadata endpoints completed.
 
 ### In Progress / Next Up
 
-- Step 3: Session metadata API + schema.
+- Step 4: Observability.
 
 ### Goals
 
@@ -48,7 +49,7 @@ Last Updated: 2026-01-31
 | ---- | ------ | ---------------------------------------- |
 | 1    | ✅     | API scaffolding + config                 |
 | 2    | ✅     | Magic link auth foundation               |
-| 3    | ⬜     | Session metadata endpoints + DB schema   |
+| 3    | ✅     | Session metadata endpoints + DB schema   |
 | 4    | ⬜     | Observability (request IDs + OTel hooks) |
 | 5    | ⬜     | Integration tests for auth + sessions    |
 
@@ -95,6 +96,12 @@ Tasks:
 - [x] Dev-only link capture (optional): return the magic link in response when `APP_ENV=development`.
 - [x] Issue a session cookie or JWT on verify (HTTP-only, short TTL).
 
+#### Implementation considerations
+
+- JWT vs session cookie: MVP uses an opaque session ID stored server-side (not a JWT) to keep revocation simple.
+- If we switch to JWT later, keep TTLs short and add a revocation strategy (allowlist/denylist).
+- Cookie security: `Secure` must be enabled in production so cookies only travel over HTTPS.
+
 Files to modify/create:
 
 - `apps/api/internal/handlers/auth.go`
@@ -105,17 +112,17 @@ Files to modify/create:
 
 ### Step 3: Session Metadata API + Schema
 
-**Status: ⬜ Not Started**
+**Status: ✅ Complete**
 
 Record session start/end without storing transcripts or summaries.
 
 Tasks:
 
-- [ ] Create DB table for `sessions` (ids + timestamps + transcript hash).
-- [ ] Define transcript hash contract (ordered message list, role+content, normalized whitespace).
-- [ ] `POST /v1/sessions/start` (record `started_at`).
-- [ ] `POST /v1/sessions/end` (record `ended_at`, `transcript_hash`).
-- [ ] Ensure auth context is required for session writes.
+- [x] Create DB table for `sessions` (ids + timestamps + transcript hash).
+- [x] Define transcript hash contract (ordered message list, role+content, normalized whitespace).
+- [x] `POST /v1/sessions/start` (record `started_at`).
+- [x] `POST /v1/sessions/end` (record `ended_at`, `transcript_hash`).
+- [x] Ensure auth context is required for session writes.
 
 Transcript hash contract (MVP):
 
