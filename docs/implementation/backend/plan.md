@@ -12,10 +12,11 @@ Last Updated: 2026-01-31
 
 - 2026-01-31: Backend plan split out from frontend plan.
 - 2026-01-31: LLM proxy moved to Phase 4; observability promoted into Phase 5.
+- 2026-02-02: Step 1 scaffolding completed (router, config, CORS, request IDs).
 
 ### In Progress / Next Up
 
-- Step 1: API scaffolding + config.
+- Step 2: Magic link auth foundation.
 
 ### Goals
 
@@ -44,7 +45,7 @@ Last Updated: 2026-01-31
 
 | Step | Status | Notes                                        |
 | ---- | ------ | -------------------------------------------- |
-| 1    | ⬜     | API scaffolding + config                     |
+| 1    | ✅     | API scaffolding + config                     |
 | 2    | ⬜     | Magic link auth foundation                   |
 | 3    | ⬜     | Session metadata endpoints + DB schema       |
 | 4    | ⬜     | Observability (request IDs + OTel hooks)     |
@@ -54,7 +55,7 @@ Last Updated: 2026-01-31
 
 ### Step 1: API Scaffolding + Config
 
-**Status: ⬜ Not Started**
+**Status: ✅ Complete**
 
 Set up the Go service structure and core middleware.
 
