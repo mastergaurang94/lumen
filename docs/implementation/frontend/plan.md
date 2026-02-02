@@ -25,6 +25,7 @@ Last Updated: 2026-01-31
 - Conversational harness integration and deterministic context assembly.
 - “Coach unavailable” UI state and privacy indicators.
 - Client-to-API integration for auth and session metadata.
+- Client-to-LLM calls (no server proxy) with privacy-first handling.
 
 ---
 
@@ -69,6 +70,26 @@ Files to modify/create:
 - `apps/web/app/chat/page.tsx`
 - `apps/web/lib/api/sessions.ts` (new)
 - `apps/web/lib/api/client.ts` (new)
+
+---
+
+#### Step 3: Client-to-LLM Calls (No Server Proxy)
+
+**Status: ⬜ Not Started**
+
+Call the LLM provider directly from the client while preserving privacy guarantees.
+
+Tasks:
+
+- [ ] Route LLM calls directly from the browser (no API proxy).
+- [ ] Ensure only client-assembled context + user messages are sent.
+- [ ] Add retry/backoff and “coach unavailable” handling for provider outages.
+- [ ] Avoid logging or persisting plaintext outside the local vault.
+
+Files to modify/create:
+
+- `apps/web/app/chat/page.tsx`
+- `apps/web/lib/llm/client.ts` (new)
 
 ---
 
