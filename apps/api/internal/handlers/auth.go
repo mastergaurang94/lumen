@@ -163,6 +163,11 @@ func (h *AuthHandler) Verify(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
+// SessionStatus handles GET /v1/auth/session.
+func (h *AuthHandler) SessionStatus(w http.ResponseWriter, r *http.Request) {
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
 func (h *AuthHandler) hashToken(token string) string {
 	mac := hmac.New(sha256.New, []byte(h.cfg.AuthTokenSecret))
 	_, _ = mac.Write([]byte(token))
@@ -171,7 +176,7 @@ func (h *AuthHandler) hashToken(token string) string {
 
 func (h *AuthHandler) magicLink(token string) string {
 	base := strings.TrimRight(h.cfg.AppURL, "/")
-	return base + "/login?token=" + token
+	return base + "/login/callback?token=" + token
 }
 
 func (h *AuthHandler) generateToken(size int) (string, error) {

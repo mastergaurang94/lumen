@@ -10,6 +10,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { AuthPageLayout, PrivacyFooter } from '@/components/auth-page-layout';
 import { cn } from '@/lib/utils';
 import { deriveKey } from '@/lib/crypto';
+import { useAuthSessionGuard } from '@/lib/hooks/use-auth-session-guard';
 import { isUnlocked, setKey } from '@/lib/crypto/key-context';
 import { createStorageService } from '@/lib/storage/dexie-storage';
 import { verifyKeyCheck } from '@/lib/storage/metadata';
@@ -17,6 +18,7 @@ import { verifyKeyCheck } from '@/lib/storage/metadata';
 export default function UnlockPage() {
   const router = useRouter();
   const storageRef = React.useRef(createStorageService());
+  const { isAuthed } = useAuthSessionGuard();
   const [passphrase, setPassphrase] = React.useState('');
   const [showPassphrase, setShowPassphrase] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -24,8 +26,12 @@ export default function UnlockPage() {
   const [isCheckingVault, setIsCheckingVault] = React.useState(true);
 
   React.useEffect(() => {
-    // Ensure vault exists before showing unlock UI.
-    const checkVault = async () => {
+    let isActive = true;
+
+    // Ensure auth session and vault exist before showing unlock UI.
+    const checkAccess = async () => {
+      if (!isAuthed) return;
+
       const metadata = await storageRef.current.getVaultMetadata();
       if (!metadata?.vault_initialized) {
         router.replace('/setup');
@@ -35,11 +41,17 @@ export default function UnlockPage() {
         router.replace('/session');
         return;
       }
-      setIsCheckingVault(false);
+      if (isActive) {
+        setIsCheckingVault(false);
+      }
     };
 
-    checkVault();
-  }, [router]);
+    void checkAccess();
+
+    return () => {
+      isActive = false;
+    };
+  }, [isAuthed, router]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();

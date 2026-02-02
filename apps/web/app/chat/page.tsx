@@ -20,6 +20,7 @@ import { formatSessionDate, formatElapsedTime } from '@/lib/format';
 import { Z_INDEX } from '@/lib/z-index';
 import { decrypt, encrypt, generateIV, hashTranscript } from '@/lib/crypto';
 import { getKey, isUnlocked, registerLockHandler } from '@/lib/crypto/key-context';
+import { useAuthSessionGuard } from '@/lib/hooks/use-auth-session-guard';
 import { buildSessionContext } from '@/lib/context/assembly';
 import { createStorageService } from '@/lib/storage/dexie-storage';
 import { getSessionNumber } from '@/lib/storage/queries';
@@ -105,6 +106,7 @@ async function* streamText(text: string, signal?: AbortSignal): AsyncGenerator<s
 function ChatPageInner() {
   const router = useRouter();
   const storageRef = React.useRef(createStorageService());
+  const { isAuthed } = useAuthSessionGuard();
   const vaultMetadataRef = React.useRef<VaultMetadata | null>(null);
   const userIdRef = React.useRef<string | null>(null);
   const sessionIdRef = React.useRef<string | null>(null);
@@ -196,6 +198,8 @@ function ChatPageInner() {
 
   React.useEffect(() => {
     const checkVault = async () => {
+      if (!isAuthed) return;
+
       const metadata = await storageRef.current.getVaultMetadata();
       if (!metadata?.vault_initialized) {
         router.replace('/setup');
@@ -217,7 +221,7 @@ function ChatPageInner() {
     };
 
     checkVault();
-  }, [router]);
+  }, [isAuthed, router]);
 
   React.useEffect(() => {
     // Flush buffered messages before vault lock clears the key.

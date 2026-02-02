@@ -44,6 +44,10 @@ func New(cfg config.Config) http.Handler {
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/request-link", authHandler.RequestLink)
 			r.Post("/verify", authHandler.Verify)
+			r.With(apimiddleware.RequireAuthSession(cfg, authSessionStore)).Get(
+				"/session",
+				authHandler.SessionStatus,
+			)
 		})
 		r.Route("/sessions", func(r chi.Router) {
 			r.Use(apimiddleware.RequireAuthSession(cfg, authSessionStore))
