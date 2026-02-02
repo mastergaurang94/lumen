@@ -42,6 +42,7 @@ Tasks:
 - [ ] Call `POST /v1/auth/request-link` from `apps/web/app/login/page.tsx`.
 - [ ] Add a `/login` callback handler to exchange token via `POST /v1/auth/verify`.
 - [ ] Store session cookie (HTTP-only) implicitly; no client storage needed.
+- [ ] Ensure API fetches include `credentials: 'include'` for cookie auth.
 - [ ] Handle errors with friendly retry UX.
 
 Files to modify/create:
@@ -61,9 +62,12 @@ Send start/end metadata to the API while keeping transcripts local.
 Tasks:
 
 - [ ] On session start, call `POST /v1/sessions/start` with `session_id`.
-- [ ] On session end, call `POST /v1/sessions/end` with `session_id` + `transcript_hash`.
+- [ ] On session end, call `POST /v1/sessions/end` with `session_id` + `transcript_hash`
+      (SHA-256 over `serialize(encryption_header) || encrypted_blob`).
 - [ ] Ensure calls do not include plaintext transcript content.
 - [ ] Retry on transient errors with backoff (UI should remain usable).
+- [ ] Add a lightweight client "outbox" queue (IndexedDB) for pending start/end
+      events and flush on reconnect/app start.
 
 Files to modify/create:
 
@@ -83,6 +87,8 @@ Tasks:
 
 - [ ] Route LLM calls directly from the browser (no API proxy).
 - [ ] Ensure only client-assembled context + user messages are sent.
+- [ ] BYOK MVP: prompt user for provider API key, store locally encrypted, and
+      use it for LLM calls.
 - [ ] Add retry/backoff and “coach unavailable” handling for provider outages.
 - [ ] Avoid logging or persisting plaintext outside the local vault.
 
