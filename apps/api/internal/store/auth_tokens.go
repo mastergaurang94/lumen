@@ -52,38 +52,38 @@ func (s *AuthTokenStore) Consume(tokenHash string, now time.Time) (string, bool)
 	return record.Email, true
 }
 
-// SessionRecord tracks a login session token.
-type SessionRecord struct {
+// AuthSessionRecord tracks a login session token.
+type AuthSessionRecord struct {
 	Email     string
 	ExpiresAt time.Time
 }
 
-// SessionStore holds active session tokens in memory for MVP usage.
-type SessionStore struct {
+// AuthSessionStore holds active login session tokens in memory for MVP usage.
+type AuthSessionStore struct {
 	mu       sync.RWMutex
-	sessions map[string]SessionRecord
+	sessions map[string]AuthSessionRecord
 }
 
-// NewSessionStore constructs an in-memory session store.
-func NewSessionStore() *SessionStore {
-	return &SessionStore{
-		sessions: make(map[string]SessionRecord),
+// NewAuthSessionStore constructs an in-memory login session store.
+func NewAuthSessionStore() *AuthSessionStore {
+	return &AuthSessionStore{
+		sessions: make(map[string]AuthSessionRecord),
 	}
 }
 
-// Save stores a new session token.
-func (s *SessionStore) Save(sessionID, email string, expiresAt time.Time) {
+// Save stores a new login session token.
+func (s *AuthSessionStore) Save(sessionID, email string, expiresAt time.Time) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.sessions[sessionID] = SessionRecord{
+	s.sessions[sessionID] = AuthSessionRecord{
 		Email:     email,
 		ExpiresAt: expiresAt,
 	}
 }
 
-// Validate returns the email for a valid, unexpired session token.
-func (s *SessionStore) Validate(sessionID string, now time.Time) (string, bool) {
+// Validate returns the email for a valid, unexpired login session token.
+func (s *AuthSessionStore) Validate(sessionID string, now time.Time) (string, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 

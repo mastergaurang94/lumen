@@ -14,8 +14,8 @@ type contextKey string
 
 const userIDKey contextKey = "userID"
 
-// RequireSession enforces a valid session cookie and stores the user ID in context.
-func RequireSession(cfg config.Config, sessions *store.SessionStore) func(http.Handler) http.Handler {
+// RequireAuthSession enforces a valid auth session cookie and stores the user ID in context.
+func RequireAuthSession(cfg config.Config, sessions *store.AuthSessionStore) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			cookie, err := r.Cookie(cfg.AuthCookieName)

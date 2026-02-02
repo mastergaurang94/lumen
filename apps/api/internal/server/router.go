@@ -29,10 +29,10 @@ func New(cfg config.Config) http.Handler {
 	}))
 
 	tokenStore := store.NewAuthTokenStore()
-	sessionStore := store.NewSessionStore()
-	authHandler := handlers.NewAuthHandler(cfg, tokenStore, sessionStore, &email.DevProvider{})
-	sessionMetadataStore := store.NewSessionMetadataStore()
-	sessionsHandler := handlers.NewSessionsHandler(sessionMetadataStore)
+	authSessionStore := store.NewAuthSessionStore()
+	authHandler := handlers.NewAuthHandler(cfg, tokenStore, authSessionStore, &email.DevProvider{})
+	coachingSessionStore := store.NewCoachingSessionStore()
+	coachingSessionsHandler := handlers.NewCoachingSessionsHandler(coachingSessionStore)
 
 	router.Route("/v1", func(r chi.Router) {
 		r.Get("/health", func(w http.ResponseWriter, _ *http.Request) {
@@ -43,9 +43,9 @@ func New(cfg config.Config) http.Handler {
 			r.Post("/verify", authHandler.Verify)
 		})
 		r.Route("/sessions", func(r chi.Router) {
-			r.Use(apimiddleware.RequireSession(cfg, sessionStore))
-			r.Post("/start", sessionsHandler.Start)
-			r.Post("/end", sessionsHandler.End)
+			r.Use(apimiddleware.RequireAuthSession(cfg, authSessionStore))
+			r.Post("/start", coachingSessionsHandler.Start)
+			r.Post("/end", coachingSessionsHandler.End)
 		})
 	})
 

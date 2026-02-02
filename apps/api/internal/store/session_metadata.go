@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// SessionMetadata captures server-side session lifecycle metadata.
-type SessionMetadata struct {
+// CoachingSession captures server-side coaching session lifecycle metadata.
+type CoachingSession struct {
 	SessionID      string
 	UserID         string
 	StartedAt      time.Time
@@ -14,21 +14,21 @@ type SessionMetadata struct {
 	TranscriptHash string
 }
 
-// SessionMetadataStore stores session metadata in memory for MVP usage.
-type SessionMetadataStore struct {
+// CoachingSessionStore stores coaching session metadata in memory for MVP usage.
+type CoachingSessionStore struct {
 	mu       sync.RWMutex
-	sessions map[string]SessionMetadata
+	sessions map[string]CoachingSession
 }
 
-// NewSessionMetadataStore constructs an in-memory session metadata store.
-func NewSessionMetadataStore() *SessionMetadataStore {
-	return &SessionMetadataStore{
-		sessions: make(map[string]SessionMetadata),
+// NewCoachingSessionStore constructs an in-memory coaching session metadata store.
+func NewCoachingSessionStore() *CoachingSessionStore {
+	return &CoachingSessionStore{
+		sessions: make(map[string]CoachingSession),
 	}
 }
 
 // Start records a session start time.
-func (s *SessionMetadataStore) Start(sessionID, userID string, startedAt time.Time) {
+func (s *CoachingSessionStore) Start(sessionID, userID string, startedAt time.Time) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -40,7 +40,7 @@ func (s *SessionMetadataStore) Start(sessionID, userID string, startedAt time.Ti
 }
 
 // End records a session end time and transcript hash.
-func (s *SessionMetadataStore) End(sessionID, userID, transcriptHash string, endedAt time.Time) {
+func (s *CoachingSessionStore) End(sessionID, userID, transcriptHash string, endedAt time.Time) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
