@@ -7,8 +7,11 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/mastergaurang94/lumen/apps/api/internal/config"
+	"github.com/mastergaurang94/lumen/apps/api/internal/email"
+	"github.com/mastergaurang94/lumen/apps/api/internal/handlers"
 	"github.com/mastergaurang94/lumen/apps/api/internal/httpx"
 	apimiddleware "github.com/mastergaurang94/lumen/apps/api/internal/middleware"
+	"github.com/mastergaurang94/lumen/apps/api/internal/store"
 )
 
 // New assembles the API router with core middleware and versioned routes.
@@ -25,9 +28,17 @@ func New(cfg config.Config) http.Handler {
 		MaxAge:           300,
 	}))
 
+	tokenStore := store.NewAuthTokenStore()
+	sessionStore := store.NewSessionStore()
+	authHandler := handlers.NewAuthHandler(cfg, tokenStore, sessionStore, &email.DevProvider{})
+
 	router.Route("/v1", func(r chi.Router) {
 		r.Get("/health", func(w http.ResponseWriter, _ *http.Request) {
 			httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+		})
+		r.Route("/auth", func(r chi.Router) {
+			r.Post("/request-link", authHandler.RequestLink)
+			r.Post("/verify", authHandler.Verify)
 		})
 	})
 

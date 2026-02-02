@@ -13,10 +13,11 @@ Last Updated: 2026-01-31
 - 2026-01-31: Backend plan split out from frontend plan.
 - 2026-01-31: LLM proxy moved to Phase 4; observability promoted into Phase 5.
 - 2026-02-02: Step 1 scaffolding completed (router, config, CORS, request IDs).
+- 2026-02-02: Step 2 magic link auth foundation completed.
 
 ### In Progress / Next Up
 
-- Step 2: Magic link auth foundation.
+- Step 3: Session metadata API + schema.
 
 ### Goals
 
@@ -46,7 +47,7 @@ Last Updated: 2026-01-31
 | Step | Status | Notes                                    |
 | ---- | ------ | ---------------------------------------- |
 | 1    | ✅     | API scaffolding + config                 |
-| 2    | ⬜     | Magic link auth foundation               |
+| 2    | ✅     | Magic link auth foundation               |
 | 3    | ⬜     | Session metadata endpoints + DB schema   |
 | 4    | ⬜     | Observability (request IDs + OTel hooks) |
 | 5    | ⬜     | Integration tests for auth + sessions    |
@@ -61,11 +62,11 @@ Set up the Go service structure and core middleware.
 
 Tasks:
 
-- [ ] Create `/v1` router group with health endpoint (`GET /v1/health`).
-- [ ] Add config loading (env + defaults) for API, DB, Redis, and provider keys.
-- [ ] Add CORS config for the web app origin.
-- [ ] Add request ID middleware (generate if missing, echo in response).
-- [ ] Add JSON error helpers (consistent error envelope).
+- [x] Create `/v1` router group with health endpoint (`GET /v1/health`).
+- [x] Add config loading (env + defaults) for API, DB, Redis, and provider keys.
+- [x] Add CORS config for the web app origin.
+- [x] Add request ID middleware (generate if missing, echo in response).
+- [x] Add JSON error helpers (consistent error envelope).
 
 Files to modify/create:
 
@@ -78,21 +79,21 @@ Files to modify/create:
 
 ### Step 2: Magic Link Auth Foundation
 
-**Status: ⬜ Not Started**
+**Status: ✅ Complete**
 
 Implement minimal auth endpoints and token verification.
 
 Tasks:
 
-- [ ] `POST /v1/auth/request-link` to issue a login token.
-- [ ] `POST /v1/auth/verify` to exchange token for a session.
-- [ ] Store auth tokens hashed (HMAC or bcrypt) with expiry; invalidate on use.
-- [ ] Rate limit by IP + email (per-minute and per-hour).
-- [ ] Session cookies: `HttpOnly`, `Secure`, `SameSite=Lax`, short TTL, rotation on login.
-- [ ] Explicitly log auth events without PII (token requests and verifies only).
-- [ ] Email provider stub (log link for now; swap in real provider later).
-- [ ] Dev-only link capture (optional): return the magic link in response when `APP_ENV=development`.
-- [ ] Issue a session cookie or JWT on verify (HTTP-only, short TTL).
+- [x] `POST /v1/auth/request-link` to issue a login token.
+- [x] `POST /v1/auth/verify` to exchange token for a session.
+- [x] Store auth tokens hashed (HMAC or bcrypt) with expiry; invalidate on use.
+- [x] Rate limit by IP + email (per-minute and per-hour).
+- [x] Session cookies: `HttpOnly`, `Secure`, `SameSite=Lax`, short TTL, rotation on login.
+- [x] Explicitly log auth events without PII (token requests and verifies only).
+- [x] Email provider stub (log link for now; swap in real provider later).
+- [x] Dev-only link capture (optional): return the magic link in response when `APP_ENV=development`.
+- [x] Issue a session cookie or JWT on verify (HTTP-only, short TTL).
 
 Files to modify/create:
 

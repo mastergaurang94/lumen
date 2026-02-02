@@ -3,16 +3,22 @@ package config
 import (
 	"os"
 	"strings"
+	"time"
 )
 
 // Config captures API runtime configuration loaded from environment variables.
 type Config struct {
-	Env         string
-	Addr        string
-	WebOrigins  []string
-	DatabaseURL string
-	RedisURL    string
-	ProviderKey string
+	Env             string
+	Addr            string
+	WebOrigins      []string
+	DatabaseURL     string
+	RedisURL        string
+	ProviderKey     string
+	AppURL          string
+	AuthTokenTTL    time.Duration
+	SessionTTL      time.Duration
+	AuthTokenSecret string
+	AuthCookieName  string
 }
 
 // Load reads environment variables and applies sensible defaults for local development.
@@ -23,12 +29,17 @@ func Load() Config {
 	}
 
 	return Config{
-		Env:         getEnv("APP_ENV", "development"),
-		Addr:        getEnv("API_ADDR", ":8080"),
-		WebOrigins:  webOrigins,
-		DatabaseURL: getEnv("DATABASE_URL", ""),
-		RedisURL:    getEnv("REDIS_URL", ""),
-		ProviderKey: getEnv("LLM_PROVIDER_KEY", ""),
+		Env:             getEnv("APP_ENV", "development"),
+		Addr:            getEnv("API_ADDR", ":8080"),
+		WebOrigins:      webOrigins,
+		DatabaseURL:     getEnv("DATABASE_URL", ""),
+		RedisURL:        getEnv("REDIS_URL", ""),
+		ProviderKey:     getEnv("LLM_PROVIDER_KEY", ""),
+		AppURL:          getEnv("APP_URL", webOrigins[0]),
+		AuthTokenTTL:    getEnvDuration("AUTH_TOKEN_TTL", 15*time.Minute),
+		SessionTTL:      getEnvDuration("SESSION_TTL", 24*time.Hour),
+		AuthTokenSecret: getEnv("AUTH_TOKEN_SECRET", "dev-secret-change-me"),
+		AuthCookieName:  getEnv("AUTH_COOKIE_NAME", "lumen_session"),
 	}
 }
 
@@ -54,4 +65,16 @@ func splitCSV(value string) []string {
 		}
 	}
 	return result
+}
+
+func getEnvDuration(key string, fallback time.Duration) time.Duration {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+	parsed, err := time.ParseDuration(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
 }
