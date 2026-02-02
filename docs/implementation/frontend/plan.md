@@ -4,17 +4,18 @@ Last Updated: 2026-01-31
 
 ---
 
-## Current Phase: Phase 4 — Conversational Spacing + Context Assembly
+## Current Phase: Phase 5 — Client Integration (Auth + Session Metadata)
 
-**Status: ✅ Complete**
+**Status: ⬜ Not Started**
 
 ### Running Updates
 
 - 2026-01-31: Backend plan moved to `docs/implementation/backend/plan.md`.
+- 2026-02-02: Phase 5 drafted for client integration.
 
 ### In Progress / Next Up
 
-- TBD: Frontend follow-ups will be tracked here.
+- Step 1: Wire login to the magic link API.
 
 ### Goals (Frontend Focus)
 
@@ -23,6 +24,51 @@ Last Updated: 2026-01-31
 - Local storage + encryption (IndexedDB + WebCrypto).
 - Conversational harness integration and deterministic context assembly.
 - “Coach unavailable” UI state and privacy indicators.
+- Client-to-API integration for auth and session metadata.
+
+---
+
+### Phase 5: Client Integration Plan
+
+#### Step 1: Magic Link Request + Verify
+
+**Status: ⬜ Not Started**
+
+Wire the login flow to the Go API.
+
+Tasks:
+
+- [ ] Call `POST /v1/auth/request-link` from `apps/web/app/login/page.tsx`.
+- [ ] Add a `/login` callback handler to exchange token via `POST /v1/auth/verify`.
+- [ ] Store session cookie (HTTP-only) implicitly; no client storage needed.
+- [ ] Handle errors with friendly retry UX.
+
+Files to modify/create:
+
+- `apps/web/app/login/page.tsx`
+- `apps/web/app/login/callback/page.tsx` (new)
+- `apps/web/lib/api/auth.ts` (new)
+
+---
+
+#### Step 2: Session Metadata Sync
+
+**Status: ⬜ Not Started**
+
+Send start/end metadata to the API while keeping transcripts local.
+
+Tasks:
+
+- [ ] On session start, call `POST /v1/sessions/start` with `session_id`.
+- [ ] On session end, call `POST /v1/sessions/end` with `session_id` + `transcript_hash`.
+- [ ] Ensure calls do not include plaintext transcript content.
+- [ ] Retry on transient errors with backoff (UI should remain usable).
+
+Files to modify/create:
+
+- `apps/web/app/chat/page.tsx`
+- `apps/web/lib/api/sessions.ts` (new)
+- `apps/web/lib/api/client.ts` (new)
 
 ---
 

@@ -23,10 +23,8 @@ Status: Draft (MVP)
 - **Go Service (API + Governance)**
   - Auth (email magic link).
   - Session timestamp recording (for sync/insights, not blocking).
-  - LLM proxy + policy layer (separate from governance logic).
-  - Provider abstraction (single provider now, fallback-ready interface).
   - API versioning (e.g., `/v1`) for stable client-server contracts.
-  - Request ID propagation across web app, API, and LLM calls.
+  - Request ID propagation across web app and API calls.
   - OpenTelemetry hooks for traceability.
   - Structured logs with trace IDs; observability scope.
 
@@ -43,9 +41,9 @@ Status: Draft (MVP)
 1. User authenticates via magic link.
 2. Web app computes days since last session locally; coach handles spacing conversationally.
 3. Web app loads local memory and builds context.
-4. Web app sends prompt + context to Go service.
-5. Go service applies governance/policy, forwards to LLM.
-6. Response returns to web app; transcript + summary stored locally.
+4. Web app sends prompt + context directly to the LLM provider.
+5. Response returns to web app; transcript + summary stored locally.
+6. Web app sends session metadata (start/end + transcript hash) to Go service.
 
 ## Security Notes
 
@@ -65,7 +63,6 @@ Status: Draft (MVP)
   - session start/stop
   - client-side context assembly
   - LLM calls
-  - governance decisions
   - session closure decisions
   - session spacing context (days since last session)
   - model unavailability events

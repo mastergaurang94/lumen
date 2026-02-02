@@ -1,35 +1,12 @@
-# Backend Implementation Plan
+# Backend Implementation Plan — Phase 5 (Complete)
 
 Last Updated: 2026-02-02
 
 ---
 
-## Current Phase: Phase 6 — TBD
+## Phase 5 — Backend Foundation (Auth + Session Metadata + Observability)
 
-**Status: ⬜ Not Started**
-
-### Running Updates
-
-- 2026-02-02: Phase 5 archived to `docs/implementation/backend/phase5.md`.
-
-### In Progress / Next Up
-
-- TBD: Backend follow-ups will be tracked here.
-
-### Notes
-
-- Phase 5 (auth + session metadata + observability + tests) is complete and archived.
-- Client-to-LLM integration is tracked in `docs/implementation/mvp.md` and frontend plans.
-
-# Backend Implementation Plan
-
-Last Updated: 2026-01-31
-
----
-
-## Current Phase: Phase 5 — Backend Foundation (Auth + Session Metadata + Observability)
-
-**Status: 🔄 Not Started**
+**Status: ✅ Complete**
 
 ### Running Updates
 
@@ -219,7 +196,6 @@ Files to modify/create:
 
 - `apps/api/internal/handlers/auth_test.go`
 - `apps/api/internal/handlers/sessions_test.go`
-- `apps/api/internal/handlers/llm_test.go`
 
 ---
 
