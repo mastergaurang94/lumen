@@ -118,7 +118,7 @@ Record session start/end without storing transcripts or summaries.
 
 Tasks:
 
-- [x] Create DB table for `sessions` (ids + timestamps + transcript hash).
+- [x] In-memory session metadata store (DB migration deferred).
 - [x] Define transcript hash contract (ordered message list, role+content, normalized whitespace).
 - [x] `POST /v1/sessions/start` (record `started_at`).
 - [x] `POST /v1/sessions/end` (record `ended_at`, `transcript_hash`).
@@ -149,9 +149,9 @@ Let's take a breath together.
 
 Files to modify/create:
 
-- `apps/api/internal/store/sessions.go`
+- `apps/api/internal/store/session_metadata.go`
 - `apps/api/internal/handlers/sessions.go`
-- `apps/api/migrations/` (new migration)
+- `apps/api/migrations/` (deferred until persistence)
 
 ---
 
