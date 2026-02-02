@@ -11,6 +11,7 @@ import (
 	"github.com/mastergaurang94/lumen/apps/api/internal/handlers"
 	"github.com/mastergaurang94/lumen/apps/api/internal/httpx"
 	apimiddleware "github.com/mastergaurang94/lumen/apps/api/internal/middleware"
+	"github.com/mastergaurang94/lumen/apps/api/internal/observability"
 	"github.com/mastergaurang94/lumen/apps/api/internal/store"
 )
 
@@ -19,6 +20,8 @@ func New(cfg config.Config) http.Handler {
 	router := chi.NewRouter()
 
 	router.Use(apimiddleware.RequestID())
+	router.Use(observability.TraceRequests())
+	router.Use(observability.RequestLogger())
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   cfg.WebOrigins,
 		AllowCredentials: true,
