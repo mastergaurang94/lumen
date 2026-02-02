@@ -45,27 +45,13 @@ Status: Draft
 - Summary generation + closure formatting (incl. next-session cue).
 - Minimal evaluation harness for summary/closure.
 
-7. System prompts + UX copy
-
-- Align prompts with “user ends session.”
-- Privacy copy + passphrase warnings.
-- “Coach unavailable” UI state.
-
-8. Observability
+7. Observability
 
 - Structured logs with trace IDs.
 - OTel spans for session start/stop, LLM calls, sync.
 
-9. Tests & QA
+8. Tests & QA
 
 - Unit tests: encryption, storage, sync queue.
 - Harness tests: deterministic context assembly + summary format.
 - Integration tests: auth + gating.
-
-## Post-MVP (v1.1)
-
-- Zero-knowledge encrypted sync:
-  - Client sync queue for encrypted blobs (push/pull).
-  - Server endpoints: upload/download ciphertext + metadata.
-  - Server stores only ciphertext and headers (no plaintext).
-  - Conflict strategy: last-write-wins (v1.1).

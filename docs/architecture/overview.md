@@ -24,7 +24,7 @@ Status: Draft (MVP)
   - Auth (email magic link).
   - Session timestamp recording (for sync/insights, not blocking).
   - API versioning (e.g., `/v1`) for stable client-server contracts.
-  - Request ID propagation across web app and API calls.
+  - Request ID propagation across web app, API calls, and LLM calls.
   - OpenTelemetry hooks for traceability.
   - Structured logs with trace IDs; observability scope.
 

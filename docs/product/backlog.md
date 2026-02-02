@@ -11,6 +11,10 @@ Date: 2026-01-27
 - Export/import for recovery.
 - Resolve multi-device edits (merge strategy, last-write-wins vs CRDT, user prompts).
 - Zero-knowledge encrypted sync (ciphertext-only storage).
+  - Client sync queue for encrypted blobs (push/pull).
+  - Server endpoints: upload/download ciphertext + metadata.
+  - Server stores only ciphertext and headers (no plaintext).
+  - Conflict strategy: last-write-wins (v1.1).
 
 ## Post-MVP: Memory
 
