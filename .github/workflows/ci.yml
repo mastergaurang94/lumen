@@ -19,3 +19,15 @@ jobs:
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm lint
       - run: pnpm format:check
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+          cache: true
+          cache-dependency-path: apps/api/go.sum
+      - name: Go test
+        working-directory: apps/api
+        run: go test ./...
