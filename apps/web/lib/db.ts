@@ -5,6 +5,7 @@ import type {
   SessionTranscriptChunk,
   EncryptedSessionSummary,
   VaultMetadata,
+  SessionOutboxEvent,
 } from '@/types/storage';
 
 // Dexie schema for local encrypted storage (chunked transcripts).
@@ -14,6 +15,7 @@ export class LumenDB extends Dexie {
   sessionTranscriptChunks!: Table<SessionTranscriptChunk, [string, number]>;
   sessionSummaries!: Table<EncryptedSessionSummary, string>;
   vaultMetadata!: Table<VaultMetadata, string>;
+  sessionOutbox!: Table<SessionOutboxEvent, string>;
 
   constructor() {
     super('lumen-db');
@@ -25,6 +27,7 @@ export class LumenDB extends Dexie {
       sessionTranscriptChunks: '&[session_id+chunk_index], session_id, created_at',
       sessionSummaries: '&session_id, user_id, created_at',
       vaultMetadata: '&id',
+      sessionOutbox: '&id, status, available_at, created_at, session_id',
     });
   }
 }
