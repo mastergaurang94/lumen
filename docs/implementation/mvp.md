@@ -29,28 +29,34 @@ Status: Draft
 
 - Auth (magic link).
 - Session timestamp recording (for sync/insights).
-- LLM proxy + policy layer (separate).
 - Request ID propagation + OpenTelemetry.
 
-5. Conversational harness (core quality)
+5. Client + LLM Integration (post backend foundation)
+
+- Wire client auth/session flow to API (login, session start/end).
+- Keep LLM calls client-to-provider (no server proxy).
+- Add minimal API error handling + retry UX in the client.
+- LLM proxy + policy layer (separate).
+
+6. Conversational harness (core quality)
 
 - Deterministic context assembly.
 - Prompt versioning.
 - Summary generation + closure formatting (incl. next-session cue).
 - Minimal evaluation harness for summary/closure.
 
-6. System prompts + UX copy
+7. System prompts + UX copy
 
 - Align prompts with “user ends session.”
 - Privacy copy + passphrase warnings.
 - “Coach unavailable” UI state.
 
-7. Observability
+8. Observability
 
 - Structured logs with trace IDs.
 - OTel spans for session start/stop, LLM calls, sync.
 
-8. Tests & QA
+9. Tests & QA
 
 - Unit tests: encryption, storage, sync queue.
 - Harness tests: deterministic context assembly + summary format.

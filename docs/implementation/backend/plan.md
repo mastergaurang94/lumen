@@ -15,10 +15,13 @@ Last Updated: 2026-01-31
 - 2026-02-02: Step 1 scaffolding completed (router, config, CORS, request IDs).
 - 2026-02-02: Step 2 magic link auth foundation completed.
 - 2026-02-02: Step 3 session metadata endpoints completed.
+- 2026-02-02: Dropped LLM proxy from backend plan (client-to-LLM only).
+- 2026-02-02: Step 4 observability completed.
+- 2026-02-02: Step 5 integration tests completed.
 
 ### In Progress / Next Up
 
-- Step 4: Observability.
+- TBD: Backend follow-ups will be tracked here.
 
 ### Goals
 
@@ -50,8 +53,8 @@ Last Updated: 2026-01-31
 | 1    | ✅     | API scaffolding + config                 |
 | 2    | ✅     | Magic link auth foundation               |
 | 3    | ✅     | Session metadata endpoints + DB schema   |
-| 4    | ⬜     | Observability (request IDs + OTel hooks) |
-| 5    | ⬜     | Integration tests for auth + sessions    |
+| 4    | ✅     | Observability (request IDs + OTel hooks) |
+| 5    | ✅     | Integration tests for auth + sessions    |
 
 ---
 
@@ -158,18 +161,18 @@ Files to modify/create:
 
 ### Step 4: Observability
 
-**Status: ⬜ Not Started**
+**Status: ✅ Complete**
 
 Add structured logs and OpenTelemetry hooks.
 
 Tasks:
 
-- [ ] Structured logging with request ID + route + status.
-- [ ] OTel spans for session start/end.
-- [ ] Ensure no PII is logged.
-- [ ] Define log schema fields (env, request_id, route, status, latency_ms).
-- [ ] Default exporter: OTLP/HTTP to `OTEL_EXPORTER_OTLP_ENDPOINT` (no-op if unset).
-- [ ] Sampling: default to parent-based 10% unless `OTEL_TRACES_SAMPLER` set.
+- [x] Structured logging with request ID + route + status.
+- [x] OTel spans for session start/end.
+- [x] Ensure no PII is logged.
+- [x] Define log schema fields (env, request_id, route, status, latency_ms).
+- [x] Default exporter: OTLP/HTTP to `OTEL_EXPORTER_OTLP_ENDPOINT` (no-op if unset).
+- [x] Sampling: default to parent-based 10% unless `OTEL_TRACES_SAMPLER` set.
 
 Files to modify/create:
 
@@ -180,33 +183,20 @@ Files to modify/create:
 
 ### Step 5: Integration Tests
 
-**Status: ⬜ Not Started**
+**Status: ✅ Complete**
 
 Add smoke-level integration tests for the API.
 
 Tasks:
 
-- [ ] Auth request/verify flow tests.
-- [ ] Session start/end API tests.
+- [x] Auth request/verify flow tests.
+- [x] Session start/end API tests.
 
 Files to modify/create:
 
 - `apps/api/internal/handlers/auth_test.go`
 - `apps/api/internal/handlers/sessions_test.go`
-
----
-
-## Previous Phases (Backend)
-
-| Phase | Status      | Description          | Archive     |
-| ----- | ----------- | -------------------- | ----------- |
-| 4     | ✅ Complete | LLM proxy foundation | `phase4.md` |
-
-Phase 4 LLM proxy requirements (for reference):
-
-- Require auth for all LLM proxy calls.
-- Validate request payload shape (model, messages, max tokens).
-- Enforce per-user quotas and basic rate limiting.
+- `apps/api/internal/handlers/llm_test.go`
 
 ---
 
