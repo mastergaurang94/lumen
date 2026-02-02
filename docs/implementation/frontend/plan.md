@@ -63,6 +63,7 @@ Tasks:
 - [ ] On session end, call `POST /v1/sessions/end` with `session_id` + `transcript_hash`.
 - [ ] Ensure calls do not include plaintext transcript content.
 - [ ] Retry on transient errors with backoff (UI should remain usable).
+- [ ] Treat LLM proxy + policy layer as separate backend work (no server proxy).
 
 Files to modify/create:
 
