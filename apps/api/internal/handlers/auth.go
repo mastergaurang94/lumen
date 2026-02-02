@@ -30,7 +30,7 @@ const (
 type AuthHandler struct {
 	cfg         config.Config
 	tokens      *store.AuthTokenStore
-	sessions    *store.SessionStore
+	sessions    *store.AuthSessionStore
 	emailer     email.Provider
 	rateLimiter *RateLimiter
 	clock       func() time.Time
@@ -38,7 +38,7 @@ type AuthHandler struct {
 }
 
 // NewAuthHandler wires dependencies for auth routes.
-func NewAuthHandler(cfg config.Config, tokens *store.AuthTokenStore, sessions *store.SessionStore, emailer email.Provider) *AuthHandler {
+func NewAuthHandler(cfg config.Config, tokens *store.AuthTokenStore, sessions *store.AuthSessionStore, emailer email.Provider) *AuthHandler {
 	return &AuthHandler{
 		cfg:         cfg,
 		tokens:      tokens,

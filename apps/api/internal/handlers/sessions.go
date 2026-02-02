@@ -11,15 +11,15 @@ import (
 	"github.com/mastergaurang94/lumen/apps/api/internal/store"
 )
 
-// SessionsHandler implements session metadata endpoints.
-type SessionsHandler struct {
-	store *store.SessionMetadataStore
+// CoachingSessionsHandler implements coaching session metadata endpoints.
+type CoachingSessionsHandler struct {
+	store *store.CoachingSessionStore
 	clock func() time.Time
 }
 
-// NewSessionsHandler wires dependencies for session metadata routes.
-func NewSessionsHandler(store *store.SessionMetadataStore) *SessionsHandler {
-	return &SessionsHandler{
+// NewCoachingSessionsHandler wires dependencies for coaching session metadata routes.
+func NewCoachingSessionsHandler(store *store.CoachingSessionStore) *CoachingSessionsHandler {
+	return &CoachingSessionsHandler{
 		store: store,
 		clock: time.Now,
 	}
@@ -30,7 +30,7 @@ type sessionStartPayload struct {
 }
 
 // Start handles POST /v1/sessions/start.
-func (h *SessionsHandler) Start(w http.ResponseWriter, r *http.Request) {
+func (h *CoachingSessionsHandler) Start(w http.ResponseWriter, r *http.Request) {
 	var payload sessionStartPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_json", "Invalid JSON payload.")
@@ -59,7 +59,7 @@ type sessionEndPayload struct {
 }
 
 // End handles POST /v1/sessions/end.
-func (h *SessionsHandler) End(w http.ResponseWriter, r *http.Request) {
+func (h *CoachingSessionsHandler) End(w http.ResponseWriter, r *http.Request) {
 	var payload sessionEndPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_json", "Invalid JSON payload.")

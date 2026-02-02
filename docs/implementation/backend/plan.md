@@ -101,6 +101,7 @@ Tasks:
 - JWT vs session cookie: MVP uses an opaque session ID stored server-side (not a JWT) to keep revocation simple.
 - If we switch to JWT later, keep TTLs short and add a revocation strategy (allowlist/denylist).
 - Cookie security: `Secure` must be enabled in production so cookies only travel over HTTPS.
+- Naming: use `AuthSession` for login sessions and `CoachingSession` for user coaching sessions.
 
 Files to modify/create:
 
