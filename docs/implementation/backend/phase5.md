@@ -130,25 +130,17 @@ Tasks:
 
 Transcript hash contract (MVP):
 
-- Canonical payload is an ordered list of messages.
-- Each message string is: `${role}\n${normalized_content}`.
-- `normalized_content` trims leading/trailing whitespace, converts `\r\n` to `\n`,
-  and collapses multiple whitespace to a single space.
-- Join messages with `\n---\n` and compute SHA-256 hex digest.
-- Include system messages only if they are part of the stored session transcript
-  (note this explicitly to avoid drift across clients).
+- Hash the encrypted transcript payload, not plaintext.
+- Canonical payload is the encrypted blob bytes concatenated with the serialized
+  encryption header bytes (as stored locally).
+- Compute SHA-256 hex digest over `header_bytes || encrypted_blob`.
+- This keeps the server blind to plaintext while still providing a stable,
+  tamper-evident session identifier.
 
-Example (canonical payload string):
+Example (canonical payload bytes):
 
 ```
-system
-You are Lumen.
----
-user
-I want to feel calmer today.
----
-assistant
-Let's take a breath together.
+sha256(serialize(header) || encrypted_blob)
 ```
 
 Files to modify/create:

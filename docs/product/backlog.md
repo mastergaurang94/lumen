@@ -4,6 +4,8 @@ Date: 2026-01-27
 
 ## Post-MVP: Platform
 
+- Client-side model orchestration and policy enforcement (no server-side plaintext handling).
+- Ephemeral token broker for LLM auth (short-lived, scope-limited tokens).
 - Passphrase recovery mechanism (e.g., recovery key generated at setup, stored offline by user).
 - Move auth/session storage to DB/Redis (tokens, sessions, rate limits).
 - Privacy-preserving session insights endpoint (`POST /v1/session-insights`) for aggregate learning without PII. Collect: session duration bucket, days since last session, turn count, closure type, optional user rating, action step count.
