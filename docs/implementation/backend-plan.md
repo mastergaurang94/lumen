@@ -14,7 +14,7 @@ Last Updated: 2026-02-03
 
 ### In Progress / Next Up
 
-- See `docs/product/backlog.md` for prioritized backlog items.
+- See `backlog.md` for prioritized backlog items.
 - Next phase scope TBD based on backlog priorities.
 
 ### Goals (Backend Focus)
