@@ -1,6 +1,6 @@
 # Backend Implementation Plan
 
-Last Updated: 2026-02-02
+Last Updated: 2026-02-03
 
 ---
 
@@ -10,13 +10,44 @@ Last Updated: 2026-02-02
 
 ### Running Updates
 
-- 2026-02-02: Phase 5 archived to `docs/implementation/backend/phase5.md`.
+- 2026-02-02: Phase 5 archived to `phase5.md`.
 
 ### In Progress / Next Up
 
-- TBD: Backend follow-ups will be tracked here.
+- See `docs/product/backlog.md` for prioritized backlog items.
+- Next phase scope TBD based on backlog priorities.
 
-### Notes
+### Goals (Backend Focus)
 
-- Phase 5 (auth + session metadata + observability + tests) is complete and archived.
-- Client-to-LLM integration is tracked in `docs/implementation/mvp.md` and frontend plans.
+- Auth service with magic link flow and session cookies.
+- Session metadata recording (start/end times, transcript hash).
+- Observability with structured logs and OpenTelemetry spans.
+- No plaintext transcript storage — privacy by design.
+
+---
+
+## Previous Phases
+
+| Phase | Status      | Description                                      | Archive     |
+| ----- | ----------- | ------------------------------------------------ | ----------- |
+| 5     | ✅ Complete | API foundation (auth, session metadata, o11y)    | `phase5.md` |
+
+---
+
+## Common Context
+
+### Running the API
+
+```bash
+cd apps/api && go run ./cmd/api
+```
+
+### Common Commands
+
+```bash
+# Run tests
+cd apps/api && go test ./...
+
+# Lint
+cd apps/api && golangci-lint run
+```
