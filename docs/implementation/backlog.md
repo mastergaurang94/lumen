@@ -37,6 +37,8 @@ Immediate fixes and polish to ship a solid MVP.
   </details>
 
 - [ ] `[S]` **Warm up pre-session copy**: "Set aside 60 min to reflect" feels like preparing for an exam. Rewrite to feel more like a friendly conversation — approachable, not clinical.
+- [ ] `[S]` **Session closure loading state**: The "Wrapping up your session..." screen is static. Add a spinner or pulsing animation to indicate that summary generation is in progress.
+  - _Code ref: `apps/web/components/chat/session-closure.tsx`_
 
 ### Harness
 
