@@ -14,3 +14,4 @@ build/
 .turbo/
 
 coverage/
+tsconfig.tsbuildinfo

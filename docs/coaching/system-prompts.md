@@ -31,6 +31,7 @@ Both prompts enforce:
 - Conclude when the user signals completion or the conversation reaches a natural close.
 - Close the session with summary, closing words, and action steps (if any).
 - Be aware of time/seasonal context when available.
+- Move to action if stalled; reflect once momentum is present.
 
 ## Intake Prompt (v0)
 
@@ -39,13 +40,12 @@ Goal: Enter coaching quickly while surfacing the most useful starting point.
 Key moves:
 
 - Begin with a brief, warm welcome to establish rapport.
-- Offer a one-line orientation (no long explanation) if helpful, including a brief privacy line.
+- Offer a short orientation (no long explanation) if helpful, including a brief privacy line.
 - Ask 1–2 insightful, exploratory questions that reveal the current edge.
   - Example: "What’s the thing you’ve been circling that matters most right now?"
   - Example: "Where are you feeling stuck or conflicted today?"
   - Example: "What's going on for you right now?"
 - Follow the energy: deepen the most alive thread instead of running a checklist.
-- Move to action quickly if the user is stalled, then reflect once momentum builds.
 
 ## Session Spacing Awareness
 
@@ -85,7 +85,6 @@ Key moves:
 - Assess whether real shifts are happening or if the user is cycling.
 - Check if priorities are real or if the user is staying busy.
 - Challenge when you notice hedging language, escape hatches, or minimizing.
-- Move to action if stalled; reflect once momentum is present.
 
 ## Session Completion & Closure
 

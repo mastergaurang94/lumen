@@ -9,14 +9,16 @@ import { formatSessionDate } from '@/lib/format';
 
 interface SessionClosureProps {
   sessionDate: Date;
-  recognitionMoment: string;
-  actionSteps: string[];
+  recognitionMoment?: string | null;
+  actionSteps?: string[];
+  isSummaryLoading?: boolean;
 }
 
 export function SessionClosure({
   sessionDate,
   recognitionMoment,
-  actionSteps,
+  actionSteps = [],
+  isSummaryLoading = false,
 }: SessionClosureProps) {
   const [showActionSteps, setShowActionSteps] = React.useState(false);
 
@@ -66,24 +68,42 @@ export function SessionClosure({
           </motion.div>
 
           {/* Recognition moment - the seed to carry forward */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="py-6"
-          >
-            <div className="relative">
-              {/* Subtle divider lines */}
-              <div className="absolute left-1/2 -translate-x-1/2 top-0 w-16 h-px bg-border" />
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-16 h-px bg-border" />
-
-              <blockquote className="py-6 px-4">
-                <p className="font-display text-xl leading-relaxed text-foreground italic">
-                  &ldquo;{recognitionMoment}&rdquo;
+          {isSummaryLoading && !recognitionMoment && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              className="py-6"
+            >
+              <div className="relative">
+                <div className="absolute left-1/2 -translate-x-1/2 top-0 w-16 h-px bg-border" />
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-16 h-px bg-border" />
+                <p className="py-6 px-4 text-sm text-muted-foreground">
+                  Wrapping up your session...
                 </p>
-              </blockquote>
-            </div>
-          </motion.div>
+              </div>
+            </motion.div>
+          )}
+          {recognitionMoment && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              className="py-6"
+            >
+              <div className="relative">
+                {/* Subtle divider lines */}
+                <div className="absolute left-1/2 -translate-x-1/2 top-0 w-16 h-px bg-border" />
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-16 h-px bg-border" />
+
+                <blockquote className="py-6 px-4">
+                  <p className="font-display text-xl leading-relaxed text-foreground italic">
+                    &ldquo;{recognitionMoment}&rdquo;
+                  </p>
+                </blockquote>
+              </div>
+            </motion.div>
+          )}
 
           {/* Next session suggestion */}
           <motion.div

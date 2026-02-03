@@ -19,6 +19,8 @@ import { buildVaultMetadata, createKeyCheck } from '@/lib/storage/metadata';
 import type {
   EncryptedSessionSummary,
   EncryptedUserProfile,
+  EncryptedLlmProviderKey,
+  LlmProviderKey,
   SessionSummary,
   SessionTranscript,
   SessionTranscriptChunk,
@@ -269,5 +271,38 @@ describe('storage integration', () => {
     expect(ordered).toHaveLength(2);
     expect(ordered[0].session_id).toBe('session-2');
     expect(ordered[1].session_id).toBe('session-1');
+  });
+
+  it('encrypts LLM provider keys at rest', async () => {
+    const storage = createStorageService();
+    const salt = generateSalt();
+    const iterations = 10;
+    const key = await deriveKey('passphrase', salt, iterations);
+
+    const keyCheck = await createKeyCheck(key, salt, iterations, 'enc-v0.1');
+    const metadata = buildVaultMetadata({ salt, iterations, version: 'enc-v0.1', keyCheck });
+    await storage.saveVaultMetadata(metadata);
+    storage.setVaultContext({ key, metadata });
+
+    const now = new Date().toISOString();
+    const providerKey: LlmProviderKey = {
+      provider: 'anthropic',
+      api_key: 'sk-ant-oat-test-token',
+      created_at: now,
+      updated_at: now,
+    };
+
+    await storage.saveLlmProviderKey(providerKey);
+
+    const stored = (await db.llmProviderKeys.get(
+      providerKey.provider,
+    )) as EncryptedLlmProviderKey;
+    expect(stored).toBeTruthy();
+    expect(new Uint8Array(stored.encrypted_blob)).not.toEqual(
+      new Uint8Array(encodeJson(providerKey)),
+    );
+
+    const decrypted = await storage.getLlmProviderKey(providerKey.provider);
+    expect(decrypted).toEqual(providerKey);
   });
 });

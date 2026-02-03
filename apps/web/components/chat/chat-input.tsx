@@ -88,6 +88,7 @@ export function ChatInput({
           ref={textareaRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
+          onInput={(e) => setValue(e.currentTarget.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}

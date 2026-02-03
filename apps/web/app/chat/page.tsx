@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Sidebar } from '@/components/sidebar';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { CoachUnavailable } from '@/components/coach-unavailable';
@@ -30,9 +31,18 @@ import {
 import { createStorageService } from '@/lib/storage/dexie-storage';
 import { getSessionNumber } from '@/lib/storage/queries';
 import { getOrCreateUserId } from '@/lib/storage/user';
-import { DEFAULT_MODEL_ID } from '@/lib/llm/model-config';
+import {
+  callLlmWithRetry,
+  LlmAbortError,
+  LlmInvalidKeyError,
+  LlmUnavailableError,
+  type LlmMessage,
+} from '@/lib/llm/client';
+import { DEFAULT_MODEL_ID, DEFAULT_PROVIDER } from '@/lib/llm/model-config';
+import { buildSystemPrompt } from '@/lib/llm/prompts';
 import { deserializeMessages, serializeMessages } from '@/lib/storage/transcript';
 import type {
+  LlmProviderKey,
   VaultMetadata,
   SessionTranscript,
   SessionTranscriptChunk,
@@ -44,60 +54,17 @@ import type { SessionState, Message } from '@/types/session';
 const MOCK_COACH_UNAVAILABLE = process.env.NEXT_PUBLIC_MOCK_COACH_UNAVAILABLE === 'true';
 const MOCK_CONNECTION_ERROR = process.env.NEXT_PUBLIC_MOCK_CONNECTION_ERROR === 'true';
 
-// Mock closure data - in real app this would be generated from the session
-const MOCK_RECOGNITION_MOMENT =
-  'What would it look like to trust yourself the way you trust your instincts at work?';
-const MOCK_ACTION_STEPS = [
-  "Notice when you're second-guessing a decision this week — pause and ask what your gut says first",
-  'Have one conversation where you share your real opinion, even if it feels uncomfortable',
-  'Write down one thing you did well each day, without qualifying it',
-];
-
-function buildMockSummary(): string {
-  // Temporary summary format until LLM summarization is added.
-  return [
-    'You named the tension between trust and second-guessing.',
-    'We traced the pattern to moments where outside feedback outweighs your own signal.',
-    'You want to act from conviction rather than permission.',
-    'Recognition: the pull to edit yourself before you even speak.',
-    'Next session: check in on how often you let your first instinct lead.',
-  ].join('\n');
-}
-
-// Mock initial message from coach
-const INITIAL_COACH_MESSAGE = `Welcome. I'm glad you're here.
-
-Before we begin, I want you to know that everything we discuss stays between us — your conversations are stored locally on your device and are never used to train AI models.
-
-So, **what's on your mind today?** What brought you here, and what's the thing you've been circling that matters most right now?`;
-
-// Simulated coach responses for demo
-const MOCK_RESPONSES = [
-  `That's a meaningful place to start. Thank you for sharing that with me.
-
-I hear that you're feeling pulled in different directions. There's something underneath that tension worth exploring.
-
-What does your gut tell you about what's most important right now — not what *should* be important, but what actually feels urgent or alive?`,
-
-  `I notice you're being quite thoughtful about this, which tells me it matters.
-
-Sometimes when we're stuck, it's because we're trying to solve the wrong problem. The surface issue might not be the real one.
-
-**What would change if you stopped trying to figure this out perfectly?** What might you try instead?`,
-
-  `That resonates. And I appreciate your honesty in naming it.
-
-It sounds like there's a pattern here — one that might be familiar. Have you noticed this dynamic before in other areas of your life?
-
-Sometimes recognizing a pattern is the first step to choosing differently.`,
-];
+const INITIAL_COACH_INSTRUCTION =
+  'Begin the session with a brief warm welcome, include a one-line privacy reminder, and ask one open question.';
 
 // Generate unique ID
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 }
 
-// Simulate streaming text with abort support
+// TODO: Replace with real streaming from Anthropic's SSE endpoint. Currently this
+// simulates word-by-word streaming after the full response is received, which adds
+// artificial latency (~30-70ms per word). For a 200-word response this is ~10s extra.
 async function* streamText(text: string, signal?: AbortSignal): AsyncGenerator<string> {
   const words = text.split(' ');
   for (let i = 0; i < words.length; i++) {
@@ -105,6 +72,48 @@ async function* streamText(text: string, signal?: AbortSignal): AsyncGenerator<s
     yield words.slice(0, i + 1).join(' ');
     await new Promise((resolve) => setTimeout(resolve, 30 + Math.random() * 40));
   }
+}
+
+// Map UI chat roles to provider-friendly message roles.
+function buildLlmMessages(messages: Message[]): LlmMessage[] {
+  return messages.map((message) => ({
+    role: message.role === 'coach' ? 'assistant' : 'user',
+    content: message.content,
+  }));
+}
+
+type LlmSummaryResponse = {
+  summary_text: string;
+  recognition_moment: string | null;
+  action_steps: string[];
+  open_threads: string[];
+};
+
+// Parse LLM summary response, tolerating markdown code fences that models sometimes emit.
+function parseSummaryResponse(raw: string): LlmSummaryResponse {
+  const trimmed = raw.trim();
+  const withoutFence = trimmed.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  const parsed = JSON.parse(withoutFence) as Partial<LlmSummaryResponse>;
+  if (!parsed || typeof parsed.summary_text !== 'string') {
+    throw new Error('Summary response missing summary_text.');
+  }
+  const recognition =
+    parsed.recognition_moment === null || typeof parsed.recognition_moment === 'string'
+      ? parsed.recognition_moment ?? null
+      : null;
+  const actionSteps = Array.isArray(parsed.action_steps)
+    ? parsed.action_steps.filter((step) => typeof step === 'string')
+    : [];
+  const openThreads = Array.isArray(parsed.open_threads)
+    ? parsed.open_threads.filter((thread) => typeof thread === 'string')
+    : [];
+
+  return {
+    summary_text: parsed.summary_text.trim(),
+    recognition_moment: recognition?.trim() ?? null,
+    action_steps: actionSteps.map((step) => step.trim()).filter(Boolean),
+    open_threads: openThreads.map((thread) => thread.trim()).filter(Boolean),
+  };
 }
 
 // Inner chat component (wrapped by error boundary)
@@ -132,9 +141,16 @@ function ChatPageInner() {
   const [sessionState, setSessionState] = React.useState<SessionState>('loading');
   const [isRetrying, setIsRetrying] = React.useState(false);
   const [elapsedTime, setElapsedTime] = React.useState('');
+  const [llmKeyReady, setLlmKeyReady] = React.useState(false);
+  const [llmKey, setLlmKey] = React.useState<string | null>(null);
+  const [llmKeyInput, setLlmKeyInput] = React.useState('');
+  const [llmKeyError, setLlmKeyError] = React.useState<string | null>(null);
+  const [isSavingKey, setIsSavingKey] = React.useState(false);
+  const [sessionSummary, setSessionSummary] = React.useState<SessionSummary | null>(null);
+  const [isSummaryLoading, setIsSummaryLoading] = React.useState(false);
+  const initialPromptSentRef = React.useRef(false);
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
-  const responseIndexRef = React.useRef(0);
   const sessionDateRef = React.useRef(new Date());
   const abortControllerRef = React.useRef<AbortController | null>(null);
 
@@ -231,8 +247,27 @@ function ChatPageInner() {
   }, [isAuthed, router]);
 
   React.useEffect(() => {
+    if (!vaultReady) return;
+
+    const loadProviderKey = async () => {
+      try {
+        const record = await storageRef.current.getLlmProviderKey(DEFAULT_PROVIDER);
+        setLlmKey(record?.api_key ?? null);
+      } catch {
+        setLlmKey(null);
+      } finally {
+        setLlmKeyReady(true);
+      }
+    };
+
+    loadProviderKey();
+  }, [vaultReady]);
+
+  React.useEffect(() => {
     // Flush buffered messages before vault lock clears the key.
     return registerLockHandler(async () => {
+      setLlmKey(null);
+      setLlmKeyReady(false);
       await flushPendingMessages();
     });
   }, [flushPendingMessages]);
@@ -373,6 +408,7 @@ function ChatPageInner() {
       sessionIdRef.current = sessionId;
       transcriptRef.current = transcript;
       chunkIndexRef.current = 0;
+      initialPromptSentRef.current = false;
       await storageRef.current.saveTranscript(transcript);
       await enqueueSessionStart(sessionId);
       void flushSessionOutbox();
@@ -393,26 +429,78 @@ function ChatPageInner() {
     initStorageSession();
   }, [sessionState, vaultReady]);
 
+  // Send the initial coach greeting when starting a fresh session.
+  // Guard conditions prevent re-sending on resume or after messages exist.
+  // On error, initialPromptSentRef resets so the effect can retry on next key change.
   React.useEffect(() => {
     if (sessionState !== 'active' || !vaultReady || !storageReady) return;
+    if (!llmKey) return;
     if (isResumingRef.current || messages.length > 0) return;
+    if (initialPromptSentRef.current) return;
 
-    const timer = window.setTimeout(() => {
-      // Seed the session with the initial coach message.
-      const initialMessage: Message = {
-        id: generateId(),
-        role: 'coach',
-        content: INITIAL_COACH_MESSAGE,
-        timestamp: new Date(),
-      };
-      setMessages([initialMessage]);
-      queueMessageForChunk(initialMessage);
-    }, 300);
+    initialPromptSentRef.current = true;
+    abortControllerRef.current = new AbortController();
+    setIsTyping(true);
+    setStreamingContent('');
 
-    return () => {
-      window.clearTimeout(timer);
+    const sendInitialPrompt = async () => {
+      try {
+        const sessionNumber = transcriptRef.current?.session_number ?? 1;
+        const systemPrompt = buildSystemPrompt({
+          sessionNumber,
+          sessionContext: sessionContextRef.current ?? '',
+        });
+        const responseText = await callLlmWithRetry({
+          apiKey: llmKey,
+          modelId: DEFAULT_MODEL_ID,
+          systemPrompt,
+          messages: [{ role: 'user', content: INITIAL_COACH_INSTRUCTION }],
+          signal: abortControllerRef.current?.signal,
+        });
+
+        for await (const partial of streamText(responseText, abortControllerRef.current?.signal)) {
+          setStreamingContent(partial);
+        }
+
+        const coachMessage: Message = {
+          id: generateId(),
+          role: 'coach',
+          content: responseText,
+          timestamp: new Date(),
+        };
+        setMessages([coachMessage]);
+        queueMessageForChunk(coachMessage);
+      } catch (error) {
+        initialPromptSentRef.current = false;
+        if (error instanceof LlmAbortError) {
+          return;
+        }
+        if (error instanceof LlmInvalidKeyError) {
+          setLlmKey(null);
+          setLlmKeyError(error.message);
+          return;
+        }
+        if (error instanceof LlmUnavailableError) {
+          setSessionState('unavailable');
+        } else {
+          setSessionState('error');
+        }
+      } finally {
+        setIsTyping(false);
+        setStreamingContent(null);
+        abortControllerRef.current = null;
+      }
     };
-  }, [messages.length, queueMessageForChunk, sessionState, storageReady, vaultReady]);
+
+    void sendInitialPrompt();
+  }, [
+    llmKey,
+    messages.length,
+    queueMessageForChunk,
+    sessionState,
+    storageReady,
+    vaultReady,
+  ]);
 
   React.useEffect(() => {
     if (!storageReady) return;
@@ -435,6 +523,54 @@ function ChatPageInner() {
     }
   }, [messages, streamingContent, isTyping]);
 
+  // Persist the provider key in encrypted storage for this vault.
+  const handleSaveKey = React.useCallback(async () => {
+    if (!llmKeyInput.trim()) {
+      setLlmKeyError('Enter a valid token.');
+      return;
+    }
+
+    setIsSavingKey(true);
+    setLlmKeyError(null);
+    try {
+      // Verify token before persisting it to the vault.
+      await callLlmWithRetry({
+        apiKey: llmKeyInput.trim(),
+        modelId: DEFAULT_MODEL_ID,
+        systemPrompt: '',
+        messages: [{ role: 'user', content: 'Reply with OK.' }],
+        maxTokens: 4,
+        temperature: 0,
+      });
+
+      const now = new Date().toISOString();
+      const record: LlmProviderKey = {
+        provider: DEFAULT_PROVIDER,
+        api_key: llmKeyInput.trim(),
+        created_at: now,
+        updated_at: now,
+      };
+      await storageRef.current.saveLlmProviderKey(record);
+      setLlmKey(record.api_key);
+      setLlmKeyInput('');
+    } catch (error) {
+      if (error instanceof LlmAbortError) {
+        return;
+      }
+      if (error instanceof LlmInvalidKeyError) {
+        setLlmKeyError(error.message);
+      } else if (error instanceof LlmUnavailableError) {
+        setLlmKeyError('Provider is unavailable. Try again in a moment.');
+      } else if (error instanceof Error) {
+        setLlmKeyError(error.message);
+      } else {
+        setLlmKeyError('Could not verify the token. Try again.');
+      }
+    } finally {
+      setIsSavingKey(false);
+    }
+  }, [llmKeyInput]);
+
   // Handle sending a message
   const handleSend = React.useCallback(
     async (content: string) => {
@@ -445,31 +581,68 @@ function ChatPageInner() {
         content,
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, userMessage]);
+      const nextMessages = [...messages, userMessage];
+      setMessages(nextMessages);
       queueMessageForChunk(userMessage);
 
       // Show typing indicator
       setIsTyping(true);
 
-      // Simulate thinking delay
-      await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 1000));
+      // Brief pause for a natural response cadence.
+      await new Promise((resolve) => setTimeout(resolve, 300 + Math.random() * 300));
+
+      if (!llmKey) {
+        setIsTyping(false);
+        setLlmKeyError('Add your token to continue.');
+        return;
+      }
+
+      const sessionNumber = transcriptRef.current?.session_number ?? 1;
+      const systemPrompt = buildSystemPrompt({
+        sessionNumber,
+        sessionContext: sessionContextRef.current ?? '',
+      });
+      const modelMessages = buildLlmMessages(nextMessages);
+
+      // Create abort controller for this request + stream
+      abortControllerRef.current = new AbortController();
+
+      let responseText = '';
+      try {
+        responseText = await callLlmWithRetry(
+          {
+            apiKey: llmKey,
+            modelId: DEFAULT_MODEL_ID,
+            systemPrompt,
+            messages: modelMessages,
+            signal: abortControllerRef.current.signal,
+          },
+          2,
+        );
+      } catch (error) {
+        setIsTyping(false);
+        setStreamingContent(null);
+        abortControllerRef.current = null;
+        if (error instanceof LlmAbortError) {
+          return;
+        }
+        if (error instanceof LlmInvalidKeyError) {
+          setLlmKey(null);
+          setLlmKeyError(error.message);
+          return;
+        }
+        if (error instanceof LlmUnavailableError) {
+          setSessionState('unavailable');
+        } else {
+          setSessionState('error');
+        }
+        return;
+      }
 
       // Hide typing indicator, start streaming
       setIsTyping(false);
-
-      const systemPrompt = sessionContextRef.current ?? '';
-      // Placeholder until LLM integration: context is prepared as system prompt input.
-      console.info('llm request prepared', { system_prompt_chars: systemPrompt.length });
-
-      // Get next mock response (cycle through them)
-      const responseText = MOCK_RESPONSES[responseIndexRef.current % MOCK_RESPONSES.length];
-      responseIndexRef.current++;
-
-      // Create abort controller for this stream
-      abortControllerRef.current = new AbortController();
-
-      // Stream the response
       setStreamingContent('');
+
       try {
         for await (const partial of streamText(responseText, abortControllerRef.current.signal)) {
           setStreamingContent(partial);
@@ -489,7 +662,7 @@ function ChatPageInner() {
         abortControllerRef.current = null;
       }
     },
-    [queueMessageForChunk],
+    [llmKey, messages, queueMessageForChunk],
   );
 
   // Handle end session
@@ -514,22 +687,9 @@ function ChatPageInner() {
 
     const userId = userIdRef.current;
     const sessionId = sessionIdRef.current;
-    // Persist a mock summary and touch profile metadata on session close.
+    const now = new Date().toISOString();
+    const messagesSnapshot = [...messages];
     if (userId && sessionId) {
-      const now = new Date().toISOString();
-      const summary: SessionSummary = {
-        session_id: sessionId,
-        user_id: userId,
-        summary_text: buildMockSummary(),
-        recognition_moment: MOCK_RECOGNITION_MOMENT,
-        action_steps: MOCK_ACTION_STEPS,
-        open_threads: [],
-        coach_notes: null,
-        created_at: now,
-        updated_at: now,
-      };
-      await storageRef.current.saveSummary(summary);
-
       const profile = await storageRef.current.getProfile(userId);
       if (profile) {
         await storageRef.current.saveProfile({ ...profile, updated_at: now });
@@ -545,7 +705,58 @@ function ChatPageInner() {
     }
 
     setSessionState('complete');
-  }, [flushPendingMessages]);
+
+    if (userId && sessionId && llmKey) {
+      setIsSummaryLoading(true);
+      const sessionNumber = transcriptRef.current?.session_number ?? 1;
+      const systemPrompt = buildSystemPrompt({
+        sessionNumber,
+        sessionContext: sessionContextRef.current ?? '',
+      });
+      // Ask the LLM for a structured session summary.
+      const summaryPrompt = [
+        'Summarize this session as JSON with the following keys:',
+        'summary_text (string), recognition_moment (string), action_steps (string[]), open_threads (string[]).',
+        'Recognition moment definition: the single most important pattern, insight, or shift that the user should carry forward into the week.',
+        'Keep summary_text concise (8-12 lines max).',
+        'Return JSON only, no markdown.',
+      ].join('\n');
+
+      void (async () => {
+        try {
+          const summaryText = await callLlmWithRetry({
+            apiKey: llmKey,
+            modelId: DEFAULT_MODEL_ID,
+            systemPrompt,
+            messages: [
+              ...buildLlmMessages(messagesSnapshot),
+              { role: 'user', content: summaryPrompt },
+            ],
+            temperature: 0.2,
+            maxTokens: 800,
+          });
+          const parsed = parseSummaryResponse(summaryText);
+          const summary: SessionSummary = {
+            session_id: sessionId,
+            user_id: userId,
+            summary_text: parsed.summary_text,
+            recognition_moment: parsed.recognition_moment,
+            action_steps: parsed.action_steps,
+            open_threads: parsed.open_threads,
+            coach_notes: null,
+            created_at: now,
+            updated_at: now,
+          };
+          await storageRef.current.saveSummary(summary);
+          setSessionSummary(summary);
+        } catch {
+          // Keep closure UI available even if summary generation fails.
+        } finally {
+          setIsSummaryLoading(false);
+        }
+      })();
+    }
+  }, [flushPendingMessages, llmKey, messages]);
 
   // Loading state
   if (!vaultReady || sessionState === 'loading') {
@@ -604,11 +815,14 @@ function ChatPageInner() {
     return (
       <SessionClosure
         sessionDate={sessionDateRef.current}
-        recognitionMoment={MOCK_RECOGNITION_MOMENT}
-        actionSteps={MOCK_ACTION_STEPS}
+        recognitionMoment={sessionSummary?.recognition_moment ?? null}
+        actionSteps={sessionSummary?.action_steps ?? []}
+        isSummaryLoading={isSummaryLoading}
       />
     );
   }
+
+  const showProviderGate = sessionState === 'active' && storageReady && llmKeyReady && !llmKey;
 
   return (
     <div className="atmosphere h-screen flex flex-col overflow-hidden">
@@ -618,11 +832,13 @@ function ChatPageInner() {
       </div>
 
       {/* End Session button - top right */}
-      <div className="fixed top-4 right-4" style={{ zIndex: Z_INDEX.navigation }}>
-        <Button variant="outline" onClick={handleEndSession} className="text-base text-foreground">
-          End Session
-        </Button>
-      </div>
+      {!showProviderGate && (
+        <div className="fixed top-4 right-4" style={{ zIndex: Z_INDEX.navigation }}>
+          <Button variant="outline" onClick={handleEndSession} className="text-base text-foreground">
+            End Session
+          </Button>
+        </div>
+      )}
 
       {/* Title - centered */}
       <div className="pt-16 pb-4 text-center">
@@ -634,49 +850,92 @@ function ChatPageInner() {
 
       {/* Messages area */}
       <main className="flex-1 min-h-0 overflow-hidden">
-        <div ref={scrollAreaRef} className="h-full chat-scroll-area">
-          <div className="max-w-3xl mx-auto px-6 py-8 min-h-[calc(100%+24px)]">
-            {/* Empty state before first message */}
-            {messages.length === 0 && !isTyping && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex flex-col items-center justify-center py-20 text-center"
-              >
-                <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mb-4">
-                  <Shield className="w-6 h-6 text-accent" />
+        {showProviderGate ? (
+          <div className="h-full flex items-center justify-center px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="w-full max-w-md rounded-2xl border border-border/60 bg-background/80 backdrop-blur-md p-6 shadow-sm"
+            >
+              <div className="space-y-3 text-center">
+                <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto">
+                  <Shield className="h-6 w-6 text-accent" />
                 </div>
-                <p className="text-muted-foreground text-sm max-w-xs">
-                  Your session is beginning...
+                <h1 className="font-display text-xl text-foreground">Connect your provider</h1>
+                <p className="text-sm text-muted-foreground">
+                  To begin your session, add your Claude Code OAuth token (sk-ant-oat...) to
+                  begin chatting.
                 </p>
-              </motion.div>
-            )}
-
-            {/* Message list */}
-            <div className="space-y-6">
-              <AnimatePresence mode="popLayout">
-                {messages.map((message) =>
-                  message.role === 'coach' ? (
-                    <CoachMessage key={message.id} content={message.content} />
-                  ) : (
-                    <UserMessage key={message.id} content={message.content} />
-                  ),
-                )}
-
-                {/* Streaming message */}
-                {streamingContent !== null && (
-                  <CoachMessage key="streaming" content={streamingContent} />
-                )}
-
-                {/* Typing indicator */}
-                {isTyping && <TypingIndicator key="typing" />}
-              </AnimatePresence>
-            </div>
-
-            {/* Scroll anchor */}
-            <div ref={messagesEndRef} className="h-4" />
+              </div>
+              <div className="mt-6 space-y-3">
+                <Input
+                  type="password"
+                  placeholder="sk-ant-oat..."
+                  value={llmKeyInput}
+                  onChange={(event) => {
+                    setLlmKeyInput(event.target.value);
+                    if (llmKeyError) {
+                      setLlmKeyError(null);
+                    }
+                  }}
+                />
+                {llmKeyError && <p className="text-xs text-destructive">{llmKeyError}</p>}
+                <Button
+                  className="w-full h-11"
+                  onClick={handleSaveKey}
+                  disabled={isSavingKey || llmKeyInput.trim().length === 0}
+                >
+                  {isSavingKey ? 'Verifying...' : 'Verify & Save Token'}
+                </Button>
+              </div>
+            </motion.div>
           </div>
-        </div>
+        ) : (
+          <div ref={scrollAreaRef} className="h-full chat-scroll-area">
+            <div className="max-w-3xl mx-auto px-6 py-8 min-h-[calc(100%+24px)]">
+              {/* Empty state before first message */}
+              {messages.length === 0 && !isTyping && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col items-center justify-center py-20 text-center"
+                >
+                  <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mb-4">
+                    <Shield className="w-6 h-6 text-accent" />
+                  </div>
+                  <p className="text-muted-foreground text-sm max-w-xs">
+                    Your session is beginning...
+                  </p>
+                </motion.div>
+              )}
+
+              {/* Message list */}
+              <div className="space-y-6">
+                <AnimatePresence mode="popLayout">
+                  {messages.map((message) =>
+                    message.role === 'coach' ? (
+                      <CoachMessage key={message.id} content={message.content} />
+                    ) : (
+                      <UserMessage key={message.id} content={message.content} />
+                    ),
+                  )}
+
+                  {/* Streaming message */}
+                  {streamingContent !== null && (
+                    <CoachMessage key="streaming" content={streamingContent} />
+                  )}
+
+                  {/* Typing indicator */}
+                  {isTyping && <TypingIndicator key="typing" />}
+                </AnimatePresence>
+              </div>
+
+              {/* Scroll anchor */}
+              <div ref={messagesEndRef} className="h-4" />
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Input area */}
@@ -692,7 +951,13 @@ function ChatPageInner() {
           <div className="max-w-3xl mx-auto px-6 pt-4 pb-6">
             <ChatInput
               onSend={handleSend}
-              disabled={!storageReady || isTyping || streamingContent !== null}
+              disabled={
+                !storageReady ||
+                !llmKeyReady ||
+                !llmKey ||
+                isTyping ||
+                streamingContent !== null
+              }
               placeholder="Reply..."
             />
             <p className="mt-3 text-xs text-muted-foreground/50 text-center">

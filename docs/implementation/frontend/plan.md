@@ -1,12 +1,12 @@
 # Frontend Implementation Plan
 
-Last Updated: 2026-01-31
+Last Updated: 2026-02-02
 
 ---
 
 ## Current Phase: Phase 5 — Client Integration (Auth + Session Metadata)
 
-**Status: 🔄 In Progress**
+**Status: ✅ Complete**
 
 ### Running Updates
 
@@ -15,10 +15,11 @@ Last Updated: 2026-01-31
 - 2026-02-02: Step 1 complete — wired magic link request/verify with shared API client and login callback flow.
 - 2026-02-02: Added auth session check endpoint + client guards for setup/unlock/session/chat.
 - 2026-02-02: Step 2 complete — added session metadata outbox, retries, and API sync wiring.
+- 2026-02-02: Step 3 complete — client LLM calls with BYOK key (encrypted), retry/backoff, and provider unavailable handling.
 
 ### In Progress / Next Up
 
-- Step 2: Session metadata sync.
+- Phase 5 complete. Next step TBD.
 
 ### Deferred / If Time
 
@@ -92,23 +93,27 @@ Files to modify/create:
 
 #### Step 3: Client-to-LLM Calls (No Server Proxy)
 
-**Status: ⬜ Not Started**
+**Status: ✅ Complete**
 
 Call the LLM provider directly from the client while preserving privacy guarantees.
 
 Tasks:
 
-- [ ] Route LLM calls directly from the browser (no API proxy).
-- [ ] Ensure only client-assembled context + user messages are sent.
-- [ ] BYOK MVP: prompt user for provider API key, store locally encrypted, and
+- [x] Route LLM calls directly from the browser (no API proxy).
+- [x] Ensure only client-assembled context + user messages are sent.
+- [x] BYOK MVP: prompt user for provider API key, store locally encrypted, and
       use it for LLM calls.
-- [ ] Add retry/backoff and “coach unavailable” handling for provider outages.
-- [ ] Avoid logging or persisting plaintext outside the local vault.
+- [x] Add retry/backoff and “coach unavailable” handling for provider outages.
+- [x] Avoid logging or persisting plaintext outside the local vault.
 
 Files to modify/create:
 
 - `apps/web/app/chat/page.tsx`
 - `apps/web/lib/llm/client.ts` (new)
+- `apps/web/lib/storage/dexie-storage.ts`
+- `apps/web/lib/storage/index.ts`
+- `apps/web/lib/db.ts`
+- `apps/web/types/storage.ts`
 
 ---
 

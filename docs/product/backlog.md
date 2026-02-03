@@ -4,8 +4,14 @@ Date: 2026-01-27
 
 ## Post-MVP: Platform
 
+- Real LLM streaming: replace mock word-by-word streaming with Anthropic SSE endpoint for true incremental response display.
+- Abort signal propagation: pass client disconnect signal to upstream LLM requests; optionally queue pending responses for session resume.
 - Client-side model orchestration and policy enforcement (no server-side plaintext handling).
 - Ephemeral token broker for LLM auth (short-lived, scope-limited tokens).
+- Provider auth + billing options:
+  - Monetizable path: hosted token broker that swaps user auth for scoped API tokens
+    (server-held provider keys; billing/quotas enforced server-side).
+  - Decide whether to allow BYOK API keys as an alternative for power users.
 - Passphrase recovery mechanism (e.g., recovery key generated at setup, stored offline by user).
 - Move auth/session storage to DB/Redis (tokens, sessions, rate limits).
 - Reduce vault unlock churn: idle timeout + OS keychain / WebAuthn unlock (desktop).
