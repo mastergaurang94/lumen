@@ -3,6 +3,8 @@ import type {
   SessionTranscript,
   SessionTranscriptChunk,
   SessionSummary,
+  LlmProvider,
+  LlmProviderKey,
   VaultMetadata,
 } from '@/types/storage';
 
@@ -23,6 +25,9 @@ export interface StorageService {
   getSummary(sessionId: string): Promise<SessionSummary | null>;
   saveSummary(summary: SessionSummary): Promise<void>;
   listSummaries(userId: string, limit?: number): Promise<SessionSummary[]>;
+
+  getLlmProviderKey(provider: LlmProvider): Promise<LlmProviderKey | null>;
+  saveLlmProviderKey(record: LlmProviderKey): Promise<void>;
 
   getVaultMetadata(): Promise<VaultMetadata | null>;
   saveVaultMetadata(metadata: VaultMetadata): Promise<void>;

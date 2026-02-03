@@ -4,6 +4,7 @@ import type {
   SessionTranscript,
   SessionTranscriptChunk,
   EncryptedSessionSummary,
+  EncryptedLlmProviderKey,
   VaultMetadata,
   SessionOutboxEvent,
 } from '@/types/storage';
@@ -14,6 +15,7 @@ export class LumenDB extends Dexie {
   sessionTranscripts!: Table<SessionTranscript, string>;
   sessionTranscriptChunks!: Table<SessionTranscriptChunk, [string, number]>;
   sessionSummaries!: Table<EncryptedSessionSummary, string>;
+  llmProviderKeys!: Table<EncryptedLlmProviderKey, string>;
   vaultMetadata!: Table<VaultMetadata, string>;
   sessionOutbox!: Table<SessionOutboxEvent, string>;
 
@@ -26,6 +28,7 @@ export class LumenDB extends Dexie {
       sessionTranscripts: '&session_id, user_id, started_at',
       sessionTranscriptChunks: '&[session_id+chunk_index], session_id, created_at',
       sessionSummaries: '&session_id, user_id, created_at',
+      llmProviderKeys: '&provider',
       vaultMetadata: '&id',
       sessionOutbox: '&id, status, available_at, created_at, session_id',
     });

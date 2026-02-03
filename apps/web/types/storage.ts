@@ -77,6 +77,26 @@ export interface EncryptedSessionSummary {
   updated_at: string;
 }
 
+export type LlmProvider = 'anthropic';
+
+// LlmProviderKey stores the decrypted API key for a provider (runtime only).
+export interface LlmProviderKey {
+  provider: LlmProvider;
+  api_key: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// EncryptedLlmProviderKey is the at-rest representation of provider keys.
+export interface EncryptedLlmProviderKey {
+  provider: LlmProvider;
+  encrypted_blob: ArrayBuffer;
+  encryption_header: EncryptionHeader;
+  key_hash: ArrayBuffer;
+  created_at: string;
+  updated_at: string;
+}
+
 // Sentinel used to validate a passphrase without decrypting transcripts.
 export interface VaultKeyCheck {
   encrypted_blob: ArrayBuffer;

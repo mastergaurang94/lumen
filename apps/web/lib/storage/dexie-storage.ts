@@ -3,8 +3,11 @@ import { decodeJson, encodeJson, encrypt, decrypt, generateIV, hashTranscript } 
 import type { StorageService } from '@/lib/storage';
 import type {
   EncryptionHeader,
+  EncryptedLlmProviderKey,
   EncryptedSessionSummary,
   EncryptedUserProfile,
+  LlmProvider,
+  LlmProviderKey,
   SessionTranscript,
   SessionTranscriptChunk,
   SessionSummary,
@@ -40,6 +43,8 @@ export class DexieStorageService implements StorageService {
     };
   }
 
+  // Verify encrypted payload integrity before decryption to detect tampering or corruption.
+  // Uses constant-time comparison to avoid timing attacks.
   private async assertTranscriptHash(
     encrypted: ArrayBuffer,
     header: EncryptionHeader,
@@ -115,6 +120,38 @@ export class DexieStorageService implements StorageService {
     return decodeJson<SessionSummary>(plaintext);
   }
 
+  // LLM provider keys are encrypted with the same vault key as transcripts.
+  // This ensures the API key is only accessible when the vault is unlocked.
+  private async encryptLlmProviderKey(record: LlmProviderKey): Promise<EncryptedLlmProviderKey> {
+    const { key, metadata } = this.getVaultContext();
+    const iv = generateIV();
+    const header = this.buildHeader(metadata, iv);
+    const ciphertext = await encrypt(encodeJson(record), key, iv);
+    const key_hash = await hashTranscript(ciphertext, header);
+
+    return {
+      provider: record.provider,
+      encrypted_blob: ciphertext,
+      encryption_header: header,
+      key_hash,
+      created_at: record.created_at,
+      updated_at: record.updated_at,
+    };
+  }
+
+  private async decryptLlmProviderKey(
+    record: EncryptedLlmProviderKey,
+  ): Promise<LlmProviderKey> {
+    const { key } = this.getVaultContext();
+    await this.assertTranscriptHash(
+      record.encrypted_blob,
+      record.encryption_header,
+      record.key_hash,
+    );
+    const plaintext = await decrypt(record.encrypted_blob, key, record.encryption_header.iv);
+    return decodeJson<LlmProviderKey>(plaintext);
+  }
+
   async getProfile(userId: string): Promise<UserProfile | null> {
     const record = await db.userProfiles.get(userId);
     if (!record) return null;
@@ -170,6 +207,17 @@ export class DexieStorageService implements StorageService {
       .sortBy('created_at');
     const newestFirst = summaries.reverse().slice(0, limit);
     return Promise.all(newestFirst.map((record) => this.decryptSummary(record)));
+  }
+
+  async getLlmProviderKey(provider: LlmProvider): Promise<LlmProviderKey | null> {
+    const record = await db.llmProviderKeys.get(provider);
+    if (!record) return null;
+    return this.decryptLlmProviderKey(record);
+  }
+
+  async saveLlmProviderKey(record: LlmProviderKey): Promise<void> {
+    const encrypted = await this.encryptLlmProviderKey(record);
+    await db.llmProviderKeys.put(encrypted);
   }
 
   async getVaultMetadata(): Promise<VaultMetadata | null> {

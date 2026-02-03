@@ -127,6 +127,17 @@ function resolveMaxChars(options: BuildSessionContextOptions | undefined): numbe
   return tokensToChars(maxTokens);
 }
 
+function formatLocalDate(date: Date): string {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // Use an explicit local timezone to avoid UTC off-by-one dates.
+  return new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    ...(timeZone ? { timeZone } : {}),
+  }).format(date);
+}
+
 // Builds a deterministic, long-term-friendly context preamble for system prompt injection.
 export async function buildSessionContext({
   storage,
@@ -149,7 +160,7 @@ export async function buildSessionContext({
   const latestSummary = summaries[0] ?? null;
   const actionSteps = latestSummary?.action_steps ?? [];
   const openThreads = latestSummary?.open_threads ?? [];
-  const currentDate = now.toISOString().slice(0, 10);
+  const currentDate = formatLocalDate(now);
 
   let daysSinceLastSession: number | null = null;
   if (latestSession?.ended_at) {
