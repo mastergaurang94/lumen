@@ -139,9 +139,7 @@ export class DexieStorageService implements StorageService {
     };
   }
 
-  private async decryptLlmProviderKey(
-    record: EncryptedLlmProviderKey,
-  ): Promise<LlmProviderKey> {
+  private async decryptLlmProviderKey(record: EncryptedLlmProviderKey): Promise<LlmProviderKey> {
     const { key } = this.getVaultContext();
     await this.assertTranscriptHash(
       record.encrypted_blob,

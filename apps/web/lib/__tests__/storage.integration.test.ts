@@ -294,9 +294,7 @@ describe('storage integration', () => {
 
     await storage.saveLlmProviderKey(providerKey);
 
-    const stored = (await db.llmProviderKeys.get(
-      providerKey.provider,
-    )) as EncryptedLlmProviderKey;
+    const stored = (await db.llmProviderKeys.get(providerKey.provider)) as EncryptedLlmProviderKey;
     expect(stored).toBeTruthy();
     expect(new Uint8Array(stored.encrypted_blob)).not.toEqual(
       new Uint8Array(encodeJson(providerKey)),

@@ -94,16 +94,13 @@ export function useActiveTimer({
     });
   }, []);
 
-  const resetActiveTimer = React.useCallback(
-    (sessionId: string) => {
-      sessionIdRef.current = sessionId;
-      activeMsRef.current = 0;
-      activeSegmentStartRef.current = null;
-      setElapsedTime('');
-      writeActiveTime(sessionId, { active_ms: 0, last_active_started_at: null });
-    },
-    [],
-  );
+  const resetActiveTimer = React.useCallback((sessionId: string) => {
+    sessionIdRef.current = sessionId;
+    activeMsRef.current = 0;
+    activeSegmentStartRef.current = null;
+    setElapsedTime('');
+    writeActiveTime(sessionId, { active_ms: 0, last_active_started_at: null });
+  }, []);
 
   const loadActiveTimer = React.useCallback((sessionId: string) => {
     sessionIdRef.current = sessionId;
@@ -140,9 +137,7 @@ export function useActiveTimer({
     }
     activeSegmentStartRef.current = null;
     setElapsedTime(
-      activeMsRef.current > 0
-        ? formatElapsedTime(new Date(Date.now() - activeMsRef.current))
-        : '',
+      activeMsRef.current > 0 ? formatElapsedTime(new Date(Date.now() - activeMsRef.current)) : '',
     );
     persistActiveTimer();
   }, [persistActiveTimer]);

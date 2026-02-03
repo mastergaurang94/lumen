@@ -15,7 +15,7 @@ export function parseSummaryResponse(raw: string): LlmSummaryResponse {
   }
   const recognition =
     parsed.recognition_moment === null || typeof parsed.recognition_moment === 'string'
-      ? parsed.recognition_moment ?? null
+      ? (parsed.recognition_moment ?? null)
       : null;
   const actionSteps = Array.isArray(parsed.action_steps)
     ? parsed.action_steps.filter((step) => typeof step === 'string')

@@ -57,11 +57,9 @@ export function buildSystemPrompt({ sessionNumber, sessionContext }: SystemPromp
   const contextBlock = sessionContext.trim()
     ? `\n\nSession context:\n${sessionContext.trim()}`
     : '';
-  return [
-    SHARED_GROUND_RULES,
-    SESSION_SPACING,
-    modePrompt,
-    SESSION_CLOSURE,
-    OUTPUT_DISCIPLINE,
-  ].join('\n\n') + contextBlock;
+  return (
+    [SHARED_GROUND_RULES, SESSION_SPACING, modePrompt, SESSION_CLOSURE, OUTPUT_DISCIPLINE].join(
+      '\n\n',
+    ) + contextBlock
+  );
 }
