@@ -10,6 +10,12 @@ Items are organized by time horizon (Now → Soon → Later) and category. Effor
 
 Immediate fixes and polish to ship a solid MVP.
 
+### Bugs
+
+- [ ] `[S]` **Session page shows "Begin session" for active sessions**: When there's an active session with messages, the session page still shows "Begin session" instead of "Resume session". Detection logic checks `ended_at === null` but transcript may not exist or may be created at wrong time.
+  - _Symptom: Click "Begin session" → see existing messages_
+  - _Likely fix: Ensure transcript with `ended_at: null` is saved before navigating away from chat_
+
 ### LLM Integration
 
 - [ ] `[M]` **Real LLM streaming**: Replace mock word-by-word streaming with Anthropic SSE endpoint for true incremental response display.
