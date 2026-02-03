@@ -14,7 +14,7 @@ You are a senior frontend engineer building Lumen. This prompt enables session c
    - `coaching/harness-flow.md` — conversational harness design
    - `coaching/system-prompts.md` — AI coach prompts
    - `implementation/mvp.md` — implementation phases overview
-   - `product/backlog.md` — future work items
+   - `implementation/backlog.md` — prioritized work queue
 
 2. **Check for in-progress work**:
    - Look for 🔄 status in `docs/implementation/frontend-plan.md`

@@ -16,7 +16,7 @@ Last Updated: 2026-02-03
 ### In Progress / Next Up
 
 - Complete Phase 6 to finish MVP.
-- See `docs/product/backlog.md` for post-MVP priorities.
+- See `backlog.md` for post-MVP priorities.
 
 ---
 
