@@ -25,6 +25,24 @@ Immediate fixes and polish to ship a solid MVP.
 - [ ] `[S]` **Logout endpoint**: Add `POST /v1/auth/logout` to clear the session cookie.
   - _Backend task_
 
+### UX
+
+- [ ] `[M]` **Coach message scroll behavior**: When a coach message appears, auto-scroll so the message is prominent (top 2/3 of viewport). Add sufficient whitespace below the last coach message so input field doesn't obscure it as user types longer responses.
+
+  <details>
+  <summary>Implementation prompt</summary>
+
+  As more text fills the input, it covers the message from the coach. Add whitespace or scroll the page down so that when a coach message appears, it scrolls down and puts that coaching message as the only message visible on screen. There should be enough whitespace after the last coaching message (even after scrolling to the bottom of a long one) so that it only takes up ~2/3 of the page. The remaining whitespace at the bottom is intentional breathing room.
+
+  </details>
+
+- [ ] `[S]` **Warm up pre-session copy**: "Set aside 60 min to reflect" feels like preparing for an exam. Rewrite to feel more like a friendly conversation — approachable, not clinical.
+
+### Harness
+
+- [ ] `[S]` **Coach time awareness**: Coach should be aware of session duration. Around 50-60 min, start naturally wrapping up unless user indicates the timer is wrong. For short sessions (5-10 min), gently explore if there's more to discuss, but respect when user is genuinely done.
+  - _Likely a system prompt addition with elapsed time in context._
+
 ---
 
 ## Soon (Phase 6 Candidates)
@@ -48,6 +66,14 @@ Near-term improvements after MVP polish is complete.
 - [ ] `[M]` **Privacy-preserving session insights endpoint**: `POST /v1/session-insights` for aggregate learning without PII.
   - _Collect: session duration bucket, days since last session, turn count, closure type, optional user rating, action step count._
   - _No plaintext content; purely metadata for product analytics._
+
+### UX
+
+- [ ] `[M]` **View past session transcripts**: Users should be able to review their own conversation history. It's their data. Add a session history view with decrypted transcript display.
+
+### Design
+
+- [ ] `[M]` **Theme iteration**: Current dawn/dusk/afternoon palettes need refinement. Incorporate more atmospheric elements like OmmWriter — richer backgrounds, subtle textures, more immersive feel.
 
 ---
 
