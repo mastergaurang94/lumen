@@ -10,11 +10,6 @@ Items are organized by time horizon (Now → Soon → Later) and category. Effor
 
 Immediate fixes and polish to ship a solid MVP.
 
-### Bugs
-
-- [ ] `[S]` **Session page shows "Begin session" for active sessions**: When there's an active session with messages, the session page still shows "Begin session" instead of "Resume session".
-  - _Symptom: Click "Begin session" → Have a short chat with coach -> Navigate to /session page directly after unlocking vault again -> See "Begin Session" and click it => see existing messages from previous unended session -- it should say Resume Session for an active session_
-
 ### LLM Integration
 
 - [ ] `[M]` **Real LLM streaming**: Replace mock word-by-word streaming with Anthropic SSE endpoint for true incremental response display.

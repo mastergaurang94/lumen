@@ -12,10 +12,10 @@ import { isUnlocked } from '@/lib/crypto/key-context';
 import { useAuthSessionGuard } from '@/lib/hooks/use-auth-session-guard';
 import { createStorageService } from '@/lib/storage/dexie-storage';
 import { getLastSession, getDaysSinceLastSession } from '@/lib/storage/queries';
+import { getOrCreateUserId } from '@/lib/storage/user';
 import type { SessionSpacing } from '@/types/session';
 
 const SESSION_SPACING_DAYS = 7;
-const DEFAULT_USER_ID = 'local-user';
 
 // Mock toggle for testing early return state
 const MOCK_EARLY_RETURN = process.env.NEXT_PUBLIC_MOCK_EARLY_RETURN === 'true';
@@ -58,13 +58,14 @@ export default function SessionPage() {
       setVaultReady(true);
 
       // Load session spacing data from storage
+      const userId = getOrCreateUserId();
       const [lastSession, daysSince] = await Promise.all([
-        getLastSession(storage, DEFAULT_USER_ID),
-        getDaysSinceLastSession(storage, DEFAULT_USER_ID),
+        getLastSession(storage, userId),
+        getDaysSinceLastSession(storage, userId),
       ]);
 
       // Check for active (incomplete) session
-      const transcripts = await storage.listTranscripts(DEFAULT_USER_ID);
+      const transcripts = await storage.listTranscripts(userId);
       const hasActiveSession = transcripts.some((t) => t.ended_at === null);
 
       const lastSessionDate = lastSession?.ended_at ? new Date(lastSession.ended_at) : null;
