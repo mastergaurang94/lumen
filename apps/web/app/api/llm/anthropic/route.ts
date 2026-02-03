@@ -4,6 +4,7 @@ import {
   formatProviderErrorMessage,
   parseAnthropicErrorDetails,
 } from '@/lib/llm/anthropic-errors';
+import { llmLogger } from '@/lib/llm/logger';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_VERSION = '2023-06-01';
@@ -33,8 +34,7 @@ function isClaudeCodeOAuthToken(token: string) {
 }
 
 function buildClaudeCodeSystemPrompt(systemPrompt: string) {
-  const claudeCodeIdentity =
-    "You are Claude Code, Anthropic's official CLI for Claude.";
+  const claudeCodeIdentity = "You are Claude Code, Anthropic's official CLI for Claude.";
   if (!systemPrompt.trim()) {
     return [claudeCodeIdentity];
   }
@@ -55,12 +55,26 @@ function buildAnthropicHeaders(apiKey: string): Headers {
 }
 
 export async function POST(request: Request) {
+  const startTime = performance.now();
+
   try {
     const payload = (await request.json()) as ProxyPayload;
     if (!payload?.apiKey) {
+      llmLogger.warn({
+        event: 'llm_request_error',
+        errorType: 'ValidationError',
+        errorMessage: 'Missing OAuth token.',
+        statusCode: 400,
+      });
       return NextResponse.json({ error: { message: 'Missing OAuth token.' } }, { status: 400 });
     }
     if (!isClaudeCodeOAuthToken(payload.apiKey)) {
+      llmLogger.warn({
+        event: 'llm_request_error',
+        errorType: 'ValidationError',
+        errorMessage: 'Only Claude Code OAuth tokens are supported.',
+        statusCode: 400,
+      });
       return NextResponse.json(
         { error: { message: 'Only Claude Code OAuth tokens are supported.' } },
         { status: 400 },
@@ -82,11 +96,19 @@ export async function POST(request: Request) {
       })),
     };
 
+    llmLogger.info({
+      event: 'llm_request_start',
+      model: payload.model,
+      messageCount: payload.messages.length,
+    });
+
     const response = await fetch(ANTHROPIC_API_URL, {
       method: 'POST',
       headers: buildAnthropicHeaders(payload.apiKey),
       body: JSON.stringify(upstreamBody),
     });
+
+    const durationMs = Math.round(performance.now() - startTime);
 
     if (!response.ok) {
       const message = await parseAnthropicErrorDetails(response);
@@ -95,13 +117,44 @@ export async function POST(request: Request) {
         message,
         IS_DEV,
       );
-      return NextResponse.json(
-        { error: { message: errorMessage } },
-        { status: response.status },
-      );
+      llmLogger.error({
+        event: 'llm_request_error',
+        model: payload.model,
+        durationMs,
+        errorType: 'UpstreamError',
+        errorMessage: message ?? 'Unknown upstream error',
+        statusCode: response.status,
+      });
+      return NextResponse.json({ error: { message: errorMessage } }, { status: response.status });
     }
 
     const responseText = await response.text();
+
+    // Parse response to extract token usage for logging
+    try {
+      const responseData = JSON.parse(responseText) as {
+        usage?: { input_tokens?: number; output_tokens?: number };
+      };
+      const inputTokens = responseData.usage?.input_tokens;
+      const outputTokens = responseData.usage?.output_tokens;
+
+      llmLogger.info({
+        event: 'llm_request_success',
+        model: payload.model,
+        durationMs,
+        inputTokens,
+        outputTokens,
+        totalTokens: inputTokens && outputTokens ? inputTokens + outputTokens : undefined,
+      });
+    } catch {
+      // Log success without token details if parsing fails
+      llmLogger.info({
+        event: 'llm_request_success',
+        model: payload.model,
+        durationMs,
+      });
+    }
+
     return new Response(responseText, {
       status: response.status,
       headers: {
@@ -109,6 +162,14 @@ export async function POST(request: Request) {
       },
     });
   } catch {
+    const durationMs = Math.round(performance.now() - startTime);
+    llmLogger.error({
+      event: 'llm_request_error',
+      durationMs,
+      errorType: 'NetworkError',
+      errorMessage: 'Failed to reach the LLM provider.',
+      statusCode: 500,
+    });
     return NextResponse.json(
       { error: { message: 'Failed to reach the LLM provider.' } },
       { status: 500 },
