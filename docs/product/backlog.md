@@ -145,5 +145,5 @@ Longer-term features that expand Lumen's capabilities.
 
 - **Dependencies** are noted inline with _Depends on:_ markers.
 - **Code refs** link TODOs in source to backlog items.
-- **Backend tasks** are marked; coordinate with `docs/implementation/backend/plan.md`.
+- **Backend tasks** are marked; coordinate with `docs/implementation/backend-plan.md`.
 - Items may move between tiers as priorities shift.
