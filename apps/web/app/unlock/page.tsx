@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Shield, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,16 @@ import { verifyKeyCheck } from '@/lib/storage/metadata';
 
 export default function UnlockPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const storageRef = React.useRef(createStorageService());
+  const withDevAuth = React.useCallback(
+    (path: string) => {
+      if (process.env.NODE_ENV !== 'development') return path;
+      if (searchParams.get('dev_auth') !== '1') return path;
+      return `${path}?dev_auth=1`;
+    },
+    [searchParams],
+  );
   const { isAuthed } = useAuthSessionGuard();
   const [passphrase, setPassphrase] = React.useState('');
   const [showPassphrase, setShowPassphrase] = React.useState(false);
@@ -34,11 +43,11 @@ export default function UnlockPage() {
 
       const metadata = await storageRef.current.getVaultMetadata();
       if (!metadata?.vault_initialized) {
-        router.replace('/setup');
+        router.replace(withDevAuth('/setup'));
         return;
       }
       if (isUnlocked()) {
-        router.replace('/session');
+        router.replace(withDevAuth('/session'));
         return;
       }
       if (isActive) {
@@ -63,7 +72,7 @@ export default function UnlockPage() {
     try {
       const metadata = await storageRef.current.getVaultMetadata();
       if (!metadata?.vault_initialized || !metadata.key_check) {
-        router.replace('/setup');
+        router.replace(withDevAuth('/setup'));
         return;
       }
 
@@ -77,7 +86,7 @@ export default function UnlockPage() {
       }
 
       setKey(key);
-      router.push('/session');
+      router.push(withDevAuth('/session'));
     } catch (unlockError) {
       console.error('Failed to unlock vault', unlockError);
       setError('Something went wrong. Please try again.');
@@ -98,7 +107,7 @@ export default function UnlockPage() {
   return (
     <AuthPageLayout
       showBack={false}
-      backHref="/login"
+      backHref={withDevAuth('/login')}
       footer={
         <PrivacyFooter>
           Your passphrase unlocks your data locally.

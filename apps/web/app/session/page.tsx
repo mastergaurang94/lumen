@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Clock, Sun, Sparkles, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,11 +22,21 @@ const MOCK_EARLY_RETURN = process.env.NEXT_PUBLIC_MOCK_EARLY_RETURN === 'true';
 
 export default function SessionPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const storageRef = React.useRef(createStorageService());
   const { isAuthed } = useAuthSessionGuard();
   const [spacing, setSpacing] = React.useState<SessionSpacing | null>(null);
   const [mounted, setMounted] = React.useState(false);
   const [vaultReady, setVaultReady] = React.useState(false);
+
+  const withDevAuth = React.useCallback(
+    (path: string) => {
+      if (process.env.NODE_ENV !== 'development') return path;
+      if (searchParams.get('dev_auth') !== '1') return path;
+      return `${path}?dev_auth=1`;
+    },
+    [searchParams],
+  );
 
   React.useEffect(() => {
     setMounted(true);
@@ -38,11 +48,11 @@ export default function SessionPage() {
       // Gate access until the vault is initialized and unlocked.
       const metadata = await storage.getVaultMetadata();
       if (!metadata?.vault_initialized) {
-        router.replace('/setup');
+        router.replace(withDevAuth('/setup'));
         return;
       }
       if (!isUnlocked()) {
-        router.replace('/unlock');
+        router.replace(withDevAuth('/unlock'));
         return;
       }
       setVaultReady(true);
@@ -75,7 +85,7 @@ export default function SessionPage() {
     };
 
     checkVaultAndLoadSpacing();
-  }, [isAuthed, router]);
+  }, [isAuthed, router, withDevAuth]);
 
   // Loading state
   if (!mounted || !isAuthed || !vaultReady || !spacing) {
@@ -105,13 +115,13 @@ export default function SessionPage() {
       }
     >
       <div className="relative z-10 w-full max-w-md">
-        <SessionContent spacing={spacing} />
+        <SessionContent spacing={spacing} chatHref={withDevAuth('/chat')} />
       </div>
     </AuthPageLayout>
   );
 }
 
-function SessionContent({ spacing }: { spacing: SessionSpacing }) {
+function SessionContent({ spacing, chatHref }: { spacing: SessionSpacing; chatHref: string }) {
   const [greeting, setGreeting] = React.useState('');
 
   React.useEffect(() => {
@@ -215,7 +225,7 @@ function SessionContent({ spacing }: { spacing: SessionSpacing }) {
       )}
 
       {/* Begin/Resume button - always enabled */}
-      <Link href="/chat" className="block">
+      <Link href={chatHref} className="block">
         <Button className="w-full h-14 text-lg font-medium">
           {hasActiveSession ? 'Resume session' : 'Begin session'}
         </Button>

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Shield, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -49,6 +49,7 @@ const strengthConfig: Record<PasswordStrength, { label: string; color: string; w
 
 export default function SetupPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const storageRef = React.useRef(createStorageService());
   const { isAuthed } = useAuthSessionGuard();
   const [passphrase, setPassphrase] = React.useState('');
@@ -70,6 +71,15 @@ export default function SetupPage() {
   const showMismatchError = touched.confirm && hasConfirm && !passwordsMatch;
   const canSubmit = hasPassphrase && hasConfirm && passwordsMatch && isMinLength && !isSubmitting;
 
+  const withDevAuth = React.useCallback(
+    (path: string) => {
+      if (process.env.NODE_ENV !== 'development') return path;
+      if (searchParams.get('dev_auth') !== '1') return path;
+      return `${path}?dev_auth=1`;
+    },
+    [searchParams],
+  );
+
   React.useEffect(() => {
     let isActive = true;
 
@@ -79,7 +89,7 @@ export default function SetupPage() {
 
       const metadata = await storageRef.current.getVaultMetadata();
       if (metadata?.vault_initialized) {
-        router.replace('/unlock');
+        router.replace(withDevAuth('/unlock'));
         return;
       }
       if (isActive) {
@@ -125,7 +135,7 @@ export default function SetupPage() {
       await storageRef.current.saveProfile(profile);
 
       setKey(key);
-      router.push('/session');
+      router.push(withDevAuth('/session'));
     } catch (error) {
       console.error('Failed to initialize vault', error);
       setIsSubmitting(false);
@@ -144,7 +154,7 @@ export default function SetupPage() {
 
   return (
     <AuthPageLayout
-      backHref="/login"
+      backHref={withDevAuth('/login')}
       progress={{ current: 2, total: 2, label: 'Onboarding' }}
       footer={
         <PrivacyFooter>
