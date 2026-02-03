@@ -16,6 +16,7 @@ Last Updated: 2026-02-02
 - 2026-02-02: Added auth session check endpoint + client guards for setup/unlock/session/chat.
 - 2026-02-02: Step 2 complete — added session metadata outbox, retries, and API sync wiring.
 - 2026-02-02: Step 3 complete — client LLM calls with BYOK key (encrypted), retry/backoff, and provider unavailable handling.
+- 2026-02-02: LLM integration polish — provider key gate, initial coach prompt, summary generation, abort handling, and LLM client/storage tests.
 
 ### In Progress / Next Up
 
@@ -99,7 +100,7 @@ Call the LLM provider directly from the client while preserving privacy guarante
 
 Tasks:
 
-- [x] Route LLM calls directly from the browser (no API proxy).
+- [x] Route LLM calls from the browser (temporary Next API proxy required for Claude Code OAuth in MVP).
 - [x] Ensure only client-assembled context + user messages are sent.
 - [x] BYOK MVP: prompt user for provider API key, store locally encrypted, and
       use it for LLM calls.
