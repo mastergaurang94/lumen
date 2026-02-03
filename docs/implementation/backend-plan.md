@@ -10,7 +10,7 @@ Last Updated: 2026-02-03
 
 ### Running Updates
 
-- 2026-02-02: Phase 5 archived to `phase5.md`.
+- 2026-02-02: Phase 5 archived to `done/backend-phase5.md`.
 
 ### In Progress / Next Up
 
@@ -28,9 +28,9 @@ Last Updated: 2026-02-03
 
 ## Previous Phases
 
-| Phase | Status      | Description                                      | Archive     |
-| ----- | ----------- | ------------------------------------------------ | ----------- |
-| 5     | ✅ Complete | API foundation (auth, session metadata, o11y)    | `phase5.md` |
+| Phase | Status      | Description                                      | Archive                   |
+| ----- | ----------- | ------------------------------------------------ | ------------------------- |
+| 5     | ✅ Complete | API foundation (auth, session metadata, o11y)    | `done/backend-phase5.md`  |
 
 ---
 

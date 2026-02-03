@@ -10,7 +10,7 @@ Last Updated: 2026-02-03
 
 ### Running Updates
 
-- 2026-02-03: Phase 5 archived to `phase5.md`.
+- 2026-02-03: Phase 5 archived to `done/frontend-phase5.md`.
 - 2026-02-03: Phase 6 scoped — LLM observability + E2E smoke test.
 
 ### In Progress / Next Up
@@ -65,12 +65,12 @@ Files to create/modify:
 
 ## Previous Phases
 
-| Phase | Status      | Description                               | Archive     |
-| ----- | ----------- | ----------------------------------------- | ----------- |
-| 2     | ✅ Complete | Web app shell (UI-only)                   | `phase2.md` |
-| 3     | ✅ Complete | Local storage + encryption MVP            | `phase3.md` |
-| 4     | ✅ Complete | Conversational spacing + context assembly | `phase4.md` |
-| 5     | ✅ Complete | Client integration (auth, metadata, LLM)  | `phase5.md` |
+| Phase | Status      | Description                               | Archive                    |
+| ----- | ----------- | ----------------------------------------- | -------------------------- |
+| 2     | ✅ Complete | Web app shell (UI-only)                   | `done/frontend-phase2.md`  |
+| 3     | ✅ Complete | Local storage + encryption MVP            | `done/frontend-phase3.md`  |
+| 4     | ✅ Complete | Conversational spacing + context assembly | `done/frontend-phase4.md`  |
+| 5     | ✅ Complete | Client integration (auth, metadata, LLM)  | `done/frontend-phase5.md`  |
 
 ---
 
