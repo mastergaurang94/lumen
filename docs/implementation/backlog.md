@@ -12,9 +12,8 @@ Immediate fixes and polish to ship a solid MVP.
 
 ### Bugs
 
-- [ ] `[S]` **Session page shows "Begin session" for active sessions**: When there's an active session with messages, the session page still shows "Begin session" instead of "Resume session". Detection logic checks `ended_at === null` but transcript may not exist or may be created at wrong time.
-  - _Symptom: Click "Begin session" → see existing messages_
-  - _Likely fix: Ensure transcript with `ended_at: null` is saved before navigating away from chat_
+- [ ] `[S]` **Session page shows "Begin session" for active sessions**: When there's an active session with messages, the session page still shows "Begin session" instead of "Resume session".
+  - _Symptom: Click "Begin session" → Have a short chat with coach -> Navigate to /session page directly after unlocking vault again -> See "Begin Session" and click it => see existing messages from previous unended session -- it should say Resume Session for an active session_
 
 ### LLM Integration
 
