@@ -57,6 +57,59 @@ const MOCK_CONNECTION_ERROR = process.env.NEXT_PUBLIC_MOCK_CONNECTION_ERROR === 
 const INITIAL_COACH_INSTRUCTION =
   'Begin the session with a brief warm welcome, include a one-line privacy reminder, and ask one open question.';
 
+// Active time lives in localStorage to avoid Dexie schema churn pre-launch.
+const ACTIVE_TIME_STORAGE_PREFIX = 'lumen:session:active-time:';
+
+type ActiveTimeRecord = {
+  active_ms: number;
+  last_active_started_at: string | null;
+};
+
+function getActiveTimeKey(sessionId: string): string {
+  return `${ACTIVE_TIME_STORAGE_PREFIX}${sessionId}`;
+}
+
+// Load persisted active time safely, defaulting to zero on parse errors.
+function readActiveTime(sessionId: string): ActiveTimeRecord {
+  if (typeof window === 'undefined') {
+    return { active_ms: 0, last_active_started_at: null };
+  }
+  try {
+    const raw = window.localStorage.getItem(getActiveTimeKey(sessionId));
+    if (!raw) return { active_ms: 0, last_active_started_at: null };
+    const parsed = JSON.parse(raw) as Partial<ActiveTimeRecord>;
+    return {
+      active_ms: typeof parsed.active_ms === 'number' ? parsed.active_ms : 0,
+      last_active_started_at:
+        parsed.last_active_started_at && typeof parsed.last_active_started_at === 'string'
+          ? parsed.last_active_started_at
+          : null,
+    };
+  } catch {
+    return { active_ms: 0, last_active_started_at: null };
+  }
+}
+
+// Persist active time as best-effort local storage (no hard failure).
+function writeActiveTime(sessionId: string, record: ActiveTimeRecord): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(getActiveTimeKey(sessionId), JSON.stringify(record));
+  } catch {
+    // Best-effort only; active time is a convenience, not core data.
+  }
+}
+
+// Clear local active time for completed sessions.
+function clearActiveTime(sessionId: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(getActiveTimeKey(sessionId));
+  } catch {
+    // Best-effort only.
+  }
+}
+
 // Generate unique ID
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -153,6 +206,8 @@ function ChatPageInner() {
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const sessionDateRef = React.useRef(new Date());
   const abortControllerRef = React.useRef<AbortController | null>(null);
+  const activeMsRef = React.useRef(0);
+  const activeSegmentStartRef = React.useRef<Date | null>(null);
 
   // Persist buffered messages as a single encrypted chunk.
   const flushPendingMessages = React.useCallback(async () => {
@@ -263,14 +318,74 @@ function ChatPageInner() {
     loadProviderKey();
   }, [vaultReady]);
 
+  const persistActiveTimer = React.useCallback(() => {
+    const sessionId = sessionIdRef.current;
+    if (!sessionId) return;
+    writeActiveTime(sessionId, {
+      active_ms: activeMsRef.current,
+      last_active_started_at: activeSegmentStartRef.current
+        ? activeSegmentStartRef.current.toISOString()
+        : null,
+    });
+  }, []);
+
+  const resetActiveTimer = React.useCallback((sessionId: string) => {
+    activeMsRef.current = 0;
+    activeSegmentStartRef.current = null;
+    setElapsedTime('');
+    writeActiveTime(sessionId, { active_ms: 0, last_active_started_at: null });
+  }, []);
+
+  const loadActiveTimer = React.useCallback((sessionId: string) => {
+    const record = readActiveTime(sessionId);
+    activeMsRef.current = record.active_ms;
+    activeSegmentStartRef.current = null;
+    if (record.active_ms > 0) {
+      setElapsedTime(formatElapsedTime(new Date(Date.now() - record.active_ms)));
+    } else {
+      setElapsedTime('');
+    }
+    if (record.last_active_started_at) {
+      writeActiveTime(sessionId, {
+        active_ms: record.active_ms,
+        last_active_started_at: null,
+      });
+    }
+  }, []);
+
+  const startActiveSegment = React.useCallback(() => {
+    if (activeSegmentStartRef.current) return;
+    activeSegmentStartRef.current = new Date();
+    setElapsedTime(formatElapsedTime(activeSegmentStartRef.current));
+    persistActiveTimer();
+  }, [persistActiveTimer]);
+
+  const stopActiveSegment = React.useCallback(() => {
+    const startedAt = activeSegmentStartRef.current;
+    if (!startedAt) return;
+    const now = Date.now();
+    const deltaMs = now - startedAt.getTime();
+    if (deltaMs > 0) {
+      activeMsRef.current += deltaMs;
+    }
+    activeSegmentStartRef.current = null;
+    setElapsedTime(
+      activeMsRef.current > 0
+        ? formatElapsedTime(new Date(Date.now() - activeMsRef.current))
+        : '',
+    );
+    persistActiveTimer();
+  }, [persistActiveTimer]);
+
   React.useEffect(() => {
     // Flush buffered messages before vault lock clears the key.
     return registerLockHandler(async () => {
+      stopActiveSegment();
       setLlmKey(null);
       setLlmKeyReady(false);
       await flushPendingMessages();
     });
-  }, [flushPendingMessages]);
+  }, [flushPendingMessages, stopActiveSegment]);
 
   React.useEffect(() => {
     if (!isAuthed) return;
@@ -323,18 +438,48 @@ function ChatPageInner() {
     };
   }, [initializeSession, vaultReady]);
 
-  // Update elapsed time every minute
+  // Update elapsed time every minute once the active timer is running.
   React.useEffect(() => {
     if (sessionState !== 'active') return;
 
     const updateElapsed = () => {
-      setElapsedTime(formatElapsedTime(sessionDateRef.current));
+      const now = Date.now();
+      const startedAt = activeSegmentStartRef.current;
+      if (startedAt) {
+        const deltaMs = now - startedAt.getTime();
+        if (deltaMs > 0) {
+          activeMsRef.current += deltaMs;
+          activeSegmentStartRef.current = new Date(now);
+        }
+      }
+
+      if (activeMsRef.current <= 0 && !activeSegmentStartRef.current) {
+        setElapsedTime('');
+        return;
+      }
+
+      const totalMs = activeMsRef.current;
+      setElapsedTime(formatElapsedTime(new Date(now - totalMs)));
+      persistActiveTimer();
     };
 
     updateElapsed();
     const interval = setInterval(updateElapsed, 60000);
     return () => clearInterval(interval);
-  }, [sessionState]);
+  }, [persistActiveTimer, sessionState]);
+
+  React.useEffect(() => {
+    const handleBeforeUnload = () => {
+      stopActiveSegment();
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [stopActiveSegment]);
+
+  React.useEffect(() => {
+    if (sessionState === 'active') return;
+    stopActiveSegment();
+  }, [sessionState, stopActiveSegment]);
 
   React.useEffect(() => {
     if (sessionState !== 'active' || !vaultReady) return;
@@ -356,6 +501,7 @@ function ChatPageInner() {
         sessionIdRef.current = activeTranscript.session_id;
         transcriptRef.current = activeTranscript;
         sessionDateRef.current = new Date(activeTranscript.started_at);
+        loadActiveTimer(activeTranscript.session_id);
 
         const chunks = await storageRef.current.listTranscriptChunks(activeTranscript.session_id);
         chunkIndexRef.current = chunks.length;
@@ -373,6 +519,10 @@ function ChatPageInner() {
 
         if (restoredMessages.length > 0) {
           setMessages(restoredMessages);
+          const hasCoachMessage = restoredMessages.some((message) => message.role === 'coach');
+          if (hasCoachMessage) {
+            startActiveSegment();
+          }
         }
         setStorageReady(true);
         sessionContextRef.current = await buildSessionContext({
@@ -409,6 +559,8 @@ function ChatPageInner() {
       transcriptRef.current = transcript;
       chunkIndexRef.current = 0;
       initialPromptSentRef.current = false;
+      sessionDateRef.current = now;
+      resetActiveTimer(sessionId);
       await storageRef.current.saveTranscript(transcript);
       await enqueueSessionStart(sessionId);
       void flushSessionOutbox();
@@ -469,6 +621,7 @@ function ChatPageInner() {
           timestamp: new Date(),
         };
         setMessages([coachMessage]);
+        startActiveSegment();
         queueMessageForChunk(coachMessage);
       } catch (error) {
         initialPromptSentRef.current = false;
@@ -498,6 +651,7 @@ function ChatPageInner() {
     messages.length,
     queueMessageForChunk,
     sessionState,
+    startActiveSegment,
     storageReady,
     vaultReady,
   ]);
@@ -656,13 +810,14 @@ function ChatPageInner() {
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, coachMessage]);
+        startActiveSegment();
         queueMessageForChunk(coachMessage);
       } finally {
         setStreamingContent(null);
         abortControllerRef.current = null;
       }
     },
-    [llmKey, messages, queueMessageForChunk],
+    [llmKey, messages, queueMessageForChunk, startActiveSegment],
   );
 
   // Handle end session
@@ -676,6 +831,7 @@ function ChatPageInner() {
     setShowEndSessionDialog(false);
 
     await flushPendingMessages();
+    stopActiveSegment();
 
     const transcript = transcriptRef.current;
     if (transcript) {
@@ -705,6 +861,9 @@ function ChatPageInner() {
     }
 
     setSessionState('complete');
+    if (sessionId) {
+      clearActiveTime(sessionId);
+    }
 
     if (userId && sessionId && llmKey) {
       setIsSummaryLoading(true);
