@@ -4,28 +4,62 @@ Last Updated: 2026-02-03
 
 ---
 
-## Current Phase: Phase 6 — TBD
+## Current Phase: Phase 6 — MVP Completion
 
 **Status: ⬜ Not Started**
 
 ### Running Updates
 
 - 2026-02-03: Phase 5 archived to `phase5.md`.
+- 2026-02-03: Phase 6 scoped — LLM observability + E2E smoke test.
 
 ### In Progress / Next Up
 
-- See `docs/product/backlog.md` for prioritized backlog items.
-- Next phase scope TBD based on backlog priorities.
+- Complete Phase 6 to finish MVP.
+- See `docs/product/backlog.md` for post-MVP priorities.
 
-### Goals (Frontend Focus)
+---
 
-- Session-centric chat UI with pre-session gate and explicit end session flow.
-- Passphrase onboarding gate with unrecoverable warning.
-- Local storage + encryption (IndexedDB + WebCrypto).
-- Conversational harness integration and deterministic context assembly.
-- "Coach unavailable" UI state and privacy indicators.
-- Client-to-API integration for auth and session metadata.
-- Client-to-LLM calls (no server proxy) with privacy-first handling.
+### Phase 6: MVP Completion
+
+#### Step 1: LLM Observability
+
+**Status: ⬜ Not Started**
+
+Add structured logging for LLM calls to enable debugging and cost tracking.
+
+Tasks:
+
+- [ ] Log LLM call latency (time from request to first token, total time).
+- [ ] Log token usage (input tokens, output tokens) from API response.
+- [ ] Log errors with context (error type, retry count, final status).
+- [ ] Use structured console logs (JSON format for easy parsing).
+
+Files to modify:
+
+- `apps/web/lib/llm/client.ts`
+- `apps/web/app/api/llm/anthropic/route.ts`
+
+---
+
+#### Step 2: E2E Smoke Test
+
+**Status: ⬜ Not Started**
+
+Add a Playwright test covering the full session flow to ensure the app works end-to-end.
+
+Tasks:
+
+- [ ] Set up Playwright in `apps/web` (if not already configured).
+- [ ] Write smoke test: login → setup passphrase → start session → send message → receive response → end session.
+- [ ] Handle test isolation (mock LLM responses or use test API key).
+- [ ] Add to CI workflow.
+
+Files to create/modify:
+
+- `apps/web/e2e/smoke.spec.ts` (new)
+- `apps/web/playwright.config.ts` (new or modify)
+- `.github/workflows/ci.yml`
 
 ---
 
