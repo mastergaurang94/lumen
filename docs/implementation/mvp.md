@@ -58,37 +58,36 @@ _Completed in Frontend Phase 5_
 
 ---
 
-### 6. Conversational harness (core quality) 🔶
+### 6. Conversational harness (core quality) ✅
 
-_Partially complete — needs evaluation harness_
+_Core functionality complete — evaluation deferred to backlog_
 
 - [x] Deterministic context assembly _(Frontend Phase 4)_
 - [x] Summary generation + closure formatting _(Frontend Phase 5)_
-- [ ] Prompt versioning (track prompt changes for reproducibility)
-- [ ] Minimal evaluation harness for summary/closure quality
+- [ ] ~~Prompt versioning~~ → _Moved to backlog (Soon)_
+- [ ] ~~Evaluation harness~~ → _Moved to backlog (Soon)_
 
 ---
 
 ### 7. Observability 🔶
 
-_Backend complete — frontend minimal_
+_Backend complete — frontend in Phase 6_
 
 - [x] Structured logs with trace IDs _(Backend Phase 5)_
 - [x] OTel spans for session start/stop _(Backend Phase 5)_
-- [ ] Frontend error tracking / observability (optional for MVP?)
-- [ ] LLM call observability (latency, token usage, errors)
+- [ ] LLM call observability (latency, token usage, errors) → _Frontend Phase 6_
 
 ---
 
 ### 8. Tests & QA 🔶
 
-_Core tests exist — harness tests needed_
+_Core tests exist — E2E in Phase 6_
 
 - [x] Unit tests: encryption, storage _(Frontend Phase 3)_
 - [x] Integration tests: auth + gating _(Frontend Phase 5)_
-- [ ] Harness tests: deterministic context assembly verification
-- [ ] Harness tests: summary format validation
-- [ ] E2E smoke test: full session flow
+- [ ] E2E smoke test: full session flow → _Frontend Phase 6_
+- [ ] ~~Harness tests: context assembly~~ → _Moved to backlog (Soon)_
+- [ ] ~~Harness tests: summary format~~ → _Moved to backlog (Soon)_
 
 ---
 
@@ -101,8 +100,8 @@ _Core tests exist — harness tests needed_
 | 3 | Local storage + encryption | ✅ Complete |
 | 4 | API / Go service | ✅ Complete |
 | 5 | Client + LLM Integration | ✅ Complete |
-| 6 | Conversational harness | 🔶 Partial |
-| 7 | Observability | 🔶 Partial |
-| 8 | Tests & QA | 🔶 Partial |
+| 6 | Conversational harness | ✅ Complete (eval deferred) |
+| 7 | Observability | 🔶 Phase 6 |
+| 8 | Tests & QA | 🔶 Phase 6 |
 
-**MVP Completion: ~75%** — Steps 6-8 have remaining items before MVP is shippable.
+**MVP Completion: ~90%** — Phase 6 (LLM observability + E2E test) completes MVP.

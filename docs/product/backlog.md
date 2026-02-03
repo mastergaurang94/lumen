@@ -45,9 +45,15 @@ Immediate fixes and polish to ship a solid MVP.
 
 ---
 
-## Soon (Phase 6 Candidates)
+## Soon (Post-MVP)
 
-Near-term improvements after MVP polish is complete.
+Near-term improvements after MVP is complete.
+
+### Harness
+
+- [ ] `[S]` **Prompt versioning**: Track prompt changes for reproducibility. Correlate prompt versions with quality shifts.
+- [ ] `[M]` **Evaluation harness**: Minimal tooling to assess summary and closure quality. Define rubric or golden outputs for comparison.
+- [ ] `[M]` **Harness tests**: Deterministic context assembly verification and summary format validation.
 
 ### Vault & Security
 
