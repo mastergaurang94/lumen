@@ -11,11 +11,7 @@ import { getOrCreateUserId } from '@/lib/storage/user';
 import type { StorageService } from '@/lib/storage';
 import { DEFAULT_MODEL_ID } from '@/lib/llm/model-config';
 import type { Message, SessionState } from '@/types/session';
-import type {
-  SessionTranscript,
-  SessionTranscriptChunk,
-  VaultMetadata,
-} from '@/types/storage';
+import type { SessionTranscript, SessionTranscriptChunk, VaultMetadata } from '@/types/storage';
 
 type UseSessionLifecycleParams = {
   storage: StorageService;

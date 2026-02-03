@@ -118,13 +118,13 @@ test.describe('Smoke Test', () => {
       const postData = request.postDataJSON();
 
       // Check if this is a summary request (contains "Summarize this session")
-      const isSummaryRequest = postData?.messages?.some(
-        (msg: { content: string }) => msg.content?.includes('Summarize this session'),
+      const isSummaryRequest = postData?.messages?.some((msg: { content: string }) =>
+        msg.content?.includes('Summarize this session'),
       );
 
       // Check if this is a token validation request (contains "Reply with OK")
-      const isValidationRequest = postData?.messages?.some(
-        (msg: { content: string }) => msg.content?.includes('Reply with OK'),
+      const isValidationRequest = postData?.messages?.some((msg: { content: string }) =>
+        msg.content?.includes('Reply with OK'),
       );
 
       let response;

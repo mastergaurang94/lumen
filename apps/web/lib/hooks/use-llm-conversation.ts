@@ -116,10 +116,7 @@ export function useLlmConversation({
           signal: abortControllerRef.current?.signal,
         });
 
-        for await (const partial of streamText(
-          responseText,
-          abortControllerRef.current?.signal,
-        )) {
+        for await (const partial of streamText(responseText, abortControllerRef.current?.signal)) {
           setStreamingContent(partial);
         }
 
@@ -240,10 +237,7 @@ export function useLlmConversation({
       setStreamingContent('');
 
       try {
-        for await (const partial of streamText(
-          responseText,
-          abortControllerRef.current.signal,
-        )) {
+        for await (const partial of streamText(responseText, abortControllerRef.current.signal)) {
           setStreamingContent(partial);
         }
 

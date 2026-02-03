@@ -19,10 +19,7 @@ import { useActiveTimer } from '@/lib/hooks/use-active-timer';
 import { useAuthSessionGuard } from '@/lib/hooks/use-auth-session-guard';
 import { useLlmConversation } from '@/lib/hooks/use-llm-conversation';
 import { useSessionLifecycle } from '@/lib/hooks/use-session-lifecycle';
-import {
-  enqueueSessionEnd,
-  flushSessionOutbox,
-} from '@/lib/outbox/session-outbox';
+import { enqueueSessionEnd, flushSessionOutbox } from '@/lib/outbox/session-outbox';
 import { createStorageService } from '@/lib/storage/dexie-storage';
 import {
   callLlmWithRetry,
@@ -36,7 +33,6 @@ import { buildLlmMessages } from '@/lib/session/messages';
 import { parseSummaryResponse } from '@/lib/session/summary';
 import type { LlmProviderKey, SessionSummary } from '@/types/storage';
 import type { Message, SessionState } from '@/types/session';
-
 
 // Inner chat component (wrapped by error boundary)
 function ChatPageInner() {
@@ -71,14 +67,20 @@ function ChatPageInner() {
   const handleResumeHasCoachMessage = React.useCallback(() => {
     startActiveSegment();
   }, [startActiveSegment]);
-  const handleResumeActiveTimer = React.useCallback((restoredSessionId: string) => {
-    setActiveSessionId(restoredSessionId);
-    loadActiveTimer(restoredSessionId);
-  }, [loadActiveTimer]);
-  const handleNewSessionActiveTimer = React.useCallback((newSessionId: string) => {
-    setActiveSessionId(newSessionId);
-    resetActiveTimer(newSessionId);
-  }, [resetActiveTimer]);
+  const handleResumeActiveTimer = React.useCallback(
+    (restoredSessionId: string) => {
+      setActiveSessionId(restoredSessionId);
+      loadActiveTimer(restoredSessionId);
+    },
+    [loadActiveTimer],
+  );
+  const handleNewSessionActiveTimer = React.useCallback(
+    (newSessionId: string) => {
+      setActiveSessionId(newSessionId);
+      resetActiveTimer(newSessionId);
+    },
+    [resetActiveTimer],
+  );
 
   const {
     vaultReady,
@@ -105,12 +107,7 @@ function ChatPageInner() {
     onResumeActiveTimer: handleResumeActiveTimer,
     onNewSessionActiveTimer: handleNewSessionActiveTimer,
   });
-  const {
-    isTyping,
-    streamingContent,
-    handleSend,
-    abortConversation,
-  } = useLlmConversation({
+  const { isTyping, streamingContent, handleSend, abortConversation } = useLlmConversation({
     messages,
     setMessages,
     sessionId,
@@ -393,7 +390,11 @@ function ChatPageInner() {
       {/* End Session button - top right */}
       {!showProviderGate && (
         <div className="fixed top-4 right-4" style={{ zIndex: Z_INDEX.navigation }}>
-          <Button variant="outline" onClick={handleEndSession} className="text-base text-foreground">
+          <Button
+            variant="outline"
+            onClick={handleEndSession}
+            className="text-base text-foreground"
+          >
             End Session
           </Button>
         </div>
