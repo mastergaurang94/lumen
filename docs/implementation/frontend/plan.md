@@ -21,13 +21,7 @@ Last Updated: 2026-02-02
 ### In Progress / Next Up
 
 - Phase 5 complete. Next step TBD.
-
-### Deferred / If Time
-
-- Add sidebar auth state (signed-in indicator) and logout action.
-- Add `POST /v1/auth/logout` endpoint to clear the session cookie.
-- Scope vaults by user/email so each login maps to its own local vault.
-- Reduce vault unlock churn (idle timeout + OS keychain / WebAuthN unlock).
+- See `docs/product/backlog.md` for prioritized backlog items.
 
 ### Goals (Frontend Focus)
 

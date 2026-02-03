@@ -82,10 +82,6 @@ export async function POST(request: Request) {
       })),
     };
 
-    // TODO: Consider passing request.signal to abort upstream on client disconnect.
-    // Currently, if the client navigates away, this request continues to completion
-    // and the response is discarded. For MVP this is acceptable; a future improvement
-    // could queue pending responses for session resume.
     const response = await fetch(ANTHROPIC_API_URL, {
       method: 'POST',
       headers: buildAnthropicHeaders(payload.apiKey),
