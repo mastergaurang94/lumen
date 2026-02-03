@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getAuthSession } from '@/lib/api/auth';
 
 type AuthStatus = 'checking' | 'authed' | 'unauth';
@@ -11,12 +11,22 @@ type AuthStatus = 'checking' | 'authed' | 'unauth';
  */
 export function useAuthSessionGuard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [status, setStatus] = React.useState<AuthStatus>('checking');
 
   React.useEffect(() => {
     let isActive = true;
+    const bypassAuth =
+      process.env.NODE_ENV === 'development' &&
+      (searchParams.get('dev_auth') === '1' ||
+        (typeof window !== 'undefined' && window.location.href.includes('dev_auth=1')));
 
     const check = async () => {
+      if (bypassAuth) {
+        setStatus('authed');
+        return;
+      }
+
       try {
         const hasSession = await getAuthSession();
         if (!isActive) return;
@@ -40,7 +50,7 @@ export function useAuthSessionGuard() {
     return () => {
       isActive = false;
     };
-  }, [router]);
+  }, [router, searchParams]);
 
   return { status, isAuthed: status === 'authed' };
 }

@@ -4,3 +4,7 @@ export { TypingIndicator } from './typing-indicator';
 export { ChatInput } from './chat-input';
 export { SessionClosure } from './session-closure';
 export { EndSessionDialog } from './end-session-dialog';
+export { ChatHeader } from './chat-header';
+export { ProviderGate } from './provider-gate';
+export { ChatBody } from './chat-body';
+export { ChatFooter } from './chat-footer';
