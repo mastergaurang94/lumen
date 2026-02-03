@@ -44,6 +44,7 @@ Immediate fixes and polish to ship a solid MVP.
 
 - [ ] `[M]` **Improve system prompt**: Revise coaching system prompt based on collected notes. This is high-impact for product quality — the prompt shapes the entire coaching experience.
   - _Notes exist; review and incorporate improvements._
+  - Recognition moment prompt: I don't want to call it a recognition moment for the final ending dialog (this may require a significant refactor). I want it to be more of a words of wisdom. And maybe the variable can be something generic like - topInsight -- that the ending dialog generates words of widsom for. I know we call it recognition moment in plenty of places but I think I'm favoring top insight for now -- so its more general.
 - [ ] `[S]` **Coach time awareness**: Coach should be aware of session duration. Around 50-60 min, start naturally wrapping up unless user indicates the timer is wrong. For short sessions (5-10 min), gently explore if there's more to discuss, but respect when user is genuinely done.
   - _Likely a system prompt addition with elapsed time in context._
 
