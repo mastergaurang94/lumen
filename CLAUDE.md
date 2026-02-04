@@ -109,18 +109,15 @@ These patterns are core to Lumen's product experience:
 - Single quotes, trailing commas, 100 char print width (Prettier)
 - Prefer `type` over `interface` for simple type aliases
 
-## Pre-Commit Checklist
+## Pre-Commit Hooks
 
-Before committing and pushing, **always** run these checks locally to ensure CI will pass:
+Husky automatically runs checks before every commit (see `.husky/pre-commit`):
 
-```bash
-pnpm format              # Fix formatting
-pnpm lint                # Check for lint errors
-pnpm --filter web test -- --run  # Run unit tests
-cd apps/api && go test ./...     # Run Go tests
-```
+- **lint-staged**: formats and lints only staged files
+- **Unit tests**: `pnpm --filter web test -- --run`
+- **Go tests**: `go test ./...`
 
-All checks must pass before pushing. This avoids broken CI and wasted iteration cycles.
+Commits are blocked if any check fails. Keep `.husky/pre-commit` and `.github/workflows/ci.yml` in sync when adding new checks.
 
 ## Key Documentation
 
