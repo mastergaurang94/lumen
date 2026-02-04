@@ -2,11 +2,12 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Clock, Sun, Sparkles, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthPageLayout } from '@/components/auth-page-layout';
+import { withDevAuth } from '@/lib/hooks/dev-auth';
 import { formatDaysAgo, getTimeGreeting } from '@/lib/format';
 import { isUnlocked } from '@/lib/crypto/key-context';
 import { useAuthSessionGuard } from '@/lib/hooks/use-auth-session-guard';
@@ -22,21 +23,11 @@ const MOCK_EARLY_RETURN = process.env.NEXT_PUBLIC_MOCK_EARLY_RETURN === 'true';
 
 export default function SessionPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const storageRef = React.useRef(createStorageService());
   const { isAuthed } = useAuthSessionGuard();
   const [spacing, setSpacing] = React.useState<SessionSpacing | null>(null);
   const [mounted, setMounted] = React.useState(false);
   const [vaultReady, setVaultReady] = React.useState(false);
-
-  const withDevAuth = React.useCallback(
-    (path: string) => {
-      if (process.env.NODE_ENV !== 'development') return path;
-      if (searchParams.get('dev_auth') !== '1') return path;
-      return `${path}?dev_auth=1`;
-    },
-    [searchParams],
-  );
 
   React.useEffect(() => {
     setMounted(true);
@@ -86,7 +77,7 @@ export default function SessionPage() {
     };
 
     checkVaultAndLoadSpacing();
-  }, [isAuthed, router, withDevAuth]);
+  }, [isAuthed, router]);
 
   // Loading state
   if (!mounted || !isAuthed || !vaultReady || !spacing) {

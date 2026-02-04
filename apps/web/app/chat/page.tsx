@@ -263,13 +263,22 @@ function ChatPageInner() {
         sessionContext: sessionContextRef.current ?? '',
       });
       // Ask the LLM for a structured session summary.
-      const summaryPrompt = [
-        'Summarize this session as JSON with the following keys:',
-        'summary_text (string), recognition_moment (string), action_steps (string[]), open_threads (string[]).',
-        'Recognition moment definition: the single most important pattern, insight, or shift that the user should carry forward into the week.',
-        'Keep summary_text concise (8-12 lines max).',
-        'Return JSON only, no markdown.',
-      ].join('\n');
+      // Use explicit JSON framing to override conversational system prompt.
+      const summaryPrompt = `[SYSTEM: Output JSON only. Do not include any text before or after the JSON object.]
+
+Generate a session summary as a JSON object with these exact keys:
+{
+  "summary_text": "8-12 line summary of what was explored",
+  "recognition_moment": "the single most important insight or shift to carry forward",
+  "action_steps": ["concrete next step 1", "concrete next step 2"],
+  "open_threads": ["unresolved topic to revisit"]
+}
+
+Rules:
+- Output ONLY the JSON object, nothing else
+- No markdown code fences
+- No conversational text before or after
+- recognition_moment should be 1-2 sentences max`;
 
       void (async () => {
         try {
@@ -284,7 +293,13 @@ function ChatPageInner() {
             temperature: 0.2,
             maxTokens: 800,
           });
-          const parsed = parseSummaryResponse(summaryText);
+          let parsed;
+          try {
+            parsed = parseSummaryResponse(summaryText);
+          } catch (parseError) {
+            console.error('Summary JSON parse failed. Raw response:', summaryText.slice(0, 500));
+            throw parseError;
+          }
           const summary: SessionSummary = {
             session_id: sessionId,
             user_id: userId,
