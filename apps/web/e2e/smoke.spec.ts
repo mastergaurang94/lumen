@@ -117,9 +117,11 @@ test.describe('Smoke Test', () => {
       const request = route.request();
       const postData = request.postDataJSON();
 
-      // Check if this is a summary request (contains "Summarize this session")
-      const isSummaryRequest = postData?.messages?.some((msg: { content: string }) =>
-        msg.content?.includes('Summarize this session'),
+      // Check if this is a summary request (contains JSON output instruction)
+      const isSummaryRequest = postData?.messages?.some(
+        (msg: { content: string }) =>
+          msg.content?.includes('Output JSON only') ||
+          msg.content?.includes('Generate a session summary'),
       );
 
       // Check if this is a token validation request (contains "Reply with OK")
