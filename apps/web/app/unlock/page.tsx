@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Shield, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { AuthPageLayout, PrivacyFooter } from '@/components/auth-page-layout';
 import { cn } from '@/lib/utils';
 import { deriveKey } from '@/lib/crypto';
+import { withDevAuth } from '@/lib/hooks/dev-auth';
 import { useAuthSessionGuard } from '@/lib/hooks/use-auth-session-guard';
 import { isUnlocked, setKey } from '@/lib/crypto/key-context';
 import { createStorageService } from '@/lib/storage/dexie-storage';
@@ -17,16 +18,7 @@ import { verifyKeyCheck } from '@/lib/storage/metadata';
 
 export default function UnlockPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const storageRef = React.useRef(createStorageService());
-  const withDevAuth = React.useCallback(
-    (path: string) => {
-      if (process.env.NODE_ENV !== 'development') return path;
-      if (searchParams.get('dev_auth') !== '1') return path;
-      return `${path}?dev_auth=1`;
-    },
-    [searchParams],
-  );
   const { isAuthed } = useAuthSessionGuard();
   const [passphrase, setPassphrase] = React.useState('');
   const [showPassphrase, setShowPassphrase] = React.useState(false);

@@ -27,6 +27,8 @@ Immediate fixes and polish to ship a solid MVP.
 
 ### UX
 
+- [ ] `[S]` **First coach message renders twice briefly**: When the chat UI opens and the coach sends the initial message, it appears duplicated for a split second before resolving to one. Likely a React state/render race condition.
+  - _Code ref: `apps/web/app/chat/page.tsx` or `apps/web/lib/hooks/use-llm-conversation.ts`_
 - [ ] `[M]` **Coach message scroll behavior**: When a coach message appears, auto-scroll so the message is prominent (top 2/3 of viewport). Add sufficient whitespace below the last coach message so input field doesn't obscure it as user types longer responses.
 
   <details>
@@ -37,8 +39,6 @@ Immediate fixes and polish to ship a solid MVP.
   </details>
 
 - [ ] `[S]` **Warm up pre-session copy**: "Set aside 60 min to reflect" feels like preparing for an exam. Rewrite to feel more like a friendly conversation — approachable, not clinical.
-- [ ] `[S]` **Session closure loading state**: The "Wrapping up your session..." screen is static. Add a spinner or pulsing animation to indicate that summary generation is in progress.
-  - _Code ref: `apps/web/components/chat/session-closure.tsx`_
 
 ### Harness
 
@@ -149,6 +149,8 @@ Longer-term features that expand Lumen's capabilities.
 ## Notes
 
 - **Dependencies** are noted inline with _Depends on:_ markers.
-- **Code refs** link TODOs in source to backlog items.
 - **Backend tasks** are marked; coordinate with `backend-plan.md`.
 - Items may move between tiers as priorities shift.
+- **Completion tracking**:
+  - Items done directly from backlog → Log in `done/backlog.md`, remove from this file.
+  - Items that grow into full phases → Move to `frontend-plan.md` or `backend-plan.md`, archive in their `done/` docs.

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronDown, Calendar } from 'lucide-react';
+import { Check, ChevronDown, Calendar, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatSessionDate } from '@/lib/format';
 
@@ -78,9 +78,21 @@ export function SessionClosure({
               <div className="relative">
                 <div className="absolute left-1/2 -translate-x-1/2 top-0 w-16 h-px bg-border" />
                 <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-16 h-px bg-border" />
-                <p className="py-6 px-4 text-sm text-muted-foreground">
-                  Wrapping up your session...
-                </p>
+                <div className="py-6 px-4 flex flex-col items-center gap-4">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                  >
+                    <Loader2 className="h-5 w-5 text-accent" />
+                  </motion.div>
+                  <motion.p
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="text-sm text-muted-foreground"
+                  >
+                    Wrapping up your session...
+                  </motion.p>
+                </div>
               </div>
             </motion.div>
           )}

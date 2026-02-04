@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Mail } from 'lucide-react';
 import { AuthPageLayout, PrivacyFooter } from '@/components/auth-page-layout';
 import { Spinner } from '@/components/ui/spinner';
@@ -14,14 +14,32 @@ type VerifyState = 'verifying' | 'error';
 // Prevent double verification in dev StrictMode remounts.
 const attemptedTokens = new Set<string>();
 
+/**
+ * Extract token from URL search params (client-side only).
+ */
+function getTokenFromUrl(): string | null {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  return params.get('token');
+}
+
 export default function LoginCallbackPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const [token, setToken] = React.useState<string | null>(null);
+  const [mounted, setMounted] = React.useState(false);
+
+  // Read token from URL on mount (client-side only)
+  React.useEffect(() => {
+    setToken(getTokenFromUrl());
+    setMounted(true);
+  }, []);
   const [state, setState] = React.useState<VerifyState>('verifying');
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-  // Verify the token once and route the user into the app on success.
+
+  // Verify the token once mounted and route the user into the app on success.
   React.useEffect(() => {
+    if (!mounted) return;
+
     if (!token) {
       setState('error');
       setErrorMessage('Missing sign-in token. Please request a new link.');
@@ -47,7 +65,7 @@ export default function LoginCallbackPage() {
     };
 
     void verify();
-  }, [router, token]);
+  }, [mounted, router, token]);
 
   return (
     <AuthPageLayout
