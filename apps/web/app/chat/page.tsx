@@ -30,7 +30,7 @@ import {
 import { DEFAULT_MODEL_ID, DEFAULT_PROVIDER } from '@/lib/llm/model-config';
 import { buildSystemPrompt } from '@/lib/llm/prompts';
 import { buildLlmMessages } from '@/lib/session/messages';
-import { parseSummaryResponse } from '@/lib/session/summary';
+import { parseSummaryResponse, SUMMARY_PROMPT } from '@/lib/session/summary';
 import type { LlmProviderKey, SessionSummary } from '@/types/storage';
 import type { Message, SessionState } from '@/types/session';
 
@@ -263,23 +263,6 @@ function ChatPageInner() {
         sessionContext: sessionContextRef.current ?? '',
       });
       // Ask the LLM for a structured session summary.
-      // Use explicit JSON framing to override conversational system prompt.
-      const summaryPrompt = `[SYSTEM: Output JSON only. Do not include any text before or after the JSON object.]
-
-Generate a session summary as a JSON object with these exact keys:
-{
-  "summary_text": "8-12 line summary of what was explored",
-  "recognition_moment": "the single most important insight or shift to carry forward",
-  "action_steps": ["concrete next step 1", "concrete next step 2"],
-  "open_threads": ["unresolved topic to revisit"]
-}
-
-Rules:
-- Output ONLY the JSON object, nothing else
-- No markdown code fences
-- No conversational text before or after
-- recognition_moment should be 1-2 sentences max`;
-
       void (async () => {
         try {
           const summaryText = await callLlmWithRetry({
@@ -288,7 +271,7 @@ Rules:
             systemPrompt,
             messages: [
               ...buildLlmMessages(messagesSnapshot),
-              { role: 'user', content: summaryPrompt },
+              { role: 'user', content: SUMMARY_PROMPT },
             ],
             temperature: 0.2,
             maxTokens: 800,
