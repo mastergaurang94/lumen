@@ -108,7 +108,19 @@ These patterns are core to Lumen's product experience:
 
 - Single quotes, trailing commas, 100 char print width (Prettier)
 - Prefer `type` over `interface` for simple type aliases
-- Before committing, ensure CI will pass by running the checks in `.github/workflows/ci.yml`
+
+## Pre-Commit Checklist
+
+Before committing and pushing, **always** run these checks locally to ensure CI will pass:
+
+```bash
+pnpm format              # Fix formatting
+pnpm lint                # Check for lint errors
+pnpm --filter web test -- --run  # Run unit tests
+cd apps/api && go test ./...     # Run Go tests
+```
+
+All checks must pass before pushing. This avoids broken CI and wasted iteration cycles.
 
 ## Key Documentation
 
