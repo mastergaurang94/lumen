@@ -1,0 +1,8 @@
+# Run lint-staged on staged files (format + lint)
+pnpm exec lint-staged
+
+# Run unit tests
+pnpm --filter web test -- --run
+
+# Run Go tests
+cd apps/api && go test ./...
