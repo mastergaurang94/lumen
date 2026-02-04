@@ -9,14 +9,14 @@ import { formatSessionDate } from '@/lib/format';
 
 interface SessionClosureProps {
   sessionDate: Date;
-  recognitionMoment?: string | null;
+  partingWords?: string | null;
   actionSteps?: string[];
   isSummaryLoading?: boolean;
 }
 
 export function SessionClosure({
   sessionDate,
-  recognitionMoment,
+  partingWords,
   actionSteps = [],
   isSummaryLoading = false,
 }: SessionClosureProps) {
@@ -67,8 +67,8 @@ export function SessionClosure({
             <p className="text-muted-foreground">{formatSessionDate(sessionDate)}</p>
           </motion.div>
 
-          {/* Recognition moment - the seed to carry forward */}
-          {isSummaryLoading && !recognitionMoment && (
+          {/* Parting words - something meaningful to carry forward */}
+          {isSummaryLoading && !partingWords && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -96,7 +96,7 @@ export function SessionClosure({
               </div>
             </motion.div>
           )}
-          {recognitionMoment && (
+          {partingWords && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -110,7 +110,7 @@ export function SessionClosure({
 
                 <blockquote className="py-6 px-4">
                   <p className="font-display text-xl leading-relaxed text-foreground italic">
-                    &ldquo;{recognitionMoment}&rdquo;
+                    &ldquo;{partingWords}&rdquo;
                   </p>
                 </blockquote>
               </div>

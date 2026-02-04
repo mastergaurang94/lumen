@@ -61,12 +61,12 @@ function formatTranscriptSection(transcript: SessionTranscript, messages: Messag
   return [header, body].join('\n');
 }
 
-// Summary format keeps actions + open threads explicit for coaching continuity.
+// Summary format keeps actions + open threads explicit for continuity.
 function formatSummarySection(summary: SessionSummary): string {
   const header = `### Session ${summary.session_id} (${summary.created_at})`;
-  const recognition = summary.recognition_moment
-    ? `Recognition moment: ${summary.recognition_moment}`
-    : 'Recognition moment: None';
+  const partingWords = summary.parting_words
+    ? `Parting words: ${summary.parting_words}`
+    : 'Parting words: None';
   const actionSteps =
     summary.action_steps.length > 0
       ? `Action steps:\n${summary.action_steps.map((step) => `- ${step}`).join('\n')}`
@@ -76,7 +76,7 @@ function formatSummarySection(summary: SessionSummary): string {
       ? `Open threads:\n${summary.open_threads.map((thread) => `- ${thread}`).join('\n')}`
       : 'Open threads: None';
 
-  return [header, summary.summary_text, recognition, actionSteps, openThreads].join('\n');
+  return [header, summary.summary_text, partingWords, actionSteps, openThreads].join('\n');
 }
 
 // Load and decrypt transcript chunks in order; keep ordering deterministic.

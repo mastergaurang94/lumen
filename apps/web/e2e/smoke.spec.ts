@@ -38,7 +38,7 @@ const mockSummaryResponse = {
       type: 'text',
       text: JSON.stringify({
         summary_text: 'This was a brief test session exploring initial thoughts.',
-        recognition_moment: 'Taking time for self-reflection is valuable.',
+        parting_words: 'Taking time for self-reflection is valuable.',
         action_steps: ['Continue practicing mindfulness'],
         open_threads: [],
       }),

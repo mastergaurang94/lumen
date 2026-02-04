@@ -287,7 +287,7 @@ function ChatPageInner() {
             session_id: sessionId,
             user_id: userId,
             summary_text: parsed.summary_text,
-            recognition_moment: parsed.recognition_moment,
+            parting_words: parsed.parting_words,
             action_steps: parsed.action_steps,
             open_threads: parsed.open_threads,
             coach_notes: null,
@@ -369,7 +369,7 @@ function ChatPageInner() {
     return (
       <SessionClosure
         sessionDate={sessionDateRef.current}
-        recognitionMoment={sessionSummary?.recognition_moment ?? null}
+        partingWords={sessionSummary?.parting_words ?? null}
         actionSteps={sessionSummary?.action_steps ?? []}
         isSummaryLoading={isSummaryLoading}
       />

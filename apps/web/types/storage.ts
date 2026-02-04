@@ -48,7 +48,7 @@ export interface SessionSummary {
   session_id: string;
   user_id: string;
   summary_text: string;
-  recognition_moment: string | null;
+  parting_words: string | null;
   action_steps: string[];
   open_threads: string[];
   coach_notes: string | null;
