@@ -1,6 +1,6 @@
 export type LlmSummaryResponse = {
   summary_text: string;
-  recognition_moment: string | null;
+  parting_words: string | null;
   action_steps: string[];
   open_threads: string[];
 };
@@ -14,7 +14,7 @@ export const SUMMARY_PROMPT = `[SYSTEM: Output JSON only. Do not include any tex
 Generate a session summary as a JSON object with these exact keys:
 {
   "summary_text": "8-12 line summary of what was explored",
-  "recognition_moment": "the single most important insight or shift to carry forward",
+  "parting_words": "warm, meaningful words to carry forward — an insight, encouragement, or reflection",
   "action_steps": ["concrete next step 1", "concrete next step 2"],
   "open_threads": ["unresolved topic to revisit"]
 }
@@ -23,7 +23,7 @@ Rules:
 - Output ONLY the JSON object, nothing else
 - No markdown code fences
 - No conversational text before or after
-- recognition_moment should be 1-2 sentences max`;
+- parting_words should be 1-2 sentences max, heartfelt not clinical`;
 
 /**
  * Parse LLM summary response, tolerating markdown code fences that models sometimes emit.
@@ -35,9 +35,9 @@ export function parseSummaryResponse(raw: string): LlmSummaryResponse {
   if (!parsed || typeof parsed.summary_text !== 'string') {
     throw new Error('Summary response missing summary_text.');
   }
-  const recognition =
-    parsed.recognition_moment === null || typeof parsed.recognition_moment === 'string'
-      ? (parsed.recognition_moment ?? null)
+  const partingWords =
+    parsed.parting_words === null || typeof parsed.parting_words === 'string'
+      ? (parsed.parting_words ?? null)
       : null;
   const actionSteps = Array.isArray(parsed.action_steps)
     ? parsed.action_steps.filter((step) => typeof step === 'string')
@@ -48,7 +48,7 @@ export function parseSummaryResponse(raw: string): LlmSummaryResponse {
 
   return {
     summary_text: parsed.summary_text.trim(),
-    recognition_moment: recognition?.trim() ?? null,
+    parting_words: partingWords?.trim() ?? null,
     action_steps: actionSteps.map((step) => step.trim()).filter(Boolean),
     open_threads: openThreads.map((thread) => thread.trim()).filter(Boolean),
   };
