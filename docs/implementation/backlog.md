@@ -42,8 +42,6 @@ Immediate fixes and polish to ship a solid MVP.
 
 ### Harness
 
-- [x] `[M]` **Improve system prompt**: ✅ Complete (2026-02-04) — Rewrote v0 → v1 based on discovery session. See `docs/coaching/system-prompts-v1.md` and `docs/coaching/system-prompt-discovery.md`.
-  - Recognition moment prompt: I don't want to call it a recognition moment for the final ending dialog (this may require a significant refactor). I want it to be more of a words of wisdom. And maybe the variable can be something generic like - topInsight -- that the ending dialog generates words of widsom for. I know we call it recognition moment in plenty of places but I think I'm favoring top insight for now -- so its more general.
 - [ ] `[S]` **Coach time awareness**: Coach should be aware of session duration. Around 50-60 min, start naturally wrapping up unless user indicates the timer is wrong. For short sessions (5-10 min), gently explore if there's more to discuss, but respect when user is genuinely done.
   - _Likely a system prompt addition with elapsed time in context._
 

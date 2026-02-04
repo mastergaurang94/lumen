@@ -12,6 +12,9 @@ Completed backlog items done directly (not promoted to a full phase). Items that
   - _Docs: `docs/coaching/system-prompts-v1.md`, `docs/coaching/system-prompt-discovery.md`, `docs/coaching/system-prompt-discovery-raw.md`_
   - _Files: `apps/web/lib/llm/prompts.ts`_
 
+- **Rename `recognition_moment` → `parting_words`** — Refactored terminology across types, summary prompt, context assembly, and UI to better align with the coaching philosophy of leaving the user with warm, meaningful words.
+  - _Files: `types/storage.ts`, `lib/session/summary.ts`, `lib/context/assembly.ts`, `components/chat/session-closure.tsx`, `app/chat/page.tsx`, plus test files_
+
 ### UX
 
 - **Session closure loading state** — Added spinner and pulsing animation to "Wrapping up your session..." screen during summary generation.
