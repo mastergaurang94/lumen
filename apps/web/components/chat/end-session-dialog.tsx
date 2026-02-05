@@ -59,17 +59,17 @@ export function EndSessionDialog({ onConfirm, onCancel }: EndSessionDialogProps)
       >
         <div className="bg-card border border-border rounded-xl p-6 shadow-lg mx-4">
           <h2 id="dialog-title" className="font-display text-xl text-foreground mb-2">
-            End this session?
+            Ready to wrap up?
           </h2>
           <p id="dialog-description" className="text-muted-foreground text-sm mb-6">
             Your conversation will be saved locally. See what unfolds.
           </p>
           <div className="flex gap-3">
             <Button ref={cancelButtonRef} variant="outline" onClick={onCancel} className="flex-1">
-              Continue session
+              Keep going
             </Button>
             <Button onClick={onConfirm} className="flex-1">
-              End session
+              Wrap up
             </Button>
           </div>
         </div>

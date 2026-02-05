@@ -7,6 +7,10 @@ Status: Locked for MVP build-out
 
 A companion for the journey. Weekly conversations that walk you back to the world of living — restoring self-trust.
 
+## Inspirations
+
+- **"The Greatest Miracle in the World" by Og Mandino** — The ragpicker Simon Potter helps people see they are "part of the living dead" and guides them back to the world of the living. He sees value in what others have discarded — including people who have discarded themselves. The core insight: you don't teach people something new, you help them _remember_ who they truly are.
+
 ## Core Principles
 
 - Autonomy by design: sessions are designed for a weekly rhythm, encouraged conversationally.
