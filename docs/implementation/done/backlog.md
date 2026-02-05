@@ -8,6 +8,10 @@ Completed backlog items done directly (not promoted to a full phase). Items that
 
 ### Harness
 
+- **System prompt v1.1 — Simon the ragpicker infusion** — Deepened v1 prompt with explicit Simon Potter philosophy from "The Greatest Miracle in the World." Key changes: Added "You are Lumen" identity, Simon inspiration paragraph in Soul section, "greatest miracle in the world" framing, "help them remember (not learn)" presence, explicit anti-probing guidance ("don't ask what's that about"), no-disclaimers rule. Kept Simon reference to single mention at top to avoid repetition.
+  - _Docs: `docs/coaching/system-prompts-v1.md`_
+  - _Files: `apps/web/lib/llm/prompts.ts`_
+
 - **System prompt v1** — Complete rewrite of coaching system prompt based on discovery session. Shifted from instruction-heavy v0 to soul-first v1 emphasizing: companion (not coach) identity, love and acceptance, voice range and congruence, natural conversation flow.
   - _Docs: `docs/coaching/system-prompts-v1.md`, `docs/coaching/system-prompt-discovery.md`, `docs/coaching/system-prompt-discovery-raw.md`_
   - _Files: `apps/web/lib/llm/prompts.ts`_
