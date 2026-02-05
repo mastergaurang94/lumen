@@ -5,7 +5,7 @@ Status: Locked for MVP build-out
 
 ## Vision
 
-Lumen offers weekly coaching that builds self-trust -- not dependence -- through sessions that are reflective, actionable, and deeply personal.
+A companion for the journey. Weekly conversations that walk you back to the world of living — restoring self-trust.
 
 ## Core Principles
 

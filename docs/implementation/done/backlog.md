@@ -17,6 +17,10 @@ Completed backlog items done directly (not promoted to a full phase). Items that
 
 ### UX
 
+- **Warm up all UI copy** — Comprehensive tone review aligning UI language with v1 system prompt philosophy. Removed clinical language ("set aside 60 min to reflect," "action steps," "suggested next session") and replaced with warm, invitational copy ("Come as you are," "Like catching up with an old friend," "See what unfolds"). Updated vision statement to reflect "Greatest Miracle in the World" inspiration: "A companion for the journey. Weekly conversations that walk you back to the world of living — restoring self-trust."
+  - _Files: `app/page.tsx`, `app/session/page.tsx`, `components/chat/end-session-dialog.tsx`, `components/chat/session-closure.tsx`, `lib/session/summary.ts`_
+  - _Docs: `docs/product/spec.md`, `docs/coaching/harness-flow.md`_
+
 - **Session closure loading state** — Added spinner and pulsing animation to "Wrapping up your session..." screen during summary generation.
   - _Files: `apps/web/components/chat/session-closure.tsx`_
 

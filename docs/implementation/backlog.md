@@ -1,6 +1,6 @@
 # Lumen Backlog
 
-Last Updated: 2026-02-04
+Last Updated: 2026-02-05
 
 Items are organized by time horizon (Now → Soon → Later) and category. Effort markers: `[S]`mall, `[M]`edium, `[L]`arge. Status: `🔄` = in progress (check before starting).
 
@@ -37,13 +37,6 @@ Immediate fixes and polish to ship a solid MVP.
   As more text fills the input, it covers the message from the coach. Add whitespace or scroll the page down so that when a coach message appears, it scrolls down and puts that coaching message as the only message visible on screen. There should be enough whitespace after the last coaching message (even after scrolling to the bottom of a long one) so that it only takes up ~2/3 of the page. The remaining whitespace at the bottom is intentional breathing room.
 
   </details>
-
-- [ ] `[S]` **Warm up pre-session copy**: "Set aside 60 min to reflect" feels like preparing for an exam. Rewrite to feel more like a friendly conversation — approachable, not clinical.
-
-### Harness
-
-- [ ] `[S]` **Coach time awareness**: Coach should be aware of session duration. Around 50-60 min, start naturally wrapping up unless user indicates the timer is wrong. For short sessions (5-10 min), gently explore if there's more to discuss, but respect when user is genuinely done.
-  - _Likely a system prompt addition with elapsed time in context._
 
 ---
 

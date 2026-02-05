@@ -7,7 +7,7 @@ Status: Draft (MVP)
 
 - Keep context tight and high-signal.
 - Preserve privacy and autonomy constraints.
-- Support consistent coaching quality across sessions.
+- Support consistent conversational quality across sessions.
 - Be deterministic and testable for product-critical reliability.
 
 ## High-Level Flow
@@ -74,12 +74,12 @@ Signals:
 
 Action:
 
-- On user end, conclude with summary, closing words, and action steps (if any).
+- On user end, conclude with summary, parting words, and any next steps that emerged naturally.
 
 ## Harness Quality
 
 - Prompt versioning tied to summaries and transcript metadata.
 - Minimal evaluation harness:
-  - Summary quality checks (brevity, action steps present when applicable).
-  - Closure checks (summary + closing words + action steps format).
+  - Summary quality checks (brevity, warmth, natural flow).
+  - Closure checks (summary + parting words format).
   - Deterministic context assembly replay tests.

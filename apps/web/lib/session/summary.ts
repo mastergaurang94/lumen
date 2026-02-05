@@ -15,15 +15,16 @@ Generate a session summary as a JSON object with these exact keys:
 {
   "summary_text": "8-12 line summary of what was explored",
   "parting_words": "warm, meaningful words to carry forward — an insight, encouragement, or reflection",
-  "action_steps": ["concrete next step 1", "concrete next step 2"],
-  "open_threads": ["unresolved topic to revisit"]
+  "action_steps": ["something they might try", "only if it emerged naturally"],
+  "open_threads": ["something left to explore"]
 }
 
 Rules:
 - Output ONLY the JSON object, nothing else
 - No markdown code fences
 - No conversational text before or after
-- parting_words should be 1-2 sentences max, heartfelt not clinical`;
+- parting_words should be 1-2 sentences max, heartfelt not clinical
+- action_steps should only include things that came up naturally — don't manufacture them; empty array is fine`;
 
 /**
  * Parse LLM summary response, tolerating markdown code fences that models sometimes emit.
