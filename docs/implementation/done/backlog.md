@@ -12,6 +12,9 @@ Completed backlog items done directly (not promoted to a full phase). Items that
   - _Docs: `docs/coaching/system-prompts-v1.md`_
   - _Files: `apps/web/lib/llm/prompts.ts`_
 
+- **Rename coach → lumen throughout codebase** — Comprehensive rename of all "coach" references to "lumen" in both user-facing copy and internal implementation. File renames: `coach-unavailable.tsx` → `lumen-unavailable.tsx`, `coach-message.tsx` → `lumen-message.tsx`. Type changes: `MessageRole` from `'coach'` to `'lumen'`, `coach_preferences` → `preferences`, `coach_notes` → `notes`. Updated all variable names, function names, comments, and env vars. Updated initial greeting instruction to match Simon philosophy.
+  - _Files: 17 files across `apps/web/` including types, components, hooks, and tests_
+
 - **System prompt v1** — Complete rewrite of coaching system prompt based on discovery session. Shifted from instruction-heavy v0 to soul-first v1 emphasizing: companion (not coach) identity, love and acceptance, voice range and congruence, natural conversation flow.
   - _Docs: `docs/coaching/system-prompts-v1.md`, `docs/coaching/system-prompt-discovery.md`, `docs/coaching/system-prompt-discovery-raw.md`_
   - _Files: `apps/web/lib/llm/prompts.ts`_
