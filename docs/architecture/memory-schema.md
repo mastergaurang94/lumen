@@ -33,7 +33,7 @@ Fields:
 - preferred_name: string | null
 - goals: string[] (1–3 concise statements)
 - recurring_themes: string[] (1–3 concise statements)
-- coach_preferences: string[] (e.g., "challenge me directly", "gentle tone")
+- preferences: string[] (e.g., "challenge me directly", "gentle tone")
 - created_at: string (ISO8601)
 - updated_at: string (ISO8601)
 
@@ -96,7 +96,7 @@ Fields:
 - recognition_moment: string | null (1–2 lines)
 - action_steps: string[] (0–5, concise)
 - open_threads: string[] (0–5, things to revisit)
-- coach_notes: string | null (internal note for tone/approach)
+- notes: string | null (internal note for tone/approach)
 - created_at: string (ISO8601)
 - updated_at: string (ISO8601)
 

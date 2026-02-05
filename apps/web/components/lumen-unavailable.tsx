@@ -66,7 +66,7 @@ export function LumenUnavailable({ onRetry, isRetrying = false }: LumenUnavailab
             <ul className="text-sm text-muted-foreground space-y-2">
               <li className="flex items-start gap-2">
                 <span className="text-accent mt-1">•</span>
-                <span>Your previous sessions are safely stored</span>
+                <span>Your previous conversations are safely stored</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-accent mt-1">•</span>

@@ -34,8 +34,7 @@ export function ProviderGate({
           </div>
           <h1 className="font-display text-xl text-foreground">Connect your provider</h1>
           <p className="text-sm text-muted-foreground">
-            To begin your session, add your Claude Code OAuth token (sk-ant-oat...) to begin
-            chatting.
+            Add your Claude Code OAuth token (sk-ant-oat...) to get started.
           </p>
         </div>
         <div className="mt-6 space-y-3">
