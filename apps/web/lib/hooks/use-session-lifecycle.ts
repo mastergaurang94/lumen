@@ -20,7 +20,7 @@ type UseSessionLifecycleParams = {
   sessionState: SessionState;
   setSessionState: React.Dispatch<React.SetStateAction<SessionState>>;
   onMessagesRestored: (messages: Message[]) => void;
-  onResumeHasCoachMessage: () => void;
+  onResumeHasLumenMessage: () => void;
   onResumeActiveTimer: (sessionId: string) => void;
   onNewSessionActiveTimer: (sessionId: string) => void;
 };
@@ -58,7 +58,7 @@ export function useSessionLifecycle({
   sessionState,
   setSessionState,
   onMessagesRestored,
-  onResumeHasCoachMessage,
+  onResumeHasLumenMessage,
   onResumeActiveTimer,
   onNewSessionActiveTimer,
 }: UseSessionLifecycleParams): UseSessionLifecycleResult {
@@ -202,15 +202,15 @@ export function useSessionLifecycle({
     };
   }, [isAuthed]);
 
-  // Check coach availability and initialize session state.
+  // Check Lumen availability and initialize session state.
   const initializeSession = React.useCallback(async () => {
     setSessionState('loading');
 
-    // Simulate checking coach availability
+    // Simulate checking Lumen availability
     await new Promise((resolve) => setTimeout(resolve, 800));
 
     // Check mock toggles for testing edge states
-    if (process.env.NEXT_PUBLIC_MOCK_COACH_UNAVAILABLE === 'true') {
+    if (process.env.NEXT_PUBLIC_MOCK_LUMEN_UNAVAILABLE === 'true') {
       setSessionState('unavailable');
       return;
     }
@@ -220,7 +220,7 @@ export function useSessionLifecycle({
       return;
     }
 
-    // Coach is available, start session
+    // Lumen is available, start session
     setSessionState('active');
   }, [setSessionState]);
 
@@ -279,9 +279,9 @@ export function useSessionLifecycle({
 
         if (restoredMessages.length > 0) {
           onMessagesRestored(restoredMessages);
-          const hasCoachMessage = restoredMessages.some((message) => message.role === 'coach');
-          if (hasCoachMessage) {
-            onResumeHasCoachMessage();
+          const hasLumenMessage = restoredMessages.some((message) => message.role === 'lumen');
+          if (hasLumenMessage) {
+            onResumeHasLumenMessage();
           }
         } else {
           // No transcript content yet; treat as a fresh session so the intro prompt runs.
@@ -348,7 +348,7 @@ export function useSessionLifecycle({
     onMessagesRestored,
     onNewSessionActiveTimer,
     onResumeActiveTimer,
-    onResumeHasCoachMessage,
+    onResumeHasLumenMessage,
     sessionState,
     storage,
     vaultReady,

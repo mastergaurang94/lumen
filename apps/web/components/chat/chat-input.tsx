@@ -37,7 +37,7 @@ export function ChatInput({
     adjustHeight();
   }, [value, adjustHeight]);
 
-  // Refocus when re-enabled after being disabled (e.g., after coach finishes responding)
+  // Refocus when re-enabled after being disabled (e.g., after Lumen finishes responding)
   const wasDisabledRef = React.useRef(disabled);
   React.useEffect(() => {
     if (wasDisabledRef.current && !disabled) {

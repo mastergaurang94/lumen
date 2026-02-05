@@ -20,7 +20,7 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: 'Lumen',
-  description: 'Weekly coaching that builds self-trust',
+  description: 'A companion for the journey — weekly conversations that restore self-trust',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

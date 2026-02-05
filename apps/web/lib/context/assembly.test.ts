@@ -41,7 +41,7 @@ async function saveTranscriptWithMessages(
     userId: string;
     startedAt: string;
     endedAt: string;
-    messages: { id: string; role: 'user' | 'coach'; content: string; timestamp: Date }[];
+    messages: { id: string; role: 'user' | 'lumen'; content: string; timestamp: Date }[];
     key: CryptoKey;
   },
 ) {
@@ -101,7 +101,7 @@ describe('buildSessionContext', () => {
       endedAt: '2026-01-05T11:00:00.000Z',
       messages: [
         { id: 'm1', role: 'user', content: 'Hello', timestamp: new Date() },
-        { id: 'm2', role: 'coach', content: 'Welcome back', timestamp: new Date() },
+        { id: 'm2', role: 'lumen', content: 'Welcome back', timestamp: new Date() },
       ],
       key,
     });
@@ -113,7 +113,7 @@ describe('buildSessionContext', () => {
       parting_words: null,
       action_steps: ['Do the thing'],
       open_threads: ['Thread A'],
-      coach_notes: null,
+      notes: null,
       created_at: '2026-01-05T11:05:00.000Z',
       updated_at: '2026-01-05T11:05:00.000Z',
     });
@@ -130,7 +130,7 @@ describe('buildSessionContext', () => {
     expect(context).toContain('days_since_last_session: 5');
     expect(context).toContain('## Recent Transcripts');
     expect(context).toContain('**user:** Hello');
-    expect(context).toContain('**coach:** Welcome back');
+    expect(context).toContain('**lumen:** Welcome back');
   });
 
   it('falls back to summaries when transcripts exceed budget', async () => {
@@ -155,7 +155,7 @@ describe('buildSessionContext', () => {
       parting_words: null,
       action_steps: [],
       open_threads: [],
-      coach_notes: null,
+      notes: null,
       created_at: '2026-01-01T11:05:00.000Z',
       updated_at: '2026-01-01T11:05:00.000Z',
     });

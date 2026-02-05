@@ -190,7 +190,7 @@ test.describe('Smoke Test', () => {
     // Step 9: Verify user message appears
     await expect(page.getByText('Hello, this is a test message.')).toBeVisible();
 
-    // Step 10: Verify coach response appears (from mock)
+    // Step 10: Verify Lumen response appears (from mock)
     await expect(page.getByText("I'm here to support you")).toBeVisible({ timeout: 10000 });
 
     // Step 11: End the session

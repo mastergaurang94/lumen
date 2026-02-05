@@ -13,8 +13,8 @@ import { streamText } from '@/lib/session/stream';
 import type { Message, SessionState } from '@/types/session';
 import type { SessionTranscript } from '@/types/storage';
 
-const INITIAL_COACH_INSTRUCTION =
-  'Begin the session with a brief warm welcome, include a one-line privacy reminder, and ask one open question.';
+const INITIAL_LUMEN_INSTRUCTION =
+  'Begin the conversation with a warm, simple greeting. Be glad to be here.';
 
 type UseLlmConversationParams = {
   messages: Message[];
@@ -89,7 +89,7 @@ export function useLlmConversation({
     abortControllerRef.current?.abort();
   }, []);
 
-  // Send the initial coach greeting when starting a fresh session.
+  // Send the initial Lumen greeting when starting a fresh session.
   React.useEffect(() => {
     if (sessionState !== 'active' || !vaultReady || !storageReady) return;
     if (!llmKey) return;
@@ -112,7 +112,7 @@ export function useLlmConversation({
           apiKey: llmKey,
           modelId: DEFAULT_MODEL_ID,
           systemPrompt,
-          messages: [{ role: 'user', content: INITIAL_COACH_INSTRUCTION }],
+          messages: [{ role: 'user', content: INITIAL_LUMEN_INSTRUCTION }],
           signal: abortControllerRef.current?.signal,
         });
 
@@ -120,15 +120,15 @@ export function useLlmConversation({
           setStreamingContent(partial);
         }
 
-        const coachMessage: Message = {
+        const lumenMessage: Message = {
           id: generateMessageId(),
-          role: 'coach',
+          role: 'lumen',
           content: responseText,
           timestamp: new Date(),
         };
-        setMessages([coachMessage]);
+        setMessages([lumenMessage]);
         startActiveSegment();
-        queueMessageForChunk(coachMessage);
+        queueMessageForChunk(lumenMessage);
       } catch (error) {
         initialPromptSentRef.current = false;
         if (error instanceof LlmAbortError) {
@@ -242,15 +242,15 @@ export function useLlmConversation({
         }
 
         // Finalize the message
-        const coachMessage: Message = {
+        const lumenMessage: Message = {
           id: generateMessageId(),
-          role: 'coach',
+          role: 'lumen',
           content: responseText,
           timestamp: new Date(),
         };
-        setMessages((prev) => [...prev, coachMessage]);
+        setMessages((prev) => [...prev, lumenMessage]);
         startActiveSegment();
-        queueMessageForChunk(coachMessage);
+        queueMessageForChunk(lumenMessage);
       } finally {
         setStreamingContent(null);
         abortControllerRef.current = null;

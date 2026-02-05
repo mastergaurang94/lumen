@@ -14,7 +14,7 @@ export interface UserProfile {
   preferred_name: string | null;
   goals: string[];
   recurring_themes: string[];
-  coach_preferences: string[];
+  preferences: string[];
   created_at: string;
   updated_at: string;
 }
@@ -51,7 +51,7 @@ export interface SessionSummary {
   parting_words: string | null;
   action_steps: string[];
   open_threads: string[];
-  coach_notes: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }

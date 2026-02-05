@@ -6,12 +6,12 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 
-interface CoachMessageProps {
+interface LumenMessageProps {
   content: string;
   className?: string;
 }
 
-export function CoachMessage({ content, className }: CoachMessageProps) {
+export function LumenMessage({ content, className }: LumenMessageProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
