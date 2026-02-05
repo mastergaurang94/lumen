@@ -38,6 +38,15 @@ Immediate fixes and polish to ship a solid MVP.
 
   </details>
 
+- [ ] `[M]` **Session closure progress steps**: The "Wrapping up..." screen feels stuck because it doesn't show what's happening. Add animated step transitions to show progress through the closure flow:
+  1. "Wrapping up your conversation..."
+  2. "Storing locally..." (encryption is fast — AES-GCM is hardware-accelerated, key already derived)
+  3. "Reflecting on what we discussed..." (LLM summary call — **this is the slow step**)
+  4. Final state with parting words
+
+  Transitions should feel smooth and purposeful. The third step will take longest since it's waiting on LLM inference.
+  - _Code ref: `apps/web/app/chat/page.tsx:253-304`, `apps/web/components/chat/session-closure.tsx`_
+
 ---
 
 ## Soon (Post-MVP)
