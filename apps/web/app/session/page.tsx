@@ -84,7 +84,7 @@ export default function SessionPage() {
     return (
       <AuthPageLayout
         footer={
-          <p className="text-sm text-muted-foreground/70">A week between lets things settle.</p>
+          <p className="text-sm text-muted-foreground/70">The good stuff happens in between.</p>
         }
       >
         <div className="flex items-center justify-center">
@@ -99,7 +99,7 @@ export default function SessionPage() {
       showMenu
       showBack={false}
       footer={
-        <p className="text-sm text-muted-foreground/70">A week between lets things settle.</p>
+        <p className="text-sm text-muted-foreground/70">The good stuff happens in between.</p>
       }
     >
       <div className="relative z-10 w-full max-w-md">
@@ -150,10 +150,10 @@ function SessionContent({ spacing, chatHref }: { spacing: SessionSpacing; chatHr
         </h1>
         <p className="text-lg text-muted-foreground">
           {hasActiveSession
-            ? 'Your session is waiting for you'
+            ? 'Ready when you are'
             : isFirstSession
-              ? "Let's begin your first session"
-              : 'Your session is ready'}
+              ? "I've been expecting you. Come on in!"
+              : 'Ready when you are'}
         </p>
       </div>
 
@@ -170,7 +170,7 @@ function SessionContent({ spacing, chatHref }: { spacing: SessionSpacing; chatHr
                   : daysSinceLastSession === 1
                     ? '1 day'
                     : `${daysSinceLastSession} days`}{' '}
-                since your last session.
+                since we last talked.
               </p>
               <p className="text-sm text-muted-foreground">
                 The time between is where things settle. No rush — but a week between often helps.
@@ -187,24 +187,17 @@ function SessionContent({ spacing, chatHref }: { spacing: SessionSpacing; chatHr
         </div>
       )}
 
-      {/* First session prompt */}
-      {isFirstSession && (
-        <div className="bg-accent/5 border border-accent/10 rounded-xl p-5 text-center">
-          <p className="text-muted-foreground">The start of something good.</p>
-        </div>
-      )}
-
       {/* Begin/Resume button - always enabled */}
       <Link href={chatHref} className="block">
         <Button className="w-full h-14 text-lg font-medium">
-          {hasActiveSession ? 'Resume session' : 'Begin session'}
+          {hasActiveSession ? 'Continue' : "Let's go"}
         </Button>
       </Link>
 
       {/* Context text */}
       {!hasActiveSession && !isFirstSession && lastSessionDate && state === 'ready' && (
         <p className="text-sm text-muted-foreground/70">
-          Your last session was {formatDaysAgo(lastSessionDate)}.
+          We last talked {formatDaysAgo(lastSessionDate)}.
           <br />
           What&apos;s been on your mind?
         </p>

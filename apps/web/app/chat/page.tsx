@@ -385,7 +385,7 @@ function ChatPageInner() {
         <Sidebar />
       </div>
 
-      {/* End Session button - top right */}
+      {/* Wrap up button - top right */}
       {!showProviderGate && (
         <div className="fixed top-4 right-4" style={{ zIndex: Z_INDEX.navigation }}>
           <Button
@@ -393,7 +393,7 @@ function ChatPageInner() {
             onClick={handleEndSession}
             className="text-base text-foreground"
           >
-            End Session
+            Wrap up
           </Button>
         </div>
       )}

@@ -62,7 +62,7 @@ export function SessionClosure({
             className="space-y-2"
           >
             <h1 className="font-display text-3xl font-light tracking-tight text-foreground">
-              Session complete
+              Until next time
             </h1>
             <p className="text-muted-foreground">{formatSessionDate(sessionDate)}</p>
           </motion.div>
@@ -90,7 +90,7 @@ export function SessionClosure({
                     transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                     className="text-sm text-muted-foreground"
                   >
-                    Wrapping up your session...
+                    Wrapping up...
                   </motion.p>
                 </div>
               </div>

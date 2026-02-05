@@ -59,7 +59,7 @@ export function ChatBody({
             <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mb-4">
               <Shield className="w-6 h-6 text-accent" />
             </div>
-            <p className="text-muted-foreground text-sm max-w-xs">Your session is beginning...</p>
+            <p className="text-muted-foreground text-sm max-w-xs">One moment...</p>
           </motion.div>
         )}
 
