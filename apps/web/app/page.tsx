@@ -24,9 +24,7 @@ export default function HomePage() {
 
           {/* Session prompt and CTA */}
           <div className="space-y-6 opacity-0 animate-fade-in-up animation-delay-300">
-            <p className="text-lg text-muted-foreground/80">
-              Set aside about 60 minutes for your session.
-            </p>
+            <p className="text-lg text-muted-foreground/80">Come as you are.</p>
             <Button asChild size="lg" className="h-12 px-8 text-base">
               <Link href="/login">Get started</Link>
             </Button>

@@ -126,7 +126,7 @@ export function SessionClosure({
           >
             <Calendar className="h-4 w-4" />
             <p className="text-sm">
-              Suggested next session:{' '}
+              See you around{' '}
               <span className="text-foreground">{formatSessionDate(suggestedNextSession)}</span>
             </p>
           </motion.div>
@@ -143,7 +143,7 @@ export function SessionClosure({
                 className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group"
               >
                 <span>
-                  {showActionSteps ? 'Hide' : 'View'} action steps
+                  {showActionSteps ? 'Hide' : 'View'} what came up
                   {!showActionSteps && ` (${actionSteps.length})`}
                 </span>
                 <ChevronDown

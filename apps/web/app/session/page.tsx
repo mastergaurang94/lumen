@@ -84,9 +84,7 @@ export default function SessionPage() {
     return (
       <AuthPageLayout
         footer={
-          <p className="text-sm text-muted-foreground/70">
-            Sessions are designed for a weekly rhythm — space to reflect and act.
-          </p>
+          <p className="text-sm text-muted-foreground/70">A week between lets things settle.</p>
         }
       >
         <div className="flex items-center justify-center">
@@ -101,9 +99,7 @@ export default function SessionPage() {
       showMenu
       showBack={false}
       footer={
-        <p className="text-sm text-muted-foreground/70">
-          Sessions are designed for a weekly rhythm — space to reflect and act.
-        </p>
+        <p className="text-sm text-muted-foreground/70">A week between lets things settle.</p>
       }
     >
       <div className="relative z-10 w-full max-w-md">
@@ -177,9 +173,7 @@ function SessionContent({ spacing, chatHref }: { spacing: SessionSpacing; chatHr
                 since your last session.
               </p>
               <p className="text-sm text-muted-foreground">
-                Your coach suggests waiting about a week. The space in between is where growth
-                happens — time to act on what came up, notice patterns, and return with fresh
-                perspective.
+                The time between is where things settle. No rush — but a week between often helps.
               </p>
             </div>
           </div>
@@ -188,31 +182,15 @@ function SessionContent({ spacing, chatHref }: { spacing: SessionSpacing; chatHr
 
       {/* Pre-session prompt card - only show for new sessions when ready */}
       {!hasActiveSession && state === 'ready' && !isFirstSession && (
-        <div className="bg-accent/5 border border-accent/10 rounded-xl p-6 space-y-4">
-          <div className="flex items-start gap-3 text-left">
-            <Clock className="h-5 w-5 text-accent shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="font-medium text-foreground">Set aside about 60 minutes.</p>
-              <p className="text-sm text-muted-foreground">
-                Find a quiet space where you can reflect without interruption.
-              </p>
-            </div>
-          </div>
+        <div className="bg-accent/5 border border-accent/10 rounded-xl p-5 text-center">
+          <p className="text-muted-foreground">Like catching up with an old friend.</p>
         </div>
       )}
 
       {/* First session prompt */}
       {isFirstSession && (
-        <div className="bg-accent/5 border border-accent/10 rounded-xl p-6 space-y-4">
-          <div className="flex items-start gap-3 text-left">
-            <Clock className="h-5 w-5 text-accent shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="font-medium text-foreground">Set aside about 60 minutes.</p>
-              <p className="text-sm text-muted-foreground">
-                Find a quiet space where you can reflect without interruption.
-              </p>
-            </div>
-          </div>
+        <div className="bg-accent/5 border border-accent/10 rounded-xl p-5 text-center">
+          <p className="text-muted-foreground">The start of something good.</p>
         </div>
       )}
 
