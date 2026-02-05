@@ -7,7 +7,7 @@ import { Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sidebar } from '@/components/sidebar';
 import { ErrorBoundary } from '@/components/error-boundary';
-import { CoachUnavailable } from '@/components/coach-unavailable';
+import { LumenUnavailable } from '@/components/lumen-unavailable';
 import { SessionClosure, EndSessionDialog } from '@/components/chat';
 import { ChatHeader } from '@/components/chat/chat-header';
 import { ChatBody } from '@/components/chat/chat-body';
@@ -64,7 +64,7 @@ function ChatPageInner() {
   const handleMessagesRestored = React.useCallback((restored: Message[]) => {
     setMessages(restored);
   }, []);
-  const handleResumeHasCoachMessage = React.useCallback(() => {
+  const handleResumeHasLumenMessage = React.useCallback(() => {
     startActiveSegment();
   }, [startActiveSegment]);
   const handleResumeActiveTimer = React.useCallback(
@@ -103,7 +103,7 @@ function ChatPageInner() {
     sessionState,
     setSessionState,
     onMessagesRestored: handleMessagesRestored,
-    onResumeHasCoachMessage: handleResumeHasCoachMessage,
+    onResumeHasLumenMessage: handleResumeHasLumenMessage,
     onResumeActiveTimer: handleResumeActiveTimer,
     onNewSessionActiveTimer: handleNewSessionActiveTimer,
   });
@@ -290,7 +290,7 @@ function ChatPageInner() {
             parting_words: parsed.parting_words,
             action_steps: parsed.action_steps,
             open_threads: parsed.open_threads,
-            coach_notes: null,
+            notes: null,
             created_at: now,
             updated_at: now,
           };
@@ -324,7 +324,7 @@ function ChatPageInner() {
         >
           <div className="w-12 h-12 rounded-full border-2 border-accent/30 border-t-accent animate-spin mx-auto" />
           <div className="space-y-2">
-            <p className="text-foreground font-medium">Connecting to your coach</p>
+            <p className="text-foreground font-medium">Connecting to Lumen</p>
             <p className="text-sm text-muted-foreground">Just a moment...</p>
           </div>
         </motion.div>
@@ -332,9 +332,9 @@ function ChatPageInner() {
     );
   }
 
-  // Coach unavailable state
+  // Lumen unavailable state
   if (sessionState === 'unavailable') {
-    return <CoachUnavailable onRetry={handleRetry} isRetrying={isRetrying} />;
+    return <LumenUnavailable onRetry={handleRetry} isRetrying={isRetrying} />;
   }
 
   // Error state (connection or other errors)

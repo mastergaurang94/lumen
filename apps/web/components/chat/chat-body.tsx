@@ -2,7 +2,7 @@ import type { RefObject } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield } from 'lucide-react';
 
-import { CoachMessage, TypingIndicator, UserMessage } from '@/components/chat';
+import { LumenMessage, TypingIndicator, UserMessage } from '@/components/chat';
 import { ProviderGate } from '@/components/chat/provider-gate';
 import type { Message } from '@/types/session';
 
@@ -67,8 +67,8 @@ export function ChatBody({
         <div className="space-y-6">
           <AnimatePresence mode="popLayout">
             {messages.map((message) =>
-              message.role === 'coach' ? (
-                <CoachMessage key={message.id} content={message.content} />
+              message.role === 'lumen' ? (
+                <LumenMessage key={message.id} content={message.content} />
               ) : (
                 <UserMessage key={message.id} content={message.content} />
               ),
@@ -76,7 +76,7 @@ export function ChatBody({
 
             {/* Streaming message */}
             {streamingContent !== null && (
-              <CoachMessage key="streaming" content={streamingContent} />
+              <LumenMessage key="streaming" content={streamingContent} />
             )}
 
             {/* Typing indicator */}

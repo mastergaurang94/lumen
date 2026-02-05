@@ -72,7 +72,7 @@ describe('storage integration', () => {
 
     const messages = [
       { id: 'm1', role: 'user' as const, content: 'Hello', timestamp: new Date() },
-      { id: 'm2', role: 'coach' as const, content: 'Hi there', timestamp: new Date() },
+      { id: 'm2', role: 'lumen' as const, content: 'Hi there', timestamp: new Date() },
     ];
 
     const iv = generateIV();
@@ -128,7 +128,7 @@ describe('storage integration', () => {
       preferred_name: 'Kai',
       goals: ['Trust my gut'],
       recurring_themes: [],
-      coach_preferences: [],
+      preferences: [],
       created_at: now,
       updated_at: now,
     };
@@ -151,7 +151,7 @@ describe('storage integration', () => {
       parting_words: null,
       action_steps: ['Do the thing'],
       open_threads: [],
-      coach_notes: null,
+      notes: null,
       created_at: now,
       updated_at: now,
     };
@@ -197,7 +197,7 @@ describe('storage integration', () => {
         parting_words: null,
         action_steps: [],
         open_threads: [],
-        coach_notes: null,
+        notes: null,
         created_at: '2026-01-01T00:00:00.000Z',
         updated_at: '2026-01-01T00:00:00.000Z',
       },
@@ -208,7 +208,7 @@ describe('storage integration', () => {
         parting_words: null,
         action_steps: [],
         open_threads: [],
-        coach_notes: null,
+        notes: null,
         created_at: '2026-01-03T00:00:00.000Z',
         updated_at: '2026-01-03T00:00:00.000Z',
       },
@@ -219,7 +219,7 @@ describe('storage integration', () => {
         parting_words: null,
         action_steps: [],
         open_threads: [],
-        coach_notes: null,
+        notes: null,
         created_at: '2026-01-05T00:00:00.000Z',
         updated_at: '2026-01-05T00:00:00.000Z',
       },

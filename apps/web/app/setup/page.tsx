@@ -118,7 +118,7 @@ export default function SetupPage() {
         preferred_name: null,
         goals: [],
         recurring_themes: [],
-        coach_preferences: [],
+        preferences: [],
         created_at: now,
         updated_at: now,
       };

@@ -9,7 +9,7 @@ export function generateMessageId(): string {
 // Map UI chat roles to provider-friendly message roles.
 export function buildLlmMessages(messages: Message[]): LlmMessage[] {
   return messages.map((message) => ({
-    role: message.role === 'coach' ? 'assistant' : 'user',
+    role: message.role === 'lumen' ? 'assistant' : 'user',
     content: message.content,
   }));
 }

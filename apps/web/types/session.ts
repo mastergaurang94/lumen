@@ -26,7 +26,7 @@ export interface SessionGate {
   hasActiveSession: boolean;
 }
 
-export type MessageRole = 'coach' | 'user';
+export type MessageRole = 'lumen' | 'user';
 
 export interface Message {
   id: string;

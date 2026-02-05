@@ -18,7 +18,7 @@ export type LlmCallParams = {
 };
 
 // Error classes enable UI to distinguish between recoverable and fatal failures:
-// - LlmUnavailableError: transient provider outage, show "coach unavailable" UI
+// - LlmUnavailableError: transient provider outage, show "Lumen unavailable" UI
 // - LlmInvalidKeyError: bad credentials, prompt user to re-enter key
 // - LlmResponseError: internal, classified as retryable or not
 

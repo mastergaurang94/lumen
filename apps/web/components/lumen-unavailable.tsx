@@ -7,12 +7,12 @@ import { CloudOff, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sidebar } from '@/components/sidebar';
 
-interface CoachUnavailableProps {
+interface LumenUnavailableProps {
   onRetry?: () => void;
   isRetrying?: boolean;
 }
 
-export function CoachUnavailable({ onRetry, isRetrying = false }: CoachUnavailableProps) {
+export function LumenUnavailable({ onRetry, isRetrying = false }: LumenUnavailableProps) {
   return (
     <div className="atmosphere min-h-screen flex flex-col">
       {/* Hamburger menu - top left */}
@@ -56,7 +56,7 @@ export function CoachUnavailable({ onRetry, isRetrying = false }: CoachUnavailab
               Taking a moment
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Your coach is temporarily unavailable. This usually resolves within a few minutes.
+              Lumen is temporarily unavailable. This usually resolves within a few minutes.
             </p>
           </div>
 
