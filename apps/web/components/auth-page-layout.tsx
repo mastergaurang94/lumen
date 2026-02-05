@@ -85,7 +85,7 @@ export function PrivacyFooter({ children }: { children?: React.ReactNode }) {
     <p className="text-sm text-muted-foreground/70 max-w-xs mx-auto leading-relaxed">
       {children || (
         <>
-          Your sessions are stored locally and encrypted.
+          Your conversations are stored locally and encrypted.
           <br />
           We never use your data for training.
         </>

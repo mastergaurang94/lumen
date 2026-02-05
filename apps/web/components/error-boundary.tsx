@@ -106,7 +106,7 @@ export function ErrorFallback({
 
         {/* Reassurance */}
         <p className="text-sm text-muted-foreground/60">
-          Your sessions and data remain safely stored on your device.
+          Your conversations and data remain safely stored on your device.
         </p>
       </div>
     </div>

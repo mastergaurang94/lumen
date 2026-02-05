@@ -102,7 +102,7 @@ export default function LoginPage() {
               <div className="flex justify-center">
                 <Spinner size="lg" />
               </div>
-              <p className="text-sm text-muted-foreground">Checking your session…</p>
+              <p className="text-sm text-muted-foreground">One moment…</p>
             </motion.div>
           ) : viewState === 'form' || viewState === 'loading' ? (
             <motion.div

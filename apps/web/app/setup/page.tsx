@@ -171,7 +171,7 @@ export default function SetupPage() {
           <h1 className="font-display text-4xl font-light tracking-tight text-foreground">
             Secure your data
           </h1>
-          <p className="text-muted-foreground">Create a passphrase to encrypt your sessions</p>
+          <p className="text-muted-foreground">Create a passphrase to protect your conversations</p>
         </div>
 
         {/* Form */}
@@ -287,8 +287,8 @@ export default function SetupPage() {
                 This passphrase cannot be recovered
               </p>
               <p className="text-sm text-muted-foreground">
-                If you forget it, your session history will be permanently inaccessible. We cannot
-                reset it for you.
+                If you forget it, your conversation history will be permanently inaccessible. We
+                cannot reset it for you.
               </p>
             </div>
           </div>

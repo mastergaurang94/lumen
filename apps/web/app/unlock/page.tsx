@@ -164,7 +164,7 @@ export default function UnlockPage() {
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">Forgot your passphrase?</p>
               <p className="text-sm text-muted-foreground">
-                It cannot be recovered. Losing it means losing access to your local session history.
+                It cannot be recovered. Losing it means losing access to your conversation history.
               </p>
             </div>
           </div>

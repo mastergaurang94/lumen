@@ -34,7 +34,7 @@ export default function HomePage() {
 
       <footer className="relative z-10 py-10 text-center opacity-0 animate-fade-in animation-delay-500">
         <p className="text-sm text-muted-foreground/70 max-w-md mx-auto leading-relaxed">
-          Your sessions are stored locally and encrypted.
+          Your conversations are stored locally and encrypted.
           <br />
           We never use your data for training.
         </p>

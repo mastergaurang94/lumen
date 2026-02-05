@@ -176,7 +176,7 @@ export function Sidebar() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Lock your vault?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      You&apos;ll need to enter your passphrase again to access your sessions.
+                      You&apos;ll need to enter your passphrase again to access your conversations.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

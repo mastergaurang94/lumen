@@ -27,14 +27,14 @@ Immediate fixes and polish to ship a solid MVP.
 
 ### UX
 
-- [ ] `[S]` **First coach message renders twice briefly**: When the chat UI opens and the coach sends the initial message, it appears duplicated for a split second before resolving to one. Likely a React state/render race condition.
+- [ ] `[S]` **First Lumen message renders twice briefly**: When the chat UI opens and Lumen sends the initial message, it appears duplicated for a split second before resolving to one. Likely a React state/render race condition.
   - _Code ref: `apps/web/app/chat/page.tsx` or `apps/web/lib/hooks/use-llm-conversation.ts`_
-- [ ] `[M]` **Coach message scroll behavior**: When a coach message appears, auto-scroll so the message is prominent (top 2/3 of viewport). Add sufficient whitespace below the last coach message so input field doesn't obscure it as user types longer responses.
+- [ ] `[M]` **Lumen message scroll behavior**: When a Lumen message appears, auto-scroll so the message is prominent (top 2/3 of viewport). Add sufficient whitespace below the last Lumen message so input field doesn't obscure it as user types longer responses.
 
   <details>
   <summary>Implementation prompt</summary>
 
-  As more text fills the input, it covers the message from the coach. Add whitespace or scroll the page down so that when a coach message appears, it scrolls down and puts that coaching message as the only message visible on screen. There should be enough whitespace after the last coaching message (even after scrolling to the bottom of a long one) so that it only takes up ~2/3 of the page. The remaining whitespace at the bottom is intentional breathing room.
+  As more text fills the input, it covers the message from Lumen. Add whitespace or scroll the page down so that when a Lumen message appears, it scrolls down and puts that message as the only message visible on screen. There should be enough whitespace after the last Lumen message (even after scrolling to the bottom of a long one) so that it only takes up ~2/3 of the page. The remaining whitespace at the bottom is intentional breathing room.
 
   </details>
 
