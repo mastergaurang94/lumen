@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+> This file is mirrored into `AGENTS.md`. Keep both in sync.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Build & Development Commands
@@ -27,7 +29,7 @@ cd apps/api && go run ./cmd/api
 - `apps/web` - Next.js 15 + React 19 frontend (main development focus)
 - `apps/api` - Go chi/v5 backend (auth, LLM proxy)
 
-**Product**: Privacy-first AI coaching app. Client-side encryption (PBKDF2 + AES-GCM) is a core requirement, not an afterthought. All sensitive data stored locally in IndexedDB.
+**Product**: Privacy-first AI conversations app. Client-side encryption (PBKDF2 + AES-GCM) is a core requirement, not an afterthought. All sensitive data stored locally in IndexedDB.
 
 ## Backend Details
 
@@ -54,27 +56,6 @@ cd apps/api && go run ./cmd/api
 
 **Tech Stack**: Next.js 15, React 19, TypeScript, Tailwind CSS v4 (CSS-first config), Radix UI primitives, Framer Motion
 
-**Theming System**: Three time-based color palettes (morning/afternoon/evening) that auto-shift. Theme context in `components/theme-provider.tsx`. CSS variables defined in `app/globals.css`.
-
-**Design Aesthetic**: "Warm, grounded, clear, human" - OmmWriter-inspired minimal UI with atmospheric gradient backgrounds. Fonts are Lato (body) and Fraunces (display/headings).
-
-**Component Pattern**: shadcn/ui-style components in `components/ui/` using CVA for variants. Use `cn()` utility from `lib/utils.ts` for class merging.
-
-## Product Context
-
-**What is Lumen**: A weekly AI coaching app. Sessions are spaced 7 days apart. Data is stored locally and encrypted. Privacy is paramount.
-
-## Design Direction
-
-**Aesthetic**: Warm, grounded, and clear — never stark or cold. Inspired by OmmWriter's distraction-free focus and claude.ai's clean structure, but with more warmth and atmosphere.
-
-**Design system** (see `docs/design/system.md`):
-
-- Three time-based color palettes (morning/afternoon/evening) that shift with the day
-- Fraunces display font for headings, Lato for body text
-- Atmospheric backgrounds with subtle radial gradients
-- Generous whitespace, soft rounded corners, subtle animations
-
 **Principles**:
 
 - Warm: Soft, natural tones
@@ -92,18 +73,6 @@ cd apps/api && go run ./cmd/api
 - Use CSS variables and theme tokens — UI must adapt to all palettes
 - Fully responsive and mobile-friendly
 
-## Product UX Patterns
-
-These patterns are core to Lumen's product experience:
-
-- Session-centric layout (not conversation-history-centric)
-- Pre-session gate: prompt user to set aside ~60 minutes
-- Passphrase onboarding with clear "unrecoverable" warning
-- Session spacing: 7-day rhythm encouraged conversationally by coach
-- Explicit "End Session" button; coach may suggest closure but user decides
-- Privacy indicator in UI (local storage, not used for training)
-- "Coach unavailable" state for model outages
-
 ## Code Style
 
 - Single quotes, trailing commas, 100 char print width (Prettier)
@@ -120,6 +89,8 @@ Husky automatically runs checks before every commit (see `.husky/pre-commit`):
 Commits are blocked if any check fails. Keep `.husky/pre-commit` and `.github/workflows/ci.yml` in sync when adding new checks.
 
 ## Key Documentation
+
+ALWAYS read ALL docs to get started with a thread.
 
 - `docs/product/spec.md` - Product requirements (locked for MVP)
 - `docs/design/system.md` - Palettes, typography, component guidelines

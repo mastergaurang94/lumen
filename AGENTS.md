@@ -29,7 +29,7 @@ cd apps/api && go run ./cmd/api
 - `apps/web` - Next.js 15 + React 19 frontend (main development focus)
 - `apps/api` - Go chi/v5 backend (auth, LLM proxy)
 
-**Product**: Privacy-first AI coaching app. Client-side encryption (PBKDF2 + AES-GCM) is a core requirement, not an afterthought. All sensitive data stored locally in IndexedDB.
+**Product**: Privacy-first AI conversations app. Client-side encryption (PBKDF2 + AES-GCM) is a core requirement, not an afterthought. All sensitive data stored locally in IndexedDB.
 
 ## Backend Details
 
