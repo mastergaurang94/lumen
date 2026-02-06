@@ -31,6 +31,9 @@ Completed backlog items done directly (not promoted to a full phase). Items that
 - **Session closure loading state** — Added spinner and pulsing animation to "Wrapping up your session..." screen during summary generation.
   - _Files: `apps/web/components/chat/session-closure.tsx`_
 
+- **Session reflection sharing (copy + share sheet)** — Added share/copy CTA on session closure with cancel-safe UX, share/copy-specific success messaging, and lightweight client event logging.
+  - _Files: `apps/web/components/chat/session-closure.tsx`, `apps/web/lib/analytics.ts`_
+
 ### Build / Infra
 
 - **Next.js 15 Suspense fix** — Replaced `useSearchParams()` with `window.location.search` pattern to fix static generation errors. Created shared `lib/hooks/dev-auth.ts` utility.
