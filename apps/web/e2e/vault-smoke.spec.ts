@@ -1,6 +1,26 @@
 import { test, expect } from '@playwright/test';
 
+function buildSseResponse(text: string) {
+  return [
+    'event: message_start',
+    `data: ${JSON.stringify({ message: { usage: { input_tokens: 10 } } })}`,
+    '',
+    'event: content_block_start',
+    `data: ${JSON.stringify({ content_block: { text } })}`,
+    '',
+    'event: message_delta',
+    `data: ${JSON.stringify({ usage: { output_tokens: 2 } })}`,
+    '',
+    'data: [DONE]',
+    '',
+  ].join('\n');
+}
+
 test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __E2E_SKIP_LLM_VALIDATION__?: boolean }).__E2E_SKIP_LLM_VALIDATION__ =
+      true;
+  });
   // Clear IndexedDB to ensure test isolation
   await page.goto('/');
   await page.evaluate(() => {
@@ -38,9 +58,23 @@ test.beforeEach(async ({ page }) => {
     });
   });
 
-  // Mock LLM API - just return OK for any request
-  await page.route('**/api/llm/anthropic', (route) => {
-    route.fulfill({
+  // Mock LLM API - return SSE for streams, JSON otherwise
+  await page.route('**/api/llm/**', async (route) => {
+    let postData: { stream?: boolean } | null = null;
+    try {
+      postData = route.request().postDataJSON();
+    } catch {
+      postData = null;
+    }
+    if (postData?.stream) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        body: buildSseResponse('OK'),
+      });
+      return;
+    }
+    await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({

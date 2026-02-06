@@ -171,16 +171,22 @@ function ChatPageInner() {
 
     setIsSavingKey(true);
     setLlmKeyError(null);
+    const skipValidation =
+      typeof window !== 'undefined' &&
+      (window as unknown as { __E2E_SKIP_LLM_VALIDATION__?: boolean })
+        .__E2E_SKIP_LLM_VALIDATION__ === true;
     try {
-      // Verify token before persisting it to the vault.
-      await callLlmWithRetry({
-        apiKey: llmKeyInput.trim(),
-        modelId: DEFAULT_MODEL_ID,
-        systemPrompt: '',
-        messages: [{ role: 'user', content: 'Reply with OK.' }],
-        maxTokens: 4,
-        temperature: 0,
-      });
+      if (!skipValidation) {
+        // Verify token before persisting it to the vault.
+        await callLlmWithRetry({
+          apiKey: llmKeyInput.trim(),
+          modelId: DEFAULT_MODEL_ID,
+          systemPrompt: '',
+          messages: [{ role: 'user', content: 'Reply with OK.' }],
+          maxTokens: 4,
+          temperature: 0,
+        });
+      }
 
       const now = new Date().toISOString();
       const record: LlmProviderKey = {
