@@ -76,6 +76,7 @@ Near-term improvements after MVP is complete.
 - [ ] `[M]` **Privacy-preserving session insights endpoint**: `POST /v1/session-insights` for aggregate learning without PII.
   - _Collect: session duration bucket, days since last session, turn count, closure type, optional user rating, action step count._
   - _No plaintext content; purely metadata for product analytics._
+- [ ] `[S]` **Wire client analytics events to session insights endpoint**: send share/copy events with safe scalar properties.
 
 ### UX
 

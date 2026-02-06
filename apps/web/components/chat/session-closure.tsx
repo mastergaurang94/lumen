@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronDown, Calendar, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatSessionDate } from '@/lib/format';
+import { trackEvent } from '@/lib/analytics';
 
 interface SessionClosureProps {
   sessionDate: Date;
@@ -21,6 +22,8 @@ export function SessionClosure({
   isSummaryLoading = false,
 }: SessionClosureProps) {
   const [showActionSteps, setShowActionSteps] = React.useState(false);
+  const [shareStatus, setShareStatus] = React.useState<'idle' | 'success' | 'error'>('idle');
+  const [shareMethod, setShareMethod] = React.useState<'share' | 'copy' | null>(null);
 
   // Calculate suggested next session (7 days from session date)
   const suggestedNextSession = React.useMemo(() => {
@@ -28,6 +31,76 @@ export function SessionClosure({
     date.setDate(date.getDate() + 7);
     return date;
   }, [sessionDate]);
+
+  const canShare = Boolean(partingWords || actionSteps.length > 0);
+
+  const buildShareText = React.useCallback(() => {
+    const lines: string[] = [];
+    if (partingWords) {
+      lines.push(`“${partingWords}”`);
+      lines.push('');
+    }
+    if (actionSteps.length > 0) {
+      lines.push('What came up:');
+      for (const step of actionSteps.slice(0, 5)) {
+        lines.push(`- ${step}`);
+      }
+      lines.push('');
+    }
+    lines.push('Shared from Lumen');
+    if (typeof window !== 'undefined') {
+      lines.push(window.location.origin);
+    }
+    return lines.join('\n');
+  }, [actionSteps, partingWords]);
+
+  const handleShare = React.useCallback(async () => {
+    if (!canShare) return;
+
+    setShareStatus('idle');
+    setShareMethod(null);
+    const shareText = buildShareText();
+    trackEvent('share_reflection_clicked', {
+      has_parting_words: Boolean(partingWords),
+      action_steps_count: actionSteps.length,
+    });
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Lumen reflection',
+          text: shareText,
+        });
+        trackEvent('share_reflection_completed', { method: 'web_share' });
+        setShareStatus('success');
+        setShareMethod('share');
+        return;
+      }
+
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareText);
+        trackEvent('share_reflection_completed', { method: 'copy' });
+        setShareStatus('success');
+        setShareMethod('copy');
+        return;
+      }
+
+      throw new Error('Sharing unavailable');
+    } catch (error) {
+      const errorName = error instanceof DOMException ? error.name : undefined;
+      const isCancelled =
+        errorName === 'AbortError' ||
+        (error instanceof Error && error.message.toLowerCase().includes('abort'));
+      if (isCancelled) {
+        trackEvent('share_reflection_cancelled', { method: 'web_share' });
+        setShareStatus('idle');
+        setShareMethod(null);
+        return;
+      }
+      console.error('Share failed', error);
+      setShareStatus('error');
+    }
+  }, [actionSteps.length, buildShareText, canShare, partingWords]);
 
   return (
     <div className="atmosphere min-h-screen flex flex-col">
@@ -189,8 +262,28 @@ export function SessionClosure({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.1, duration: 0.5 }}
-            className="pt-4"
+            className="pt-4 space-y-3"
           >
+            <div className="space-y-2">
+              <Button
+                variant="default"
+                className="w-full h-12 text-base"
+                onClick={handleShare}
+                disabled={!canShare}
+              >
+                Share reflection
+              </Button>
+              {shareStatus === 'success' && (
+                <p className="text-xs text-muted-foreground">
+                  {shareMethod === 'copy'
+                    ? 'Copied to clipboard.'
+                    : 'Shared. Thank you for spreading the word.'}
+                </p>
+              )}
+              {shareStatus === 'error' && (
+                <p className="text-xs text-muted-foreground">Could not share. Try again.</p>
+              )}
+            </div>
             <Link href="/">
               <Button variant="outline" className="w-full h-12 text-base">
                 Return home
