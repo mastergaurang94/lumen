@@ -52,11 +52,14 @@ export function Sidebar() {
   const [open, setOpen] = React.useState(false);
   const [vaultInitialized, setVaultInitialized] = React.useState<boolean | null>(null);
   const [vaultUnlocked, setVaultUnlocked] = React.useState(isUnlocked());
-  const [authStatus, setAuthStatus] = React.useState<'idle' | 'checking' | 'authed' | 'unauth'>(
-    'idle',
-  );
+  const [retryDisabledUntil, setRetryDisabledUntil] = React.useState<number | null>(null);
+  const [authStatus, setAuthStatus] = React.useState<
+    'idle' | 'checking' | 'authed' | 'unauth' | 'error'
+  >('idle');
   const [authEmail, setAuthEmail] = React.useState<string | null>(null);
   const isDev = process.env.NODE_ENV === 'development';
+  const retryDisabled = retryDisabledUntil ? Date.now() < retryDisabledUntil : false;
+  const RETRY_COOLDOWN_MS = 10_000;
 
   React.useEffect(() => {
     const checkVault = async () => {
@@ -90,12 +93,18 @@ export function Sidebar() {
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         setAuthStatus('unauth');
+        setAuthEmail(null);
       } else {
-        setAuthStatus('unauth');
+        setAuthStatus('error');
       }
-      setAuthEmail(null);
     }
   }, []);
+
+  const handleRetryAuthSession = React.useCallback(async () => {
+    if (retryDisabled) return;
+    setRetryDisabledUntil(Date.now() + RETRY_COOLDOWN_MS);
+    await refreshAuthSession();
+  }, [refreshAuthSession, retryDisabled]);
 
   React.useEffect(() => {
     let isActive = true;
@@ -111,10 +120,10 @@ export function Sidebar() {
         if (!isActive) return;
         if (error instanceof ApiError && error.status === 401) {
           setAuthStatus('unauth');
+          setAuthEmail(null);
         } else {
-          setAuthStatus('unauth');
+          setAuthStatus('error');
         }
-        setAuthEmail(null);
       }
     };
 
@@ -248,6 +257,23 @@ export function Sidebar() {
                   <div className="flex items-center gap-2 text-sm text-foreground/80">
                     <span className="h-2 w-2 rounded-full bg-emerald-400" />
                     <span>{authEmail ?? 'Email unavailable'}</span>
+                  </div>
+                ) : authStatus === 'error' ? (
+                  <div className="space-y-2 text-sm text-foreground/80">
+                    <p>Unable to check session.</p>
+                    <button
+                      type="button"
+                      onClick={handleRetryAuthSession}
+                      disabled={retryDisabled}
+                      className={cn(
+                        'inline-flex items-center rounded-md border px-2 py-1 text-xs transition-colors',
+                        retryDisabled
+                          ? 'border-border/20 text-muted-foreground/50 cursor-not-allowed'
+                          : 'border-border/40 text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-border',
+                      )}
+                    >
+                      {retryDisabled ? 'Retrying soon…' : 'Retry'}
+                    </button>
                   </div>
                 ) : null}
               </div>
