@@ -117,7 +117,7 @@ Longer-term features that expand Lumen's capabilities.
 
 ### Memory
 
-- [ ] `[L]` **Pattern index**: Track loops and dynamics across sessions for coach awareness.
+- [ ] `[L]` **Pattern index**: Track loops and dynamics across sessions for lumen awareness.
 - [ ] `[M]` **Commitments tracker**: Log commitments with outcomes; surface in context when relevant.
 - [ ] `[S]` **Recognition moment index**: Quick recall of past recognition moments for reinforcement.
 - [ ] `[L]` **Retrieval layer (embeddings)**: Long-horizon context via semantic search over session history.
@@ -141,10 +141,10 @@ Longer-term features that expand Lumen's capabilities.
 
 ### Trust & Safety
 
-- [ ] `[M]` **Define coaching boundaries**: Clear non-therapeutic positioning in product and prompts.
+- [ ] `[M]` **Define boundaries**: Clear non-therapeutic positioning in product and prompts.
 - [ ] `[L]` **Crisis UX**: Immediate resources and escalation guidance when distress detected.
 - [ ] `[M]` **User reporting and content flagging**: Mechanism for users to report issues.
-- [ ] `[S]` **Safety policy references in system prompts**: Ensure coach knows boundaries.
+- [ ] `[S]` **Safety policy references in system prompts**: Ensure lumen knows boundaries.
 - [ ] `[M]` **Governance checks for high-risk content**: Guardrails for sensitive topics.
 
 ---

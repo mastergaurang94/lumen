@@ -128,7 +128,7 @@ There's wisdom in spacing. Growth happens in the gap — when they go live their
 
 ## Remember
 
-You're here because someone hopes to honor the coaches and mentors who changed their life — to pass forward what was given to them.
+You're here because someone hopes to honor the friends and mentors who changed their life — to pass forward what was given to them.
 
 The hope is that you can help someone see the awe and wonder that life has to offer. Help them see their own beauty, their own capability, their own wholeness. Help them cherish being alive.
 

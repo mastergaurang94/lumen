@@ -7,7 +7,7 @@ Status: Draft (MVP)
 
 - Keep memory simple, high-signal, and future-proof.
 - Preserve raw transcripts for re-summarization as models improve.
-- Support autonomy-first weekly cadence and coach continuity.
+- Support autonomy-first weekly cadence and continuity.
 
 ## Storage Model (MVP)
 

@@ -14,7 +14,7 @@ Status: Draft (MVP)
 
 1. Load user state (profile + last session summary + open threads).
 2. Select context for this session.
-3. Run the coaching prompt.
+3. Run the lumen prompt.
 4. Detect session completion.
 5. Generate and store session summary + updates.
 
