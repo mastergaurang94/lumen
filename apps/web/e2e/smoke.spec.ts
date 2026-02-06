@@ -160,13 +160,13 @@ test.describe('Smoke Test', () => {
 
       // Check if this is a summary request (contains JSON output instruction)
       const isSummaryRequest = postData?.messages?.some(
-        (msg: { content: string }) =>
+        (msg: { content?: string }) =>
           msg.content?.includes('Output JSON only') ||
           msg.content?.includes('Generate a session summary'),
       );
 
       // Check if this is a token validation request (contains "Reply with OK")
-      const isValidationRequest = postData?.messages?.some((msg: { content: string }) =>
+      const isValidationRequest = postData?.messages?.some((msg: { content?: string }) =>
         msg.content?.includes('Reply with OK'),
       );
 

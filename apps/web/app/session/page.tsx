@@ -190,7 +190,7 @@ function SessionContent({ spacing, chatHref }: { spacing: SessionSpacing; chatHr
       {/* Begin/Resume button - always enabled */}
       <Link href={chatHref} className="block">
         <Button className="w-full h-14 text-lg font-medium">
-          {hasActiveSession ? 'Continue' : "Let's go"}
+          {hasActiveSession ? 'Continue conversation' : "Let's go"}
         </Button>
       </Link>
 

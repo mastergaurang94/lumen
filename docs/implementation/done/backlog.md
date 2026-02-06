@@ -24,6 +24,9 @@ Completed backlog items done directly (not promoted to a full phase). Items that
 
 ### UX
 
+- **Session closure animated progress steps** — Replaced the static "Wrapping up..." spinner with a 4-step animated progression: wrapping up → storing locally → reflecting on conversation → done. Uses `ClosureStep` state machine instead of boolean `isSummaryLoading`. Fast steps enforce 600ms minimum display time so they don't flash by invisibly. Framer Motion `AnimatePresence` cross-fades between the progress view and the final "Until next time" screen. Also added `tsc --noEmit` to CI and pre-commit, fixed pre-existing `durationMs` scope bug in LLM client, and fixed E2E type errors.
+  - _Files: `apps/web/components/chat/session-closure.tsx`, `apps/web/app/chat/page.tsx`, `apps/web/types/session.ts`, `.github/workflows/ci.yml`, `.husky/pre-commit`, `apps/web/lib/llm/client.ts`, `apps/web/e2e/smoke.spec.ts`, `eslint.config.mjs`_
+
 - **Warm up all UI copy** — Comprehensive tone review aligning UI language with v1 system prompt philosophy. Removed clinical language ("set aside 60 min to reflect," "action steps," "suggested next session") and replaced with warm, invitational copy ("Come as you are," "Like catching up with an old friend," "See what unfolds"). Updated vision statement to reflect "Greatest Miracle in the World" inspiration: "A companion for the journey. Weekly conversations that walk you back to the world of living — restoring self-trust."
   - _Files: `app/page.tsx`, `app/session/page.tsx`, `components/chat/end-session-dialog.tsx`, `components/chat/session-closure.tsx`, `lib/session/summary.ts`_
   - _Docs: `docs/product/spec.md`, `docs/coaching/harness-flow.md`_

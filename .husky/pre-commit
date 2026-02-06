@@ -1,6 +1,9 @@
 # Run lint-staged on staged files (format + lint)
 pnpm exec lint-staged
 
+# Type check
+pnpm --filter web exec tsc --noEmit
+
 # Run unit tests
 pnpm --filter web test -- --run
 

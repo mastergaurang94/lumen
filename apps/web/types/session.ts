@@ -4,6 +4,9 @@
 
 export type SessionState = 'loading' | 'active' | 'complete' | 'unavailable' | 'error';
 
+// Progress steps during session closure (wrapping-up → storing → reflecting → done)
+export type ClosureStep = 'wrapping-up' | 'storing' | 'reflecting' | 'done';
+
 // Session spacing states: 'early_return' when < 7 days, 'ready' otherwise
 export type SessionSpacingState = 'early_return' | 'ready';
 
@@ -33,10 +36,4 @@ export interface Message {
   role: MessageRole;
   content: string;
   timestamp: Date;
-}
-
-export interface SessionClosureData {
-  sessionDate: Date;
-  recognitionMoment: string;
-  actionSteps: string[];
 }

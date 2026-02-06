@@ -32,7 +32,7 @@ import { buildSystemPrompt } from '@/lib/llm/prompts';
 import { buildLlmMessages } from '@/lib/session/messages';
 import { parseSummaryResponse, SUMMARY_PROMPT } from '@/lib/session/summary';
 import type { LlmProviderKey, SessionSummary } from '@/types/storage';
-import type { Message, SessionState } from '@/types/session';
+import type { ClosureStep, Message, SessionState } from '@/types/session';
 
 // Inner chat component (wrapped by error boundary)
 function ChatPageInner() {
@@ -48,7 +48,7 @@ function ChatPageInner() {
   const [llmKeyError, setLlmKeyError] = React.useState<string | null>(null);
   const [isSavingKey, setIsSavingKey] = React.useState(false);
   const [sessionSummary, setSessionSummary] = React.useState<SessionSummary | null>(null);
-  const [isSummaryLoading, setIsSummaryLoading] = React.useState(false);
+  const [closureStep, setClosureStep] = React.useState<ClosureStep>('wrapping-up');
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const [activeSessionId, setActiveSessionId] = React.useState<string | null>(null);
@@ -222,93 +222,107 @@ function ChatPageInner() {
   }, []);
 
   const confirmEndSession = React.useCallback(async () => {
-    // Abort any ongoing streaming
+    const MIN_STEP_MS = 600;
+
+    // Show closure screen immediately
     abortConversation();
     setShowEndSessionDialog(false);
+    setClosureStep('wrapping-up');
+    setSessionState('complete');
 
+    // Step 1: Wrapping up — flush and stop
+    const wrapStart = Date.now();
     await flushPendingMessages();
     stopActiveSegment();
+    const wrapElapsed = Date.now() - wrapStart;
+    if (wrapElapsed < MIN_STEP_MS) {
+      await new Promise((r) => setTimeout(r, MIN_STEP_MS - wrapElapsed));
+    }
+
+    // Step 2: Storing locally — save transcript, profile, metadata
+    setClosureStep('storing');
+    const storeStart = Date.now();
+    const now = new Date().toISOString();
+    const messagesSnapshot = [...messages];
 
     const transcript = transcriptRef.current;
     if (transcript) {
-      const now = new Date().toISOString();
       const updatedTranscript = { ...transcript, ended_at: now, updated_at: now };
       transcriptRef.current = updatedTranscript;
       await storageRef.current.saveTranscript(updatedTranscript);
     }
 
     const userId = userIdRef.current;
-    const sessionId = sessionIdRef.current;
-    const now = new Date().toISOString();
-    const messagesSnapshot = [...messages];
-    if (userId && sessionId) {
+    const sid = sessionIdRef.current;
+
+    if (userId && sid) {
       const profile = await storageRef.current.getProfile(userId);
       if (profile) {
         await storageRef.current.saveProfile({ ...profile, updated_at: now });
       }
     }
 
-    if (sessionId) {
+    if (sid) {
       const transcriptHash = lastTranscriptHashRef.current;
       if (transcriptHash) {
-        await enqueueSessionEnd(sessionId, arrayBufferToHex(transcriptHash));
+        await enqueueSessionEnd(sid, arrayBufferToHex(transcriptHash));
         void flushSessionOutbox();
+      }
+      clearActiveTimer(sid);
+    }
+
+    const storeElapsed = Date.now() - storeStart;
+    if (storeElapsed < MIN_STEP_MS) {
+      await new Promise((r) => setTimeout(r, MIN_STEP_MS - storeElapsed));
+    }
+
+    // Step 3: Reflecting — LLM summary (the slow step)
+    if (userId && sid && llmKey) {
+      setClosureStep('reflecting');
+      try {
+        const sessionNumber = transcriptRef.current?.session_number ?? 1;
+        const systemPrompt = buildSystemPrompt({
+          sessionNumber,
+          sessionContext: sessionContextRef.current ?? '',
+        });
+        const summaryText = await callLlmWithRetry({
+          apiKey: llmKey,
+          modelId: DEFAULT_MODEL_ID,
+          systemPrompt,
+          messages: [
+            ...buildLlmMessages(messagesSnapshot),
+            { role: 'user', content: SUMMARY_PROMPT },
+          ],
+          temperature: 0.2,
+          maxTokens: 800,
+        });
+        let parsed;
+        try {
+          parsed = parseSummaryResponse(summaryText);
+        } catch (parseError) {
+          console.error('Summary JSON parse failed. Raw response:', summaryText.slice(0, 500));
+          throw parseError;
+        }
+        const summary: SessionSummary = {
+          session_id: sid,
+          user_id: userId,
+          summary_text: parsed.summary_text,
+          parting_words: parsed.parting_words,
+          action_steps: parsed.action_steps,
+          open_threads: parsed.open_threads,
+          notes: null,
+          created_at: now,
+          updated_at: now,
+        };
+        await storageRef.current.saveSummary(summary);
+        setSessionSummary(summary);
+      } catch (error) {
+        console.error('Failed to generate session summary', error);
       }
     }
 
-    setSessionState('complete');
-    if (sessionId) {
-      clearActiveTimer(sessionId);
-    }
-
-    if (userId && sessionId && llmKey) {
-      setIsSummaryLoading(true);
-      const sessionNumber = transcriptRef.current?.session_number ?? 1;
-      const systemPrompt = buildSystemPrompt({
-        sessionNumber,
-        sessionContext: sessionContextRef.current ?? '',
-      });
-      // Ask the LLM for a structured session summary.
-      void (async () => {
-        try {
-          const summaryText = await callLlmWithRetry({
-            apiKey: llmKey,
-            modelId: DEFAULT_MODEL_ID,
-            systemPrompt,
-            messages: [
-              ...buildLlmMessages(messagesSnapshot),
-              { role: 'user', content: SUMMARY_PROMPT },
-            ],
-            temperature: 0.2,
-            maxTokens: 800,
-          });
-          let parsed;
-          try {
-            parsed = parseSummaryResponse(summaryText);
-          } catch (parseError) {
-            console.error('Summary JSON parse failed. Raw response:', summaryText.slice(0, 500));
-            throw parseError;
-          }
-          const summary: SessionSummary = {
-            session_id: sessionId,
-            user_id: userId,
-            summary_text: parsed.summary_text,
-            parting_words: parsed.parting_words,
-            action_steps: parsed.action_steps,
-            open_threads: parsed.open_threads,
-            notes: null,
-            created_at: now,
-            updated_at: now,
-          };
-          await storageRef.current.saveSummary(summary);
-          setSessionSummary(summary);
-        } catch (error) {
-          console.error('Failed to generate session summary', error);
-        } finally {
-          setIsSummaryLoading(false);
-        }
-      })();
-    }
+    // Step 4: Done — always reached
+    setClosureStep('done');
   }, [
     abortConversation,
     clearActiveTimer,
@@ -377,7 +391,7 @@ function ChatPageInner() {
         sessionDate={sessionDateRef.current}
         partingWords={sessionSummary?.parting_words ?? null}
         actionSteps={sessionSummary?.action_steps ?? []}
-        isSummaryLoading={isSummaryLoading}
+        closureStep={closureStep}
       />
     );
   }
