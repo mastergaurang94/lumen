@@ -165,7 +165,7 @@ test.describe('Smoke Test', () => {
     await expect(page).toHaveURL(/\/session$/);
 
     // Step 4: Begin session
-    await page.getByRole('button', { name: /begin session/i }).click();
+    await page.getByRole('button', { name: /let's go|continue/i }).click();
 
     // Step 5: Should navigate to chat
     await expect(page).toHaveURL(/\/chat$/);

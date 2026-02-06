@@ -11,6 +11,7 @@ type VerifyResponse = {
 
 type SessionStatusResponse = {
   status: 'ok';
+  email?: string;
 };
 
 /**
@@ -46,4 +47,20 @@ export async function getAuthSession(): Promise<boolean> {
     }
     throw error;
   }
+}
+
+/**
+ * Returns the current auth session details.
+ */
+export function getAuthSessionInfo() {
+  return apiFetch<SessionStatusResponse>('/v1/auth/session');
+}
+
+/**
+ * Clears the current auth session cookie.
+ */
+export function logout() {
+  return apiFetch<{ status: 'ok' }>('/v1/auth/logout', {
+    method: 'POST',
+  });
 }

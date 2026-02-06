@@ -48,6 +48,7 @@ func New(cfg config.Config) http.Handler {
 				"/session",
 				authHandler.SessionStatus,
 			)
+			r.Post("/logout", authHandler.Logout)
 		})
 		r.Route("/sessions", func(r chi.Router) {
 			r.Use(apimiddleware.RequireAuthSession(cfg, authSessionStore))
