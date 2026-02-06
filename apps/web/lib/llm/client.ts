@@ -158,7 +158,7 @@ type StreamState = {
 };
 
 function parseSseEvent(chunk: string): SseEvent | null {
-  const lines = chunk.split('\n');
+  const lines = chunk.split(/\r?\n/);
   let event = 'message';
   const dataLines: string[] = [];
 
@@ -267,6 +267,7 @@ async function callAnthropic(params: LlmCallParams): Promise<CallAnthropicResult
     throw new LlmResponseError(message, response.status, retryable, details ?? undefined);
   }
 
+  const durationMs = Math.round(performance.now() - startTime);
   const data = (await response.json()) as AnthropicResponse;
   const text = data.content?.map((part) => part.text ?? '').join('') ?? '';
   const inputTokens = data.usage?.input_tokens;
@@ -394,16 +395,25 @@ async function* callAnthropicStream(params: LlmCallParams): AsyncGenerator<strin
   const streamState: StreamState = { text: '' };
   let buffer = '';
   let lastYieldLength = 0;
+  let shouldStop = false;
 
   const flushEvent = (chunk: string) => {
     const parsed = parseSseEvent(chunk);
     if (!parsed) return;
-    if (parsed.data === '[DONE]') return;
+    if (parsed.data === '[DONE]') {
+      shouldStop = true;
+      return;
+    }
 
     let payloadData: AnthropicStreamEvent | null = null;
     try {
       payloadData = JSON.parse(parsed.data) as AnthropicStreamEvent;
     } catch {
+      return;
+    }
+
+    if (parsed.event === 'message_stop') {
+      shouldStop = true;
       return;
     }
 
@@ -439,23 +449,31 @@ async function* callAnthropicStream(params: LlmCallParams): AsyncGenerator<strin
       const { value, done } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
-      const parts = buffer.split('\n\n');
+      const parts = buffer.split(/\r?\n\r?\n/);
       buffer = parts.pop() ?? '';
       for (const part of parts) {
         if (!part.trim()) continue;
         const beforeLength = streamState.text.length;
         flushEvent(part);
+        if (shouldStop) {
+          await reader.cancel();
+          break;
+        }
         if (streamState.text.length > beforeLength && streamState.text.length > lastYieldLength) {
           lastYieldLength = streamState.text.length;
           yield streamState.text;
         }
       }
+      if (shouldStop) break;
     }
 
     buffer += decoder.decode();
     if (buffer.trim()) {
       const beforeLength = streamState.text.length;
       flushEvent(buffer);
+      if (shouldStop) {
+        await reader.cancel();
+      }
       if (streamState.text.length > beforeLength && streamState.text.length > lastYieldLength) {
         lastYieldLength = streamState.text.length;
         yield streamState.text;
