@@ -65,7 +65,7 @@ test('vault smoke flow', async ({ page }) => {
   await page.getByRole('button', { name: 'Continue' }).click();
 
   await expect(page).toHaveURL(/\/session$/);
-  await page.getByRole('button', { name: /begin session/i }).click();
+  await page.getByRole('button', { name: /let's go|continue/i }).click();
 
   await expect(page).toHaveURL(/\/chat$/);
 
@@ -96,8 +96,8 @@ test('vault smoke flow', async ({ page }) => {
   await page.getByRole('button', { name: 'Unlock' }).click();
 
   await expect(page).toHaveURL(/\/session$/);
-  // After unlock with existing session, button says "Resume session"
-  await page.getByRole('button', { name: /resume session/i }).click();
+  // After unlock with existing session, button says "Continue"
+  await page.getByRole('button', { name: /let's go|continue/i }).click();
 
   await expect(page).toHaveURL(/\/chat$/);
   await expect(page.getByText('Testing encrypted storage.')).toBeVisible();
