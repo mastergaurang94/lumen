@@ -14,7 +14,7 @@ A companion for the journey. Weekly conversations that walk you back to the worl
 ## Core Principles
 
 - Autonomy by design: sessions are designed for a weekly rhythm, encouraged conversationally.
-- Persistent memory: the coach knows the user's story across sessions.
+- Persistent memory: lumen knows the user's story across sessions.
 - Personalization: grounded in the user's influences and what resonates.
 - Privacy: no training usage of user data; local-first MVP with a path to zero-knowledge encrypted sync (v1.1).
 - Action-first: momentum precedes reflection.
@@ -26,7 +26,7 @@ A companion for the journey. Weekly conversations that walk you back to the worl
 
 ### Conversational Interface
 
-- Web-based chat with an AI coach.
+- Web-based chat with an AI-powered companion.
 - Freeform sessions (not time-boxed) but that feel like 45-60 minutes.
 - UI prompts user to set aside ~60 minutes before starting a session.
 - Clear privacy line in the UI that sessions are stored locally and not used for training.
@@ -39,15 +39,15 @@ A companion for the journey. Weekly conversations that walk you back to the worl
 
 - First session starts off guided for intake.
 - Subsequent sessions are dynamic and context-aware.
-- Coach accounts for time and seasonal context (holidays, summer, etc.) if
+- Lumen accounts for time and seasonal context (holidays, summer, etc.) if
   available.
 
 ### Session Spacing
 
 - Strong encouragement: sessions are designed for a 7-day rhythm.
-- Enforced conversationally by the coach, not hard-blocked by the system.
-- Coach acknowledges early returns, gently redirects, and models healthy boundaries.
-- If user insists on proceeding early, the coach may note the pattern but continues.
+- Enforced conversationally by lumen, not hard-blocked by the system.
+- Lumen acknowledges early returns, gently redirects, and models healthy boundaries.
+- If user insists on proceeding early, lumen may note the pattern but continues.
 
 ### Privacy and Data Ownership
 
@@ -80,7 +80,7 @@ Golden path (no setup required):
 
 - Primary provider: Opus 4.5
 - Minimal provider abstraction in MVP to allow fallback later.
-- Coach unavailable UI message when the model is down or unavailable.
+- Lumen unavailable UI message when the model is down or unavailable.
 
 ## Vector Search / Retrieval
 
@@ -94,7 +94,7 @@ Golden path (no setup required):
 As we build, incorporate best practices for conversational harnesses (or, more
 likely, invent new best practices) with the intention to potentially open-source
 this layer. This should draw from frontier-lab patterns (like coding harnesses)
-but adapted for coaching: context curation, memory hygiene, session closure
+but adapted for conversations: context curation, memory hygiene, session closure
 behavior, and safety-aware governance.
 
 - Treat the harness as product-critical: tests, prompt versioning, and deterministic context assembly.

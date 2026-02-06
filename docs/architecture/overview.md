@@ -7,7 +7,7 @@ Status: Draft (MVP)
 
 - Browser-first, local-first data storage (MVP) with a path to zero-knowledge encrypted sync.
 - Simple, production-ready separation of concerns.
-- Encourage 7-day session spacing (coach-enforced, not system-blocked).
+- Encourage 7-day session spacing (lumen-enforced, not system-blocked).
 - Maintain privacy (no training use).
 
 ## Components
@@ -18,7 +18,7 @@ Status: Draft (MVP)
   - Explicit session-closure UX (e.g., "Ready to wrap?" prompt + End Session action).
   - Local storage via IndexedDB + Dexie (encrypted with WebCrypto AES-GCM + PBKDF2).
   - Context assembly for model calls (per harness flow).
-  - Coach unavailable UI state for model outages.
+  - Lumen unavailable UI state for model outages.
 
 - **Go Service (API + Governance)**
   - Auth (email magic link).
@@ -39,7 +39,7 @@ Status: Draft (MVP)
 ## Data Flow
 
 1. User authenticates via magic link.
-2. Web app computes days since last session locally; coach handles spacing conversationally.
+2. Web app computes days since last session locally; lumen handles spacing conversationally.
 3. Web app loads local memory and builds context.
 4. Web app sends prompt + context directly to the LLM provider.
 5. Response returns to web app; transcript + summary stored locally.
