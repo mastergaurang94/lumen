@@ -1,6 +1,6 @@
 # Lumen Backlog
 
-Last Updated: 2026-02-05
+Last Updated: 2026-02-06
 
 Items are organized by time horizon (Now → Soon → Later) and category. Effort markers: `[S]`mall, `[M]`edium, `[L]`arge. Status: `🔄` = in progress (check before starting).
 
@@ -16,6 +16,7 @@ Immediate fixes and polish to ship a solid MVP.
   - _Code ref: `apps/web/app/chat/page.tsx:118`_
 - [ ] `[S]` **Abort signal propagation**: Pass client disconnect signal to upstream LLM requests; optionally queue pending responses for session resume.
   - _Code ref: `apps/web/app/api/llm/anthropic/route.ts:85`_
+- [ ] `[S]` **Opening system prompt tone**: Make the opening system prompt less formulaic and more conversational/welcoming to avoid sounding overly AI-like.
 
 ### Auth & Session
 
@@ -29,6 +30,7 @@ Immediate fixes and polish to ship a solid MVP.
 
 - [ ] `[S]` **First Lumen message renders twice briefly**: When the chat UI opens and Lumen sends the initial message, it appears duplicated for a split second before resolving to one. Likely a React state/render race condition.
   - _Code ref: `apps/web/app/chat/page.tsx` or `apps/web/lib/hooks/use-llm-conversation.ts`_
+- [ ] `[S]` **Streaming text pushes content upward**: While streaming, the response text shifts upward, making it hard to read in-progress. Stabilize the viewport so the user can comfortably read as tokens arrive.
 - [ ] `[M]` **Lumen message scroll behavior**: When a Lumen message appears, auto-scroll so the message is prominent (top 2/3 of viewport). Add sufficient whitespace below the last Lumen message so input field doesn't obscure it as user types longer responses.
 
   <details>
@@ -46,6 +48,11 @@ Immediate fixes and polish to ship a solid MVP.
 
   Transitions should feel smooth and purposeful. The third step will take longest since it's waiting on LLM inference.
   - _Code ref: `apps/web/app/chat/page.tsx:253-304`, `apps/web/components/chat/session-closure.tsx`_
+
+### Sync & Export
+
+- [ ] `[M]` **View past session transcripts**: Users should be able to review their own conversation history. It's their data. Add a session history view with decrypted transcript display.
+- [ ] `[M]` **Export/import for recovery**: User-facing backup and restore of encrypted vault.
 
 ---
 
@@ -77,10 +84,6 @@ Near-term improvements after MVP is complete.
   - _Collect: session duration bucket, days since last session, turn count, closure type, optional user rating, action step count._
   - _No plaintext content; purely metadata for product analytics._
 - [ ] `[S]` **Wire client analytics events to session insights endpoint**: send share/copy events with safe scalar properties.
-
-### UX
-
-- [ ] `[M]` **View past session transcripts**: Users should be able to review their own conversation history. It's their data. Add a session history view with decrypted transcript display.
 
 ### Design
 
