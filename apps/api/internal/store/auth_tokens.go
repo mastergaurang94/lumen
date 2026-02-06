@@ -94,3 +94,11 @@ func (s *AuthSessionStore) Validate(sessionID string, now time.Time) (string, bo
 
 	return record.Email, true
 }
+
+// Delete removes a login session token.
+func (s *AuthSessionStore) Delete(sessionID string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	delete(s.sessions, sessionID)
+}

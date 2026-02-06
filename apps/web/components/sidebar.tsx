@@ -18,6 +18,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { getAuthSessionInfo, logout } from '@/lib/api/auth';
+import { ApiError } from '@/lib/api/client';
 import { isUnlocked, lockVault } from '@/lib/crypto/key-context';
 import { db } from '@/lib/db';
 import { createStorageService } from '@/lib/storage/dexie-storage';
@@ -50,6 +52,10 @@ export function Sidebar() {
   const [open, setOpen] = React.useState(false);
   const [vaultInitialized, setVaultInitialized] = React.useState<boolean | null>(null);
   const [vaultUnlocked, setVaultUnlocked] = React.useState(isUnlocked());
+  const [authStatus, setAuthStatus] = React.useState<'idle' | 'checking' | 'authed' | 'unauth'>(
+    'idle',
+  );
+  const [authEmail, setAuthEmail] = React.useState<string | null>(null);
   const isDev = process.env.NODE_ENV === 'development';
 
   React.useEffect(() => {
@@ -75,6 +81,55 @@ export function Sidebar() {
     refreshVaultState();
   }, [open]);
 
+  const refreshAuthSession = React.useCallback(async () => {
+    setAuthStatus('checking');
+    try {
+      const session = await getAuthSessionInfo();
+      setAuthEmail(session.email ?? null);
+      setAuthStatus('authed');
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        setAuthStatus('unauth');
+      } else {
+        setAuthStatus('unauth');
+      }
+      setAuthEmail(null);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    let isActive = true;
+
+    const checkSession = async () => {
+      try {
+        setAuthStatus('checking');
+        const session = await getAuthSessionInfo();
+        if (!isActive) return;
+        setAuthEmail(session.email ?? null);
+        setAuthStatus('authed');
+      } catch (error) {
+        if (!isActive) return;
+        if (error instanceof ApiError && error.status === 401) {
+          setAuthStatus('unauth');
+        } else {
+          setAuthStatus('unauth');
+        }
+        setAuthEmail(null);
+      }
+    };
+
+    void checkSession();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    void refreshAuthSession();
+  }, [open, refreshAuthSession]);
+
   // Clears the in-memory key and returns to the unlock screen.
   const handleLock = async () => {
     if (!vaultInitialized || !vaultUnlocked) {
@@ -96,16 +151,30 @@ export function Sidebar() {
     setOpen(false);
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      await lockVault();
+      setVaultUnlocked(false);
+      setOpen(false);
+      router.push('/login');
+    }
+  };
+
   return (
     <>
       {/* Menu button */}
-      <button
-        onClick={() => setOpen(true)}
-        className="p-2 -m-2 text-muted-foreground hover:text-foreground transition-colors duration-200"
-      >
-        <Menu className="h-7 w-7" strokeWidth={1.75} />
-        <span className="sr-only">Open menu</span>
-      </button>
+      <div className="relative inline-flex items-center gap-2">
+        <button
+          onClick={() => setOpen(true)}
+          className="p-2 -m-2 text-muted-foreground hover:text-foreground transition-colors duration-200"
+        >
+          <Menu className="h-7 w-7" strokeWidth={1.75} />
+          <span className="sr-only">Open menu</span>
+        </button>
+        {authStatus === 'authed' && <SignedInIndicator email={authEmail} />}
+      </div>
 
       {/* Overlay for click-to-close */}
       <AnimatePresence>
@@ -157,11 +226,64 @@ export function Sidebar() {
             <SettingsSection title="Appearance">
               <AppearanceOptions />
               <PaletteOptions />
+              {isDev && (
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="w-full rounded-lg border border-destructive/40 px-3 py-2 text-sm text-destructive/80 hover:text-destructive hover:bg-destructive/5 hover:border-destructive transition-colors"
+                >
+                  Reset local data
+                </button>
+              )}
             </SettingsSection>
           </div>
 
           {/* Footer */}
-          <div className="p-6 pt-4 space-y-4">
+          <div className="p-6 pt-4 space-y-5">
+            <SettingsSection title="Account">
+              <div className="space-y-2">
+                {authStatus === 'checking' ? (
+                  <p className="text-sm text-foreground/80">Checking session…</p>
+                ) : authStatus === 'authed' ? (
+                  <div className="flex items-center gap-2 text-sm text-foreground/80">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                    <span>{authEmail ?? 'Email unavailable'}</span>
+                  </div>
+                ) : null}
+              </div>
+              {authStatus === 'unauth' && (
+                <Link
+                  href="/login"
+                  className="inline-flex w-full items-center justify-center rounded-lg border border-border/40 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-border transition-colors"
+                >
+                  Log in
+                </Link>
+              )}
+              {authStatus === 'authed' && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      type="button"
+                      className="w-full rounded-lg border border-border/40 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-border transition-colors"
+                    >
+                      Log out
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Log out of Lumen?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        You can always sign back in with a magic link.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleLogout}>Log out</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </SettingsSection>
             {vaultInitialized && vaultUnlocked && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -185,15 +307,6 @@ export function Sidebar() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-            )}
-            {isDev && (
-              <button
-                type="button"
-                onClick={handleReset}
-                className="w-full rounded-lg border border-destructive/40 px-3 py-2 text-sm text-destructive/80 hover:text-destructive hover:bg-destructive/5 hover:border-destructive transition-colors"
-              >
-                Reset local data
-              </button>
             )}
             <p className="text-sm text-muted-foreground/50 leading-relaxed">
               Your data stays on your device.
@@ -362,4 +475,28 @@ function PaletteButton({ active, onClick, label, swatchClass, isAuto }: PaletteB
       </span>
     </button>
   );
+}
+
+function SignedInIndicator({ email }: { email: string | null }) {
+  const initials = getInitialsFromEmail(email);
+
+  return (
+    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted text-[10px] font-medium text-foreground/80">
+      {initials}
+    </span>
+  );
+}
+
+function getInitialsFromEmail(email: string | null) {
+  if (!email) return 'U';
+  const handle = email.split('@')[0] ?? '';
+  const parts = handle.split(/[^a-zA-Z0-9]+/).filter(Boolean);
+  const letters = parts.length > 0 ? parts : [handle];
+  const initials = letters
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0] ?? '')
+    .join('');
+
+  return (initials || 'U').toUpperCase();
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/mastergaurang94/lumen/apps/api/internal/config"
 	"github.com/mastergaurang94/lumen/apps/api/internal/email"
 	"github.com/mastergaurang94/lumen/apps/api/internal/httpx"
+	apimiddleware "github.com/mastergaurang94/lumen/apps/api/internal/middleware"
 	"github.com/mastergaurang94/lumen/apps/api/internal/store"
 )
 
@@ -165,6 +166,34 @@ func (h *AuthHandler) Verify(w http.ResponseWriter, r *http.Request) {
 
 // SessionStatus handles GET /v1/auth/session.
 func (h *AuthHandler) SessionStatus(w http.ResponseWriter, r *http.Request) {
+	userID, _ := apimiddleware.UserIDFromContext(r.Context())
+	response := map[string]string{"status": "ok"}
+	if userID != "" {
+		response["email"] = userID
+	}
+	httpx.WriteJSON(w, http.StatusOK, response)
+}
+
+// Logout handles POST /v1/auth/logout.
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie(h.cfg.AuthCookieName)
+	if err == nil && cookie.Value != "" {
+		h.sessions.Delete(cookie.Value)
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     h.cfg.AuthCookieName,
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   h.cfg.Env != "development",
+		SameSite: http.SameSiteLaxMode,
+		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
+	})
+
+	h.logEvent(r, "auth_logout")
+
 	httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
