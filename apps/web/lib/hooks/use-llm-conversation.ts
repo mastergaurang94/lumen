@@ -1,15 +1,14 @@
 import * as React from 'react';
 
 import {
-  callLlmWithRetry,
   LlmAbortError,
   LlmInvalidKeyError,
   LlmUnavailableError,
+  streamLlmWithRetry,
 } from '@/lib/llm/client';
 import { DEFAULT_MODEL_ID } from '@/lib/llm/model-config';
 import { buildSystemPrompt } from '@/lib/llm/prompts';
 import { buildLlmMessages, generateMessageId } from '@/lib/session/messages';
-import { streamText } from '@/lib/session/stream';
 import type { Message, SessionState } from '@/types/session';
 import type { SessionTranscript } from '@/types/storage';
 
@@ -45,9 +44,7 @@ type UseLlmConversationResult = {
 /**
  * Manages LLM calls, streaming, and message state for a session.
  *
- * Note: Streaming is simulated — the full response is fetched first, then
- * displayed incrementally via streamText(). This simplifies error handling
- * and retry logic while maintaining a natural typing feel.
+ * Streams live LLM responses and updates message state.
  */
 export function useLlmConversation({
   messages,
@@ -108,22 +105,32 @@ export function useLlmConversation({
           sessionNumber,
           sessionContext: sessionContextRef.current ?? '',
         });
-        const responseText = await callLlmWithRetry({
+        let responseText = '';
+        let hasStreamed = false;
+        for await (const partial of streamLlmWithRetry({
           apiKey: llmKey,
           modelId: DEFAULT_MODEL_ID,
           systemPrompt,
           messages: [{ role: 'user', content: INITIAL_LUMEN_INSTRUCTION }],
           signal: abortControllerRef.current?.signal,
-        });
-
-        for await (const partial of streamText(responseText, abortControllerRef.current?.signal)) {
+        })) {
+          if (!hasStreamed) {
+            setIsTyping(false);
+            hasStreamed = true;
+          }
+          responseText = partial;
           setStreamingContent(partial);
         }
 
+        if (!hasStreamed) {
+          setIsTyping(false);
+        }
+
+        const finalText = responseText.trim();
         const lumenMessage: Message = {
           id: generateMessageId(),
           role: 'lumen',
-          content: responseText,
+          content: finalText,
           timestamp: new Date(),
         };
         setMessages([lumenMessage]);
@@ -201,9 +208,11 @@ export function useLlmConversation({
       // Create abort controller for this request + stream
       abortControllerRef.current = new AbortController();
 
-      let responseText = '';
       try {
-        responseText = await callLlmWithRetry(
+        setStreamingContent('');
+        let responseText = '';
+        let hasStreamed = false;
+        for await (const partial of streamLlmWithRetry(
           {
             apiKey: llmKey,
             modelId: DEFAULT_MODEL_ID,
@@ -212,7 +221,30 @@ export function useLlmConversation({
             signal: abortControllerRef.current.signal,
           },
           2,
-        );
+        )) {
+          if (!hasStreamed) {
+            setIsTyping(false);
+            hasStreamed = true;
+          }
+          responseText = partial;
+          setStreamingContent(partial);
+        }
+
+        if (!hasStreamed) {
+          setIsTyping(false);
+        }
+
+        // Finalize the message
+        const finalText = responseText.trim();
+        const lumenMessage: Message = {
+          id: generateMessageId(),
+          role: 'lumen',
+          content: finalText,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, lumenMessage]);
+        startActiveSegment();
+        queueMessageForChunk(lumenMessage);
       } catch (error) {
         setIsTyping(false);
         setStreamingContent(null);
@@ -229,28 +261,6 @@ export function useLlmConversation({
         } else {
           onError();
         }
-        return;
-      }
-
-      // Hide typing indicator, start streaming
-      setIsTyping(false);
-      setStreamingContent('');
-
-      try {
-        for await (const partial of streamText(responseText, abortControllerRef.current.signal)) {
-          setStreamingContent(partial);
-        }
-
-        // Finalize the message
-        const lumenMessage: Message = {
-          id: generateMessageId(),
-          role: 'lumen',
-          content: responseText,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, lumenMessage]);
-        startActiveSegment();
-        queueMessageForChunk(lumenMessage);
       } finally {
         setStreamingContent(null);
         abortControllerRef.current = null;

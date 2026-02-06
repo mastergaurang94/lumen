@@ -23,6 +23,7 @@ type ProxyPayload = {
   messages: Array<{ role: 'user' | 'assistant'; content: string }>;
   temperature?: number;
   max_tokens?: number;
+  stream?: boolean;
 };
 
 const IS_DEV = process.env.NODE_ENV !== 'production';
@@ -94,6 +95,7 @@ export async function POST(request: Request) {
         role: message.role,
         content: [{ type: 'text', text: message.content }],
       })),
+      stream: payload.stream ?? false,
     };
 
     llmLogger.info({
@@ -102,10 +104,16 @@ export async function POST(request: Request) {
       messageCount: payload.messages.length,
     });
 
+    const headers = buildAnthropicHeaders(payload.apiKey);
+    if (payload.stream) {
+      headers.set('accept', 'text/event-stream');
+    }
+
     const response = await fetch(ANTHROPIC_API_URL, {
       method: 'POST',
-      headers: buildAnthropicHeaders(payload.apiKey),
+      headers,
       body: JSON.stringify(upstreamBody),
+      signal: request.signal,
     });
 
     const durationMs = Math.round(performance.now() - startTime);
@@ -126,6 +134,31 @@ export async function POST(request: Request) {
         statusCode: response.status,
       });
       return NextResponse.json({ error: { message: errorMessage } }, { status: response.status });
+    }
+
+    if (payload.stream) {
+      if (!response.body) {
+        llmLogger.error({
+          event: 'llm_request_error',
+          model: payload.model,
+          durationMs,
+          errorType: 'StreamError',
+          errorMessage: 'Missing response stream.',
+          statusCode: 502,
+        });
+        return NextResponse.json(
+          { error: { message: 'Missing response stream.' } },
+          { status: 502 },
+        );
+      }
+      return new Response(response.body, {
+        status: response.status,
+        headers: {
+          'content-type': response.headers.get('content-type') ?? 'text/event-stream',
+          'cache-control': 'no-cache',
+          connection: 'keep-alive',
+        },
+      });
     }
 
     const responseText = await response.text();

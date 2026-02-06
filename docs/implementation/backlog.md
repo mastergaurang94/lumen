@@ -12,19 +12,11 @@ Immediate fixes and polish to ship a solid MVP.
 
 ### LLM Integration
 
-- [ ] `[M]` **Real LLM streaming**: Replace mock word-by-word streaming with Anthropic SSE endpoint for true incremental response display.
-  - _Code ref: `apps/web/app/chat/page.tsx:118`_
-- [ ] `[S]` **Abort signal propagation**: Pass client disconnect signal to upstream LLM requests; optionally queue pending responses for session resume.
-  - _Code ref: `apps/web/app/api/llm/anthropic/route.ts:85`_
 - [ ] `[S]` **Opening system prompt tone**: Make the opening system prompt less formulaic and more conversational/welcoming to avoid sounding overly AI-like.
 
 ### Auth & Session
 
-- [ ] `[S]` **Sidebar auth state**: Add signed-in indicator to sidebar showing current user.
-- [ ] `[S]` **Logout action**: Add logout button to sidebar.
-  - _Depends on: logout endpoint_
-- [ ] `[S]` **Logout endpoint**: Add `POST /v1/auth/logout` to clear the session cookie.
-  - _Backend task_
+_No open items._
 
 ### UX
 

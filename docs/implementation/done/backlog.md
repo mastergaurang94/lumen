@@ -34,7 +34,20 @@ Completed backlog items done directly (not promoted to a full phase). Items that
 - **Session reflection sharing (copy + share sheet)** — Added share/copy CTA on session closure with cancel-safe UX, share/copy-specific success messaging, and lightweight client event logging.
   - _Files: `apps/web/components/chat/session-closure.tsx`, `apps/web/lib/analytics.ts`_
 
+### Auth & Session
+
+- **Sidebar auth state + logout** — Added signed-in indicator with current email, plus logout action in the sidebar. Implemented `POST /v1/auth/logout` to clear the session cookie and invalidate the in-memory session. Session status now returns the authenticated email.
+  - _Files: `apps/web/components/sidebar.tsx`, `apps/web/lib/api/auth.ts`, `apps/api/internal/handlers/auth.go`, `apps/api/internal/server/router.go`, `apps/api/internal/store/auth_tokens.go`_
+
 ### Build / Infra
 
 - **Next.js 15 Suspense fix** — Replaced `useSearchParams()` with `window.location.search` pattern to fix static generation errors. Created shared `lib/hooks/dev-auth.ts` utility.
   - _Files: `lib/hooks/dev-auth.ts`, `lib/hooks/use-auth-session-guard.ts`, `app/session/page.tsx`, `app/setup/page.tsx`, `app/unlock/page.tsx`, `app/login/callback/page.tsx`_
+
+### LLM Integration
+
+- **Real LLM streaming** — Replaced simulated word-by-word streaming with Anthropic SSE streaming, including a client-side SSE parser and live incremental updates.
+  - _Files: `apps/web/lib/llm/client.ts`, `apps/web/lib/hooks/use-llm-conversation.ts`_
+
+- **Abort signal propagation** — Forwarded client abort signals to the Anthropic upstream request to cancel in-flight streams.
+  - _Files: `apps/web/app/api/llm/anthropic/route.ts`_
