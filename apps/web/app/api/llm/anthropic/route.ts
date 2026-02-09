@@ -60,6 +60,13 @@ export async function POST(request: Request) {
 
   try {
     const payload = (await request.json()) as ProxyPayload;
+
+    // Server-managed LLM token: inject server-side key when available.
+    const serverToken = process.env.ANTHROPIC_TOKEN;
+    if (serverToken) {
+      payload.apiKey = serverToken;
+    }
+
     if (!payload?.apiKey) {
       llmLogger.warn({
         event: 'llm_request_error',

@@ -34,6 +34,9 @@ import { parseSummaryResponse, SUMMARY_PROMPT } from '@/lib/session/summary';
 import type { LlmProviderKey, SessionSummary } from '@/types/storage';
 import type { ClosureStep, Message, SessionState } from '@/types/session';
 
+// When true, the server injects the LLM token — skip client-side key management.
+const LLM_SERVER_MODE = process.env.NEXT_PUBLIC_LLM_SERVER_MODE === 'true';
+
 // Inner chat component (wrapped by error boundary)
 function ChatPageInner() {
   const router = useRouter();
@@ -125,11 +128,26 @@ function ChatPageInner() {
       setLlmKeyError(message);
     },
     onUnavailable: () => setSessionState('unavailable'),
-    onError: () => setSessionState('error'),
+    onError: () => {
+      if (LLM_SERVER_MODE) {
+        setLlmKey(null);
+        setLlmKeyError('Server token unavailable. Add a token to continue.');
+        setSessionState('active');
+        return;
+      }
+      setSessionState('error');
+    },
   });
 
   React.useEffect(() => {
     if (!vaultReady) return;
+
+    // In server mode the LLM key lives on the server — skip IndexedDB.
+    if (LLM_SERVER_MODE) {
+      setLlmKey('server-managed');
+      setLlmKeyReady(true);
+      return;
+    }
 
     const loadProviderKey = async () => {
       try {
