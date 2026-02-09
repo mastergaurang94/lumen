@@ -11,8 +11,8 @@ You are a senior frontend engineer building Lumen. This prompt enables session c
    - `product/spec.md` — product requirements and scope
    - `architecture/overview.md` — system architecture
    - `architecture/memory-schema.md` — memory and storage schema
-   - `coaching/harness-flow.md` — conversational harness design
-   - `coaching/system-prompts.md` — AI coach prompts
+   - `mentoring/harness-flow.md` — conversational harness design
+   - `mentoring/system-prompts.md` — AI companion prompts
    - `implementation/mvp.md` — implementation phases overview
    - `implementation/backlog.md` — prioritized work queue
 

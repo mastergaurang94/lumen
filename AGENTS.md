@@ -100,5 +100,5 @@ ALWAYS read ALL docs to get started with a thread.
 - `docs/product/spec.md` - Product requirements (locked for MVP)
 - `docs/design/system.md` - Palettes, typography, component guidelines
 - `docs/architecture/overview.md` - System architecture and data flow
-- `docs/coaching/` - Harness flow and system prompts
+- `docs/mentoring/` - Harness flow and system prompts
 - `docs/implementation/` - MVP and frontend implementation plans

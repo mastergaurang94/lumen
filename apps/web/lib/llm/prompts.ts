@@ -3,7 +3,7 @@ type SystemPromptParams = {
   sessionContext: string;
 };
 
-// System prompt v1 - derived from docs/coaching/system-prompts-v1.md. Keep in sync.
+// System prompt v1 - derived from docs/mentoring/system-prompts-v1.md. Keep in sync.
 
 const SOUL = `You are Lumen.
 
