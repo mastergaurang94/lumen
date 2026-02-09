@@ -35,8 +35,8 @@ Last Updated: 2026-01-31
 - Replace hard UI gate with soft advisory nudge
 - Enable coach to enforce session spacing conversationally (via system prompt + context injection)
 - Inject `days_since_last_session` and `last_session_action_steps` into context assembly
-- Update `coaching/system-prompts.md` with spacing enforcement instructions
-- Update `coaching/harness-flow.md` to remove server-side gating requirement
+- Update `mentoring/system-prompts.md` with spacing enforcement instructions
+- Update `mentoring/harness-flow.md` to remove server-side gating requirement
 
 ### Non-Goals (Phase 4)
 
@@ -95,7 +95,7 @@ Files to modify:
 
 **Status: ✅ Complete**
 
-Add spacing awareness to coaching prompts in `docs/coaching/system-prompts.md`.
+Add spacing awareness to coaching prompts in `docs/mentoring/system-prompts.md`.
 
 Tasks:
 
@@ -114,7 +114,7 @@ Tasks:
 
 Files modified:
 
-- `docs/coaching/system-prompts.md`
+- `docs/mentoring/system-prompts.md`
 
 ---
 
@@ -122,7 +122,7 @@ Files modified:
 
 **Status: ✅ Complete**
 
-Remove server-side gating requirement from `docs/coaching/harness-flow.md`.
+Remove server-side gating requirement from `docs/mentoring/harness-flow.md`.
 
 Tasks:
 
@@ -135,7 +135,7 @@ Tasks:
 
 Files modified:
 
-- `docs/coaching/harness-flow.md`
+- `docs/mentoring/harness-flow.md`
 
 ---
 
