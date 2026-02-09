@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"github.com/mastergaurang94/lumen/apps/api/internal/config"
+	"github.com/mastergaurang94/lumen/apps/api/internal/email"
 	"github.com/mastergaurang94/lumen/apps/api/internal/server"
+	"github.com/mastergaurang94/lumen/apps/api/internal/store"
 )
 
 func TestAuthRequestAndVerifyFlow(t *testing.T) {
@@ -150,7 +152,14 @@ func newTestServer() http.Handler {
 		AuthCookieName:  "lumen_session",
 	}
 
-	return server.New(cfg)
+	deps := server.Dependencies{
+		Tokens:   store.NewAuthTokenStore(),
+		Sessions: store.NewAuthSessionStore(),
+		Coaching: store.NewCoachingSessionStore(),
+		Emailer:  &email.DevProvider{},
+	}
+
+	return server.New(cfg, deps)
 }
 
 func extractToken(t *testing.T, rawLink string) string {
