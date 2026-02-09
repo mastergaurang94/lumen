@@ -1,0 +1,4 @@
+.env
+.env.*
+*_test.go
+**/*_test.go
