@@ -19,6 +19,8 @@ type Config struct {
 	SessionTTL      time.Duration
 	AuthTokenSecret string
 	AuthCookieName  string
+	ResendAPIKey    string
+	ResendFromEmail string
 }
 
 // Load reads environment variables and applies sensible defaults for local development.
@@ -40,6 +42,8 @@ func Load() Config {
 		SessionTTL:      getEnvDuration("SESSION_TTL", 24*time.Hour),
 		AuthTokenSecret: getEnv("AUTH_TOKEN_SECRET", "dev-secret-change-me"),
 		AuthCookieName:  getEnv("AUTH_COOKIE_NAME", "lumen_session"),
+		ResendAPIKey:    getEnv("RESEND_API_KEY", ""),
+		ResendFromEmail: getEnv("RESEND_FROM_EMAIL", "Lumen <noreply@example.com>"),
 	}
 }
 
