@@ -54,3 +54,29 @@ Completed backlog items done directly (not promoted to a full phase). Items that
 
 - **Abort signal propagation** — Forwarded client abort signals to the Anthropic upstream request to cancel in-flight streams.
   - _Files: `apps/web/app/api/llm/anthropic/route.ts`_
+
+### Go Live (Phase 7)
+
+- **Store interface extraction** — Defined `AuthTokens`, `AuthSessions`, `CoachingSessions` interfaces in `store/interfaces.go`. Handlers and middleware now depend on interfaces, not concrete types. Compile-time compliance checks on in-memory stores.
+  - _Files: `internal/store/interfaces.go`, `internal/store/auth_tokens.go`, `internal/store/session_metadata.go`, `internal/handlers/auth.go`, `internal/handlers/sessions.go`, `internal/middleware/auth.go`_
+
+- **Dependency injection refactor** — Added `server.Dependencies` struct. `server.New(cfg)` → `server.New(cfg, deps)`. `main.go` builds and wires all dependencies. Test helpers updated.
+  - _Files: `internal/server/router.go`, `cmd/api/main.go`, `internal/handlers/auth_test.go`, `internal/handlers/sessions_test.go`_
+
+- **SQLite persistent storage** — Pure-Go SQLite via `modernc.org/sqlite` (no CGO). Schema migration on open, WAL mode, RFC3339 text timestamps, transactional token consumption. Selected when `DATABASE_URL` is set, falls back to in-memory.
+  - _Files: `internal/store/sqlite/sqlite.go`, `internal/store/sqlite/auth_tokens.go`, `internal/store/sqlite/auth_sessions.go`, `internal/store/sqlite/coaching_sessions.go`, `cmd/api/main.go`, `go.mod`_
+
+- **Resend email provider** — Direct HTTP POST to Resend API (no SDK). Branded HTML template with sage green CTA. Selected when `RESEND_API_KEY` is set, falls back to DevProvider.
+  - _Files: `internal/email/resend.go`, `internal/config/config.go`, `cmd/api/main.go`_
+
+- **Server-side LLM token** — Injects `ANTHROPIC_TOKEN` env var in proxy route before validation. `NEXT_PUBLIC_LLM_SERVER_MODE` skips IndexedDB key loading and ProviderGate on client, using `'server-managed'` sentinel.
+  - _Files: `apps/web/app/api/llm/anthropic/route.ts`, `apps/web/app/chat/page.tsx`_
+
+- **Next.js API rewrites** — `next.config.mjs` rewrites `/v1/:path*` to `API_BACKEND_URL` when set. Solves cross-origin cookie problem (Vercel → Fly.io same-origin proxy).
+  - _Files: `apps/web/next.config.mjs`_
+
+- **Dockerfile + Fly.io config** — Multi-stage Docker build (`golang:1.24-alpine` → `alpine:3.19`), `CGO_ENABLED=0`. `fly.toml` with health check, volume mount at `/data` for SQLite persistence.
+  - _Files: `apps/api/Dockerfile`, `apps/api/fly.toml`, `apps/api/.dockerignore`_
+
+- **Environment documentation** — `.env.example` for both apps with all env vars and commented defaults.
+  - _Files: `apps/api/.env.example`, `apps/web/.env.example`_

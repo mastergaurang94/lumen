@@ -52,11 +52,6 @@ Near-term improvements after MVP is complete.
   - _Desktop focus; may require native wrapper for keychain access._
 - [ ] `[M]` **Passphrase recovery mechanism**: Generate recovery key at setup, stored offline by user. Enables vault recovery if passphrase forgotten.
 
-### Auth & Session
-
-- [ ] `[M]` **Move auth/session storage to DB/Redis**: Tokens, sessions, and rate limits currently in-memory; move to persistent store for multi-instance deployment.
-  - _Backend task_
-
 ### Observability
 
 - [ ] `[M]` **Privacy-preserving session insights endpoint**: `POST /v1/session-insights` for aggregate learning without PII.
