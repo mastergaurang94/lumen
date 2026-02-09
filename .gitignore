@@ -19,3 +19,7 @@ apps/web/test-results/
 
 
 dev-artifacts/
+
+# Personal discovery transcripts (kept local only)
+docs/coaching/system-prompt-discovery-raw.md
+docs/coaching/system-prompt-discovery.md
