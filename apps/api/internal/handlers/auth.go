@@ -30,8 +30,8 @@ const (
 // AuthHandler implements magic-link authentication endpoints.
 type AuthHandler struct {
 	cfg         config.Config
-	tokens      *store.AuthTokenStore
-	sessions    *store.AuthSessionStore
+	tokens      store.AuthTokens
+	sessions    store.AuthSessions
 	emailer     email.Provider
 	rateLimiter *RateLimiter
 	clock       func() time.Time
@@ -39,7 +39,7 @@ type AuthHandler struct {
 }
 
 // NewAuthHandler wires dependencies for auth routes.
-func NewAuthHandler(cfg config.Config, tokens *store.AuthTokenStore, sessions *store.AuthSessionStore, emailer email.Provider) *AuthHandler {
+func NewAuthHandler(cfg config.Config, tokens store.AuthTokens, sessions store.AuthSessions, emailer email.Provider) *AuthHandler {
 	return &AuthHandler{
 		cfg:         cfg,
 		tokens:      tokens,

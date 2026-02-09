@@ -12,6 +12,12 @@ type AuthTokenRecord struct {
 	Used      bool
 }
 
+// Compile-time interface compliance checks.
+var (
+	_ AuthTokens   = (*AuthTokenStore)(nil)
+	_ AuthSessions = (*AuthSessionStore)(nil)
+)
+
 // AuthTokenStore keeps auth tokens in memory for MVP usage.
 type AuthTokenStore struct {
 	mu     sync.RWMutex

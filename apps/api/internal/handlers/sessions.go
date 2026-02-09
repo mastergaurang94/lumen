@@ -13,12 +13,12 @@ import (
 
 // CoachingSessionsHandler implements coaching session metadata endpoints.
 type CoachingSessionsHandler struct {
-	store *store.CoachingSessionStore
+	store store.CoachingSessions
 	clock func() time.Time
 }
 
 // NewCoachingSessionsHandler wires dependencies for coaching session metadata routes.
-func NewCoachingSessionsHandler(store *store.CoachingSessionStore) *CoachingSessionsHandler {
+func NewCoachingSessionsHandler(store store.CoachingSessions) *CoachingSessionsHandler {
 	return &CoachingSessionsHandler{
 		store: store,
 		clock: time.Now,

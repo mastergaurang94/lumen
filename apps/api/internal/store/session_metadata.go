@@ -14,6 +14,9 @@ type CoachingSession struct {
 	TranscriptHash string
 }
 
+// Compile-time interface compliance check.
+var _ CoachingSessions = (*CoachingSessionStore)(nil)
+
 // CoachingSessionStore stores coaching session metadata in memory for MVP usage.
 type CoachingSessionStore struct {
 	mu       sync.RWMutex
