@@ -8,7 +8,7 @@ export default defineConfig({
   retries: isCI ? 1 : 0,
   reporter: isCI ? [['html', { outputFolder: 'playwright-report' }], ['github']] : 'list',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://127.0.0.1:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -23,8 +23,8 @@ export default defineConfig({
   ...(isCI || process.env.PLAYWRIGHT_START_SERVER
     ? {
         webServer: {
-          command: 'pnpm dev',
-          url: 'http://localhost:3000',
+          command: 'pnpm exec next dev --hostname 127.0.0.1',
+          url: 'http://127.0.0.1:3000',
           reuseExistingServer: false,
           cwd: __dirname,
           timeout: 120_000,
