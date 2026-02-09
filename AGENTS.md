@@ -88,6 +88,11 @@ Husky automatically runs checks before every commit (see `.husky/pre-commit`):
 
 Commits are blocked if any check fails. Keep `.husky/pre-commit` and `.github/workflows/ci.yml` in sync when adding new checks.
 
+## Napkin
+
+Keep `.claude/napkin.md` updated with high-signal preferences, pitfalls, conventions, and
+decisions as they emerge. This is the persistent scratchpad across sessions.
+
 ## Key Documentation
 
 ALWAYS read ALL docs to get started with a thread.
