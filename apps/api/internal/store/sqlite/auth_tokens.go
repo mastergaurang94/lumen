@@ -33,7 +33,9 @@ func (s *AuthTokenStore) Consume(tokenHash string, now time.Time) (string, bool)
 	if err != nil {
 		return "", false
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	nowStr := now.Format(time.RFC3339)
 	res, err := tx.Exec(
