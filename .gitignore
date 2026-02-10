@@ -20,6 +20,5 @@ apps/web/test-results/
 
 dev-artifacts/
 
-# Personal discovery transcripts (kept local only)
-docs/mentoring/system-prompt-discovery-raw.md
-docs/mentoring/system-prompt-discovery.md
+# Mentoring folder — prompts, discovery transcripts, product thinking (kept local only)
+docs/mentoring/
