@@ -1,6 +1,6 @@
 # Lumen Backlog
 
-Last Updated: 2026-02-06
+Last Updated: 2026-02-10
 
 Items are organized by time horizon (Now → Soon → Later) and category. Effort markers: `[S]`mall, `[M]`edium, `[L]`arge. Status: `🔄` = in progress (check before starting).
 
