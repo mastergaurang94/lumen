@@ -1,25 +1,35 @@
-app = "lumen-api"
-primary_region = "iad"
+# fly.toml app configuration file generated for lumen-api on 2026-02-10T07:54:33-06:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'lumen-api'
+primary_region = 'iad'
 
 [build]
 
 [env]
-  APP_ENV = "production"
+  APP_ENV = 'production'
+
+[[mounts]]
+  source = 'lumen_data'
+  destination = '/data'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = "stop"
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
 
-[[http_service.checks]]
-  grace_period = "10s"
-  interval = "30s"
-  method = "GET"
-  path = "/v1/health"
-  timeout = "5s"
+  [[http_service.checks]]
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/v1/health'
 
-[mounts]
-  source = "lumen_data"
-  destination = "/data"
+[[vm]]
+  memory = '1gb'
+  cpus = 1
+  memory_mb = 1024
