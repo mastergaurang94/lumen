@@ -18,7 +18,7 @@ export default defineConfig({
       },
     },
     // Limit to app tests to avoid running node_modules suites.
-    include: ['lib/__tests__/**/*.test.ts'],
+    include: ['lib/**/*.test.ts'],
     exclude: ['e2e/**'],
   },
 });

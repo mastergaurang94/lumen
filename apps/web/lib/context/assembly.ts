@@ -2,7 +2,7 @@ import { decrypt } from '@/lib/crypto';
 import { getLastSession, getRecentSummaries, getSessionNumber } from '@/lib/storage/queries';
 import { deserializeMessages } from '@/lib/storage/transcript';
 import type { StorageService } from '@/lib/storage';
-import { DEFAULT_MODEL_ID, getModelConfig } from '@/lib/llm/model-config';
+import { DEFAULT_MODEL_ID, getModelContextBudget } from '@/lib/llm/model-config';
 import type { Message } from '@/types/session';
 import type { SessionSummary, SessionTranscript } from '@/types/storage';
 
@@ -24,10 +24,6 @@ type BuildSessionContextParams = {
   now?: Date;
 };
 
-// Budgeting is token-based; we approximate tokens via chars/4 for MVP.
-// This keeps selection deterministic and lets us tune per-model budgets later.
-const DEFAULT_TOTAL_CONTEXT_TOKENS = 200000;
-const DEFAULT_RESERVED_TOKENS = 60000;
 const DEFAULT_MAX_TRANSCRIPTS = 10;
 const DEFAULT_MAX_SUMMARIES = 3;
 
@@ -109,9 +105,7 @@ function tokensToChars(tokens: number): number {
 // Resolve a model-aware budget while allowing per-call overrides.
 function resolveMaxChars(options: BuildSessionContextOptions | undefined): number {
   const modelId = options?.modelId ?? DEFAULT_MODEL_ID;
-  const modelConfig = getModelConfig(modelId);
-  const modelContextTokens = modelConfig?.contextTokens ?? DEFAULT_TOTAL_CONTEXT_TOKENS;
-  const modelReservedTokens = modelConfig?.reservedTokens ?? DEFAULT_RESERVED_TOKENS;
+  const modelBudget = getModelContextBudget(modelId);
 
   if (options?.maxTokens !== undefined) {
     return tokensToChars(Math.max(0, options.maxTokens));
@@ -121,8 +115,8 @@ function resolveMaxChars(options: BuildSessionContextOptions | undefined): numbe
     return Math.max(0, options.maxChars);
   }
 
-  const totalTokens = options?.totalContextTokens ?? modelContextTokens;
-  const reservedTokens = options?.reservedTokens ?? modelReservedTokens;
+  const totalTokens = options?.totalContextTokens ?? modelBudget.totalTokens;
+  const reservedTokens = options?.reservedTokens ?? modelBudget.reservedTokens;
   const maxTokens = Math.max(0, totalTokens - reservedTokens);
   return tokensToChars(maxTokens);
 }
@@ -209,25 +203,39 @@ export async function buildSessionContext({
 
   let addedTranscript = false;
   if (transcripts.length > 0) {
-    const header = '\n## Recent Transcripts';
-    if (withinBudget(maxChars, charCount, header)) {
-      parts.push(header);
-      charCount += header.length;
-    }
+    const transcriptSections: string[] = [];
+    let transcriptChars = 0;
+    const transcriptBaseChars = charCount;
 
     for (const transcript of transcripts) {
       const header = `\n${formatTranscriptHeader(transcript)}`;
-      if (!withinBudget(maxChars, charCount, header)) {
+      if (!withinBudget(maxChars, transcriptBaseChars + transcriptChars, header)) {
         break;
       }
       const messages = await loadTranscriptMessages(storage, key, transcript);
       const section = `\n${formatTranscriptSection(transcript, messages)}`;
-      if (!withinBudget(maxChars, charCount, section)) {
+      if (!withinBudget(maxChars, transcriptBaseChars + transcriptChars, section)) {
         continue;
       }
-      parts.push(section);
-      charCount += section.length;
+      transcriptSections.push(section);
+      transcriptChars += section.length;
       addedTranscript = true;
+    }
+
+    if (addedTranscript) {
+      const sectionHeader = '\n## Recent Transcripts';
+      if (withinBudget(maxChars, charCount, sectionHeader)) {
+        parts.push(sectionHeader);
+        charCount += sectionHeader.length;
+      }
+
+      for (const section of transcriptSections) {
+        if (!withinBudget(maxChars, charCount, section)) {
+          break;
+        }
+        parts.push(section);
+        charCount += section.length;
+      }
     }
   }
 

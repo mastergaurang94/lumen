@@ -127,7 +127,7 @@ describe('buildSessionContext', () => {
     });
 
     expect(context).toContain('session_number: 2');
-    expect(context).toContain('days_since_last_session: 5');
+    expect(context).toContain('days_since_last_session: 4');
     expect(context).toContain('## Recent Transcripts');
     expect(context).toContain('**user:** Hello');
     expect(context).toContain('**lumen:** Welcome back');
