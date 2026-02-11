@@ -46,6 +46,10 @@ Status: In Progress
   requires a new registry entry.
 - 2026-02-11: `1.4 ✅ Complete` default-toggle update — set fallback default back to
   `opus-4.6` for active QA while keeping env-based model switching in place.
+- 2026-02-11: `1.5 ✅ Complete` — moved auth to canonical `user_id` (API now issues stable
+  IDs per email and returns `{ user_id, email }` from `/v1/auth/session`), then scoped web
+  storage by authenticated `user_id` via per-user Dexie database names. Removed local
+  pseudo-user IDs, kept schema version stable, and updated backend/frontend tests.
 - 2026-02-11: `1.1 ✅ Complete`, `1.2 ✅ Complete`, `1.3 ✅ Complete` — Chat UI stability
   session. Rewrote scroll behavior, animation system, and streaming rendering to match
   Claude.ai's stability patterns. Key changes:
@@ -61,6 +65,17 @@ Status: In Progress
   - Code review pass: removed dead refs (`messagesEndRef`, `footerRef`), unused exports, stale comments
 - 2026-02-11: Added `1.9`, `1.10`, `1.11` — Show More/Less, Scroll-to-bottom button, Copy action.
   Added accessibility and responsive notes to `3.4`.
+- 2026-02-11: `1.9 ✅ Complete`, `1.10 ✅ Complete`, `1.11 ✅ Complete` — Chat interaction features.
+  - **Show More/Less** (1.9): Applied to user messages (not assistant), 200px collapse threshold,
+    ResizeObserver-based height detection, thin gradient fade into card bg, left-aligned toggle
+    button inside the bubble (matches Claude.ai pattern).
+  - **Scroll-to-bottom** (1.10): Circular down-arrow button above input, appears when user scrolls
+    away from actual content (compensates for `pb-[80vh]` padding in scroll math), smooth scroll to
+    content end, AnimatePresence enter/exit animation.
+  - **Copy action** (1.11): Clipboard copy on all messages. Always visible on latest Lumen message,
+    hover-revealed on older messages (both Lumen and user). Check icon feedback on copy.
+  - **Known issue**: `pb-[80vh]` padding creates scrollbar inaccuracy and excess white space at
+    bottom. Needs a proper solution — deferred to next session.
 
 ---
 
@@ -178,6 +193,8 @@ These are the specific experiences we're engineering for. Every item in this pla
 
 ### 1.5 Scope vaults by user/email `[M]`
 
+**Status**: ✅ Complete (2026-02-11)
+
 **Problem**: All local data shares one vault. If multiple friends test on the same device or different accounts share a browser, their encrypted data could bleed together.
 
 **Code refs**:
@@ -260,6 +277,8 @@ For a product built on presence and trust, silent failures are the opposite of w
 
 ### 1.9 Show More / Show Less for long messages `[M]`
 
+**Status**: ✅ Complete (2026-02-11)
+
 **Problem**: Long assistant messages take up the entire scroll area, making it hard to navigate the conversation. Messages exceeding ~60-80vh of rendered height should collapse by default.
 
 **Spec ref**: Chat UI spec Section 3.
@@ -276,6 +295,8 @@ For a product built on presence and trust, silent failures are the opposite of w
 
 ### 1.10 Scroll-to-bottom button `[S]`
 
+**Status**: ✅ Complete (2026-02-11)
+
 **Problem**: After reading a long response or scrolling up through history, the user has no quick way to jump back to the latest content.
 
 **Spec ref**: Chat UI spec Section 4 — "Scroll to Bottom" Button.
@@ -291,6 +312,8 @@ For a product built on presence and trust, silent failures are the opposite of w
 ---
 
 ### 1.11 Copy action on messages `[S]`
+
+**Status**: ✅ Complete (2026-02-11)
 
 **Problem**: Users may want to save or share something Lumen said. There's no way to copy a message without manual text selection.
 

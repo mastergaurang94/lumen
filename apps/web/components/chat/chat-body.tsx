@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield } from 'lucide-react';
 
 import { LumenMessage, TypingIndicator, UserMessage } from '@/components/chat';
+import { MessageActions } from '@/components/chat/message-actions';
 import { ProviderGate } from '@/components/chat/provider-gate';
 import type { Message } from '@/types/session';
 
@@ -44,6 +45,9 @@ export function ChatBody({
     );
   }
 
+  // Find the last committed Lumen message index for always-visible actions.
+  const lastLumenIndex = messages.reduce((acc, msg, i) => (msg.role === 'lumen' ? i : acc), -1);
+
   return (
     <div ref={scrollAreaRef} className="h-full chat-scroll-area">
       <div className="max-w-3xl mx-auto px-6 pt-8 pb-[80vh]">
@@ -63,11 +67,22 @@ export function ChatBody({
 
         {/* Message list */}
         <div className="space-y-6">
-          {messages.map((message) =>
+          {messages.map((message, index) =>
             message.role === 'lumen' ? (
-              <LumenMessage key={message.id} content={message.content} />
+              <div key={message.id} className="group">
+                <LumenMessage content={message.content} />
+                <MessageActions
+                  content={message.content}
+                  alwaysVisible={index === lastLumenIndex}
+                />
+              </div>
             ) : (
-              <UserMessage key={message.id} content={message.content} />
+              <div key={message.id} className="group">
+                <UserMessage content={message.content} />
+                <div className="flex justify-end">
+                  <MessageActions content={message.content} />
+                </div>
+              </div>
             ),
           )}
 
