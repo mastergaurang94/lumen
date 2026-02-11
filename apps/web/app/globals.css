@@ -381,6 +381,10 @@ textarea:focus-visible {
 .chat-scroll-area {
   overflow-y: scroll !important;
   -webkit-overflow-scrolling: touch;
+  /* Disable browser scroll anchoring — all scroll control is manual.
+     Prevents the browser from auto-adjusting scroll position as
+     streaming content grows. */
+  overflow-anchor: none;
   /* Firefox scrollbar */
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted-foreground) / 0.5) transparent;
