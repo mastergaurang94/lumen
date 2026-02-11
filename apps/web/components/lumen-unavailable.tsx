@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { CloudOff, ArrowLeft, RefreshCw } from 'lucide-react';
+import { CloudOff, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sidebar } from '@/components/sidebar';
 
@@ -18,17 +18,6 @@ export function LumenUnavailable({ onRetry, isRetrying = false }: LumenUnavailab
       {/* Hamburger menu - top left */}
       <div className="fixed top-4 left-4 z-30">
         <Sidebar />
-      </div>
-
-      {/* Back link */}
-      <div className="p-6 pt-16">
-        <Link
-          href="/session"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span className="text-sm">Back</span>
-        </Link>
       </div>
 
       {/* Main content */}
