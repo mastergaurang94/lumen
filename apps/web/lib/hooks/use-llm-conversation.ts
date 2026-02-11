@@ -38,7 +38,6 @@ type UseLlmConversationResult = {
   streamingContent: string | null;
   handleSend: (content: string) => Promise<void>;
   abortConversation: () => void;
-  setStreamingContent: React.Dispatch<React.SetStateAction<string | null>>;
 };
 
 /**
@@ -127,12 +126,19 @@ export function useLlmConversation({
         }
 
         const finalText = responseText.trim();
+        if (!finalText) {
+          return;
+        }
+
         const lumenMessage: Message = {
           id: generateMessageId(),
           role: 'lumen',
           content: finalText,
           timestamp: new Date(),
         };
+        // Clear the streaming placeholder before committing the final message.
+        // This prevents a one-frame duplicate where both versions render together.
+        setStreamingContent(null);
         setMessages([lumenMessage]);
         startActiveSegment();
         queueMessageForChunk(lumenMessage);
@@ -236,12 +242,19 @@ export function useLlmConversation({
 
         // Finalize the message
         const finalText = responseText.trim();
+        if (!finalText) {
+          return;
+        }
+
         const lumenMessage: Message = {
           id: generateMessageId(),
           role: 'lumen',
           content: finalText,
           timestamp: new Date(),
         };
+        // Clear the streaming placeholder before committing the final message.
+        // This prevents a one-frame duplicate where both versions render together.
+        setStreamingContent(null);
         setMessages((prev) => [...prev, lumenMessage]);
         startActiveSegment();
         queueMessageForChunk(lumenMessage);
@@ -285,6 +298,5 @@ export function useLlmConversation({
     streamingContent,
     handleSend,
     abortConversation,
-    setStreamingContent,
   };
 }

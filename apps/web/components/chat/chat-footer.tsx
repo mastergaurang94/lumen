@@ -3,11 +3,13 @@ import { Z_INDEX } from '@/lib/z-index';
 
 type ChatFooterProps = {
   onSend: (content: string) => void;
+  onStop?: () => void;
+  isStreaming?: boolean;
   disabled: boolean;
 };
 
 // Input footer with sticky positioning and session hints.
-export function ChatFooter({ onSend, disabled }: ChatFooterProps) {
+export function ChatFooter({ onSend, onStop, isStreaming, disabled }: ChatFooterProps) {
   return (
     <footer className="sticky bottom-0" style={{ zIndex: Z_INDEX.sticky }}>
       {/* Gradient fade for smooth transition */}
@@ -19,7 +21,13 @@ export function ChatFooter({ onSend, disabled }: ChatFooterProps) {
       />
       <div className="relative bg-background/80 backdrop-blur-md">
         <div className="max-w-3xl mx-auto px-6 pt-4 pb-6">
-          <ChatInput onSend={onSend} disabled={disabled} placeholder="Reply..." />
+          <ChatInput
+            onSend={onSend}
+            onStop={onStop}
+            isStreaming={isStreaming}
+            disabled={disabled}
+            placeholder="Reply..."
+          />
           <p className="mt-3 text-xs text-muted-foreground/50 text-center">
             Enter to send · Shift+Enter for new line · Lumen is AI-powered and can make mistakes
           </p>

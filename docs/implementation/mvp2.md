@@ -20,6 +20,47 @@ Status: In Progress
 
 - 2026-02-11: Organized `docs/implementation/` — moved completed phase plans to
   `done/` as templates, updated cross-references. MVP2 is now the single active WIP doc.
+- 2026-02-11: Tier 1 kickoff. `1.1 ✅ Complete` by fixing a render-state handoff bug in
+  `use-llm-conversation`: the streaming placeholder and finalized Lumen message briefly
+  rendered together. We now clear `streamingContent` before committing final messages
+  (both initial greeting and normal replies). `1.2 🔄 In Progress` and `1.3 🔄 In Progress`
+  will be approached as one scroll-system pass to stabilize streaming and footer overlap.
+- 2026-02-11: Implemented unified scroll behavior for `1.2` + `1.3` (`🔄 In Progress`,
+  pending visual QA): removed token-by-token smooth scrolling, added bottom-locking during
+  streaming, tracked "near bottom" state to respect manual scroll-up, and added dynamic
+  bottom breathing room tied to measured footer height so growing input doesn't cover the
+  latest Lumen message.
+- 2026-02-11: QA feedback pass for Tier 1 chat rendering (`1.2 🔄 In Progress`, `1.3 🔄 In Progress`):
+  fixed empty-state shield overlap so "One moment..." hides as soon as streaming begins; adjusted
+  streaming autoscroll to align once at stream start (not every token) to prevent the currently-read
+  line from being pushed upward while text streams in; added guard to avoid rendering empty Lumen
+  bubbles when a stream resolves with blank content.
+- 2026-02-11: `1.4 ✅ Complete` — switched default model to Opus 4.6 by adding `opus-4.6` to
+  `MODEL_CONFIGS` (`claude-opus-4-6`, 1,000,000 context tokens, 120,000 reserved), updated
+  `DEFAULT_MODEL_ID` to `opus-4.6`, and raised context assembly fallbacks to 1,000,000 / 120,000.
+  Kept `opus-4.5` intact as a fallback config.
+- 2026-02-11: `1.4 ✅ Complete` refinement — made model selection provider-agnostic and
+  switchable via `NEXT_PUBLIC_DEFAULT_MODEL_ID` while restoring `opus-4.5` as the default.
+  Added Opus 4.6 support without hardcoded context constants in context assembly; token budgets
+  now derive from model metadata (30% reserved by default), so adding future models only
+  requires a new registry entry.
+- 2026-02-11: `1.4 ✅ Complete` default-toggle update — set fallback default back to
+  `opus-4.6` for active QA while keeping env-based model switching in place.
+- 2026-02-11: `1.1 ✅ Complete`, `1.2 ✅ Complete`, `1.3 ✅ Complete` — Chat UI stability
+  session. Rewrote scroll behavior, animation system, and streaming rendering to match
+  Claude.ai's stability patterns. Key changes:
+  - Removed `AnimatePresence mode="popLayout"` (caused layout jitter on every message)
+  - All scroll control is manual (`overflow-anchor: none`), no auto-scroll during streaming
+  - User message pins to top on send via `scrollTo` + `getBoundingClientRect` (smooth)
+  - Permanent `pb-[80vh]` padding provides scroll room without conditional spacers
+  - Stop button replaces Send during generation; input disabled while streaming
+  - Typing indicator replaced with pulsing gold lightbulb (brand-aligned, persists during streaming)
+  - LumenMessage simplified to plain div — no motion.div, no entrance animation, no finalization flash
+  - Double-render fix: `setStreamingContent(null)` before `setMessages()` prevents one-frame duplicate
+  - Removed blinking cursor in favor of lightbulb-only indicator
+  - Code review pass: removed dead refs (`messagesEndRef`, `footerRef`), unused exports, stale comments
+- 2026-02-11: Added `1.9`, `1.10`, `1.11` — Show More/Less, Scroll-to-bottom button, Copy action.
+  Added accessibility and responsive notes to `3.4`.
 
 ---
 
@@ -57,6 +98,8 @@ These are the specific experiences we're engineering for. Every item in this pla
 
 ### 1.1 Fix first message double-render `[S]`
 
+**Status**: ✅ Complete (2026-02-11)
+
 **Problem**: When the chat UI opens and Lumen sends the initial greeting, it appears duplicated for a split second before resolving to one. Jarring first impression.
 
 **Root cause**: Likely a React state/render race condition — either a duplicate `handleSend` call or StrictMode double-mount triggering the initial greeting twice.
@@ -72,6 +115,8 @@ These are the specific experiences we're engineering for. Every item in this pla
 
 ### 1.2 Fix streaming text pushing content upward `[S]`
 
+**Status**: ✅ Complete (2026-02-11)
+
 **Problem**: While Lumen streams a response, the text shifts upward as tokens arrive, breaking reading flow. Users can't comfortably read the response as it's being generated.
 
 **Code refs**:
@@ -84,6 +129,8 @@ These are the specific experiences we're engineering for. Every item in this pla
 ---
 
 ### 1.3 Fix Lumen message scroll behavior `[M]`
+
+**Status**: ✅ Complete (2026-02-11)
 
 **Problem**: When a Lumen message appears, it doesn't auto-position well. As the user types longer responses in the input, the growing textarea covers Lumen's last message.
 
@@ -107,12 +154,14 @@ These are the specific experiences we're engineering for. Every item in this pla
 
 ### 1.4 Default to Claude Opus 4.6 `[S]`
 
+**Status**: ✅ Complete (2026-02-11)
+
 **Problem**: Currently using Opus 4.5 (200K context). Opus 4.6 offers 1M context window — a 5x increase that changes the context assembly math entirely.
 
 **Code refs**:
 
-- `apps/web/lib/llm/model-config.ts` — `DEFAULT_MODEL_ID = 'opus-4.5'`, `MODEL_CONFIGS`, model-to-provider mapping
-- `apps/web/lib/context/assembly.ts` — `DEFAULT_TOTAL_CONTEXT_TOKENS` (200K), `DEFAULT_RESERVED_TOKENS` (60K), budget calculation
+- `apps/web/lib/llm/model-config.ts` — `DEFAULT_MODEL_ID`, `MODEL_CONFIGS`, model-to-provider mapping
+- `apps/web/lib/context/assembly.ts` — `DEFAULT_TOTAL_CONTEXT_TOKENS`, `DEFAULT_RESERVED_TOKENS`, budget calculation
 
 **Approach**:
 
@@ -206,6 +255,53 @@ For a product built on presence and trust, silent failures are the opposite of w
 - Add session number to the chat header alongside the date: e.g., "Conversation 5 — Feb 12, 2026"
 - Optionally show it on the `/session` page: _"Ready for conversation 5?"_
 - Keep it subtle — informational, not gamified
+
+---
+
+### 1.9 Show More / Show Less for long messages `[M]`
+
+**Problem**: Long assistant messages take up the entire scroll area, making it hard to navigate the conversation. Messages exceeding ~60-80vh of rendered height should collapse by default.
+
+**Spec ref**: Chat UI spec Section 3.
+
+**Approach**:
+
+- When an assistant message exceeds a height threshold (~600px), collapse it to that max height
+- Apply a gradient fade-out at the bottom indicating more content below
+- "Show more" button at the bottom edge of collapsed content
+- On expand: "Show less" button sticks to the top of the viewport (always reachable)
+- Scroll stability: expanding grows content downward; collapsing scrolls back to the message top
+
+---
+
+### 1.10 Scroll-to-bottom button `[S]`
+
+**Problem**: After reading a long response or scrolling up through history, the user has no quick way to jump back to the latest content.
+
+**Spec ref**: Chat UI spec Section 4 — "Scroll to Bottom" Button.
+
+**Approach**:
+
+- Small circular button with a down-arrow, floating just above the input area
+- Only visible when the user is scrolled away from the bottom of the conversation
+- Clicking it scrolls smoothly to the bottom
+- Disappears when the user reaches the bottom
+- Subtle styling — not intrusive, appears on scroll-up and fades in
+
+---
+
+### 1.11 Copy action on messages `[S]`
+
+**Problem**: Users may want to save or share something Lumen said. There's no way to copy a message without manual text selection.
+
+**Spec ref**: Chat UI spec Section 7 — Message Action Bar.
+
+**Approach**:
+
+- On hover (desktop) or tap (mobile), show a small action bar below assistant messages
+- Primary action: Copy (copies the message content to clipboard)
+- For the most recent assistant message, the action bar may be always visible
+- Keep it minimal — just Copy for now, expandable later
 
 ---
 
@@ -513,11 +609,11 @@ Keep it minimal and integrated into the existing voice. Not a separate "safety" 
 
 ---
 
-### 3.4 Mobile testing pass `[M]`
+### 3.4 Mobile testing pass + accessibility `[M]`
 
-**Problem**: Testers will try Lumen on their phones. The chat input, sidebar overlay, passphrase entry, and closure flow all need to work comfortably on mobile viewports.
+**Problem**: Testers will try Lumen on their phones. The chat input, sidebar overlay, passphrase entry, and closure flow all need to work comfortably on mobile viewports. Additionally, basic accessibility standards should be met.
 
-**Approach**: This is a testing pass, not a feature. After Tiers 1 and 2 are complete:
+**Approach**: This is a testing + polish pass. After Tiers 1 and 2 are complete:
 
 1. Open the deployed app on an iPhone and an Android device
 2. Walk through the full flow: login → setup → session → chat → wrap up → closure
@@ -528,7 +624,18 @@ Keep it minimal and integrated into the existing voice. Not a separate "safety" 
    - Scroll behavior during streaming (especially on iOS Safari)
    - Closure reflection view layout
    - Touch targets (buttons, links)
+   - Message action bar: tap-triggered instead of hover on mobile
+   - Show More/Less collapse threshold: lower on mobile (~400px vs 600px)
+   - Full-width messages on mobile (minimal side padding ~16px)
 4. Fix what's broken, note what can wait
+
+**Accessibility** (Chat UI spec Section 15):
+
+- All interactive elements keyboard-navigable
+- ARIA labels on icons (Send, Stop, Copy, Show More/Less)
+- Respect `prefers-reduced-motion` — disable scroll animations and streaming effects
+- Sufficient color contrast (4.5:1 minimum for body text)
+- Screen reader announcement for streaming completion ("Response complete")
 
 **Key concern**: iOS Safari handles viewport height differently when the keyboard is open (`100vh` includes the keyboard). The chat footer and input area need to account for this.
 

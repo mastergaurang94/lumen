@@ -2,40 +2,36 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
+import { Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TypingIndicatorProps {
   className?: string;
 }
 
+// Pulsing lightbulb — Lumen's "thinking" indicator.
 export function TypingIndicator({ className }: TypingIndicatorProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -4 }}
-      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-      className={cn('', className)}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className={cn('flex items-center', className)}
     >
-      {/* Typing dots */}
-      <div className="inline-flex items-center gap-1.5 px-4 py-3 rounded-2xl bg-muted">
-        {[0, 1, 2].map((i) => (
-          <motion.span
-            key={i}
-            className="w-2 h-2 rounded-full bg-muted-foreground/50"
-            animate={{
-              y: [0, -3, 0],
-              opacity: [0.4, 1, 0.4],
-            }}
-            transition={{
-              duration: 0.8,
-              repeat: Infinity,
-              delay: i * 0.15,
-              ease: 'easeInOut',
-            }}
-          />
-        ))}
-      </div>
+      <motion.div
+        animate={{
+          opacity: [0.5, 1, 0.5],
+          scale: [0.95, 1.1, 0.95],
+        }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        className="drop-shadow-[0_0_6px_rgba(210,170,60,0.5)]"
+      >
+        <Lightbulb
+          className="h-6 w-6 fill-amber-400/30 stroke-amber-500 dark:fill-amber-300/30 dark:stroke-amber-400"
+          strokeWidth={2.5}
+        />
+      </motion.div>
     </motion.div>
   );
 }

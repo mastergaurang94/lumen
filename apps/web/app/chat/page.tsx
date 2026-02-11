@@ -53,7 +53,7 @@ function ChatPageInner() {
   const [sessionSummary, setSessionSummary] = React.useState<SessionSummary | null>(null);
   const [closureStep, setClosureStep] = React.useState<ClosureStep>('wrapping-up');
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const previousMessageCountRef = React.useRef(0);
   const [activeSessionId, setActiveSessionId] = React.useState<string | null>(null);
   const {
     elapsedTime,
@@ -173,12 +173,37 @@ function ChatPageInner() {
     });
   }, [flushPendingMessages, stopActiveSegment]);
 
-  // Auto-scroll to bottom when messages change
+  // Scroll behavior — the user owns the scroll position:
+  //
+  // The only auto-scroll is when the user sends a message: we pin their message
+  // to the top of the viewport so the full visible area is available for the
+  // response to grow into. Everything else (streaming, finalization) is hands-off.
   React.useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    const scrollArea = scrollAreaRef.current;
+    if (!scrollArea) return;
+
+    const hasNewMessage = messages.length > previousMessageCountRef.current;
+    previousMessageCountRef.current = messages.length;
+
+    if (!hasNewMessage) return;
+
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage?.role === 'user') {
+      // Pin the user message to the top of the scroll container. We use
+      // getBoundingClientRect for a precise offset relative to the container
+      // rather than scrollIntoView which may scroll ancestor overflow containers.
+      requestAnimationFrame(() => {
+        const els = scrollArea.querySelectorAll('[data-message-role="user"]');
+        const el = els[els.length - 1] as HTMLElement | null;
+        if (el) {
+          const containerTop = scrollArea.getBoundingClientRect().top;
+          const elTop = el.getBoundingClientRect().top;
+          const target = scrollArea.scrollTop + (elTop - containerTop);
+          scrollArea.scrollTo({ top: target, behavior: 'smooth' });
+        }
+      });
     }
-  }, [messages, streamingContent, isTyping]);
+  }, [messages]);
 
   // Persist the provider key in encrypted storage for this vault.
   const handleSaveKey = React.useCallback(async () => {
@@ -457,14 +482,15 @@ function ChatPageInner() {
           isTyping={isTyping}
           streamingContent={streamingContent}
           scrollAreaRef={scrollAreaRef}
-          messagesEndRef={messagesEndRef}
         />
       </main>
 
       {/* Input area */}
       <ChatFooter
         onSend={handleSend}
-        disabled={!storageReady || !llmKeyReady || !llmKey || isTyping || streamingContent !== null}
+        onStop={abortConversation}
+        isStreaming={isTyping || streamingContent !== null}
+        disabled={!storageReady || !llmKeyReady || !llmKey}
       />
 
       {/* End Session Dialog */}

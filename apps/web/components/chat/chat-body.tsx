@@ -17,7 +17,6 @@ type ChatBodyProps = {
   isTyping: boolean;
   streamingContent: string | null;
   scrollAreaRef: RefObject<HTMLDivElement | null>;
-  messagesEndRef: RefObject<HTMLDivElement | null>;
 };
 
 // Main chat body with provider gate, message list, and streaming state.
@@ -32,7 +31,6 @@ export function ChatBody({
   isTyping,
   streamingContent,
   scrollAreaRef,
-  messagesEndRef,
 }: ChatBodyProps) {
   if (showProviderGate) {
     return (
@@ -48,9 +46,9 @@ export function ChatBody({
 
   return (
     <div ref={scrollAreaRef} className="h-full chat-scroll-area">
-      <div className="max-w-3xl mx-auto px-6 py-8 min-h-[calc(100%+24px)]">
+      <div className="max-w-3xl mx-auto px-6 pt-8 pb-[80vh]">
         {/* Empty state before first message */}
-        {messages.length === 0 && !isTyping && (
+        {messages.length === 0 && !isTyping && streamingContent === null && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -65,27 +63,22 @@ export function ChatBody({
 
         {/* Message list */}
         <div className="space-y-6">
-          <AnimatePresence mode="popLayout">
-            {messages.map((message) =>
-              message.role === 'lumen' ? (
-                <LumenMessage key={message.id} content={message.content} />
-              ) : (
-                <UserMessage key={message.id} content={message.content} />
-              ),
-            )}
+          {messages.map((message) =>
+            message.role === 'lumen' ? (
+              <LumenMessage key={message.id} content={message.content} />
+            ) : (
+              <UserMessage key={message.id} content={message.content} />
+            ),
+          )}
 
-            {/* Streaming message */}
-            {streamingContent !== null && (
-              <LumenMessage key="streaming" content={streamingContent} />
-            )}
+          {/* Streaming message */}
+          {streamingContent !== null && <LumenMessage key="streaming" content={streamingContent} />}
 
-            {/* Typing indicator */}
-            {isTyping && <TypingIndicator key="typing" />}
+          {/* Pulsing lightbulb — visible during thinking and streaming */}
+          <AnimatePresence>
+            {(isTyping || streamingContent !== null) && <TypingIndicator key="typing" />}
           </AnimatePresence>
         </div>
-
-        {/* Scroll anchor */}
-        <div ref={messagesEndRef} className="h-4" />
       </div>
     </div>
   );

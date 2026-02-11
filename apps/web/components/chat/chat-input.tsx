@@ -1,12 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { Send } from 'lucide-react';
+import { Send, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
+  onStop?: () => void;
+  isStreaming?: boolean;
   disabled?: boolean;
   placeholder?: string;
   className?: string;
@@ -14,6 +16,8 @@ interface ChatInputProps {
 
 export function ChatInput({
   onSend,
+  onStop,
+  isStreaming = false,
   disabled = false,
   placeholder = 'Reply...',
   className,
@@ -26,9 +30,7 @@ export function ChatInput({
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    // Reset height to auto to get the correct scrollHeight
     textarea.style.height = 'auto';
-    // Set height to scrollHeight, max 200px
     const newHeight = Math.min(textarea.scrollHeight, 200);
     textarea.style.height = `${newHeight}px`;
   }, []);
@@ -37,34 +39,30 @@ export function ChatInput({
     adjustHeight();
   }, [value, adjustHeight]);
 
-  // Refocus when re-enabled after being disabled (e.g., after Lumen finishes responding)
-  const wasDisabledRef = React.useRef(disabled);
+  // Refocus when generation finishes (streaming → not streaming with input enabled).
+  const wasStreamingRef = React.useRef(isStreaming);
   React.useEffect(() => {
-    if (wasDisabledRef.current && !disabled) {
-      // Was disabled, now enabled - refocus
+    if (wasStreamingRef.current && !isStreaming && !disabled) {
       textareaRef.current?.focus();
     }
-    wasDisabledRef.current = disabled;
-  }, [disabled]);
+    wasStreamingRef.current = isStreaming;
+  }, [isStreaming, disabled]);
 
   const handleSubmit = React.useCallback(() => {
     const trimmed = value.trim();
-    if (!trimmed || disabled) return;
+    if (!trimmed || disabled || isStreaming) return;
 
     onSend(trimmed);
     setValue('');
 
-    // Reset height and refocus after sending
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      // Refocus the textarea so user can keep typing
       setTimeout(() => textareaRef.current?.focus(), 0);
     }
-  }, [value, disabled, onSend]);
+  }, [value, disabled, isStreaming, onSend]);
 
   const handleKeyDown = React.useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      // Enter without shift sends the message
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         handleSubmit();
@@ -73,7 +71,7 @@ export function ChatInput({
     [handleSubmit],
   );
 
-  const canSend = value.trim().length > 0 && !disabled;
+  const canSend = value.trim().length > 0 && !disabled && !isStreaming;
 
   return (
     <div className={cn('relative', className)}>
@@ -91,7 +89,7 @@ export function ChatInput({
           onInput={(e) => setValue(e.currentTarget.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          disabled={disabled}
+          disabled={disabled || isStreaming}
           rows={1}
           className={cn(
             'flex-1 min-h-[52px] max-h-[200px] py-3 px-4',
@@ -102,22 +100,38 @@ export function ChatInput({
           )}
           aria-label="Message input"
         />
-        <Button
-          type="button"
-          size="icon"
-          onClick={handleSubmit}
-          disabled={!canSend}
-          className={cn(
-            'shrink-0 h-11 w-11 rounded-xl',
-            'transition-all duration-200',
-            canSend
-              ? 'bg-accent text-accent-foreground hover:bg-accent/90'
-              : 'bg-background text-muted-foreground',
-          )}
-          aria-label="Send message"
-        >
-          <Send className="h-5 w-5" />
-        </Button>
+        {isStreaming ? (
+          <Button
+            type="button"
+            size="icon"
+            onClick={onStop}
+            className={cn(
+              'shrink-0 h-11 w-11 rounded-xl',
+              'bg-muted-foreground/20 text-foreground hover:bg-muted-foreground/30',
+              'transition-all duration-200',
+            )}
+            aria-label="Stop generating"
+          >
+            <Square className="h-4 w-4 fill-current" />
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            size="icon"
+            onClick={handleSubmit}
+            disabled={!canSend}
+            className={cn(
+              'shrink-0 h-11 w-11 rounded-xl',
+              'transition-all duration-200',
+              canSend
+                ? 'bg-accent text-accent-foreground hover:bg-accent/90'
+                : 'bg-background text-muted-foreground',
+            )}
+            aria-label="Send message"
+          >
+            <Send className="h-5 w-5" />
+          </Button>
+        )}
       </div>
     </div>
   );
