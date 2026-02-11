@@ -2,6 +2,8 @@ export { LumenMessage } from './lumen-message';
 export { UserMessage } from './user-message';
 export { TypingIndicator } from './typing-indicator';
 export { ChatInput } from './chat-input';
+export { MessageActions } from './message-actions';
+export { ScrollToBottom } from './scroll-to-bottom';
 export { SessionClosure } from './session-closure';
 export { EndSessionDialog } from './end-session-dialog';
 export { ChatHeader } from './chat-header';

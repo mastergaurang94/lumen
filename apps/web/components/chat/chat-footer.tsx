@@ -1,4 +1,6 @@
+import type { RefObject } from 'react';
 import { ChatInput } from '@/components/chat/chat-input';
+import { ScrollToBottom } from '@/components/chat/scroll-to-bottom';
 import { Z_INDEX } from '@/lib/z-index';
 
 type ChatFooterProps = {
@@ -6,10 +8,17 @@ type ChatFooterProps = {
   onStop?: () => void;
   isStreaming?: boolean;
   disabled: boolean;
+  scrollAreaRef: RefObject<HTMLDivElement | null>;
 };
 
-// Input footer with sticky positioning and session hints.
-export function ChatFooter({ onSend, onStop, isStreaming, disabled }: ChatFooterProps) {
+// Input footer with sticky positioning, scroll-to-bottom button, and session hints.
+export function ChatFooter({
+  onSend,
+  onStop,
+  isStreaming,
+  disabled,
+  scrollAreaRef,
+}: ChatFooterProps) {
   return (
     <footer className="sticky bottom-0" style={{ zIndex: Z_INDEX.sticky }}>
       {/* Gradient fade for smooth transition */}
@@ -21,6 +30,10 @@ export function ChatFooter({ onSend, onStop, isStreaming, disabled }: ChatFooter
       />
       <div className="relative bg-background/80 backdrop-blur-md">
         <div className="max-w-3xl mx-auto px-6 pt-4 pb-6">
+          {/* Scroll-to-bottom — floats above the input when user has scrolled up */}
+          <div className="flex justify-center mb-2">
+            <ScrollToBottom scrollAreaRef={scrollAreaRef} />
+          </div>
           <ChatInput
             onSend={onSend}
             onStop={onStop}

@@ -9,8 +9,29 @@ interface UserMessageProps {
   className?: string;
 }
 
+// Height threshold (px) above which user messages collapse.
+const COLLAPSE_THRESHOLD = 200;
+
 // Subtle opacity-only entrance — no vertical shift that would displace sibling content.
 export function UserMessage({ content, className }: UserMessageProps) {
+  const contentRef = React.useRef<HTMLDivElement>(null);
+  const [isCollapsible, setIsCollapsible] = React.useState(false);
+  const [isExpanded, setIsExpanded] = React.useState(false);
+
+  // Observe the natural height of the inner text to decide if collapse is needed.
+  React.useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      setIsCollapsible(entry.contentRect.height > COLLAPSE_THRESHOLD);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const collapsed = isCollapsible && !isExpanded;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -22,13 +43,45 @@ export function UserMessage({ content, className }: UserMessageProps) {
       <div className="max-w-[85%]">
         <div
           className={cn(
-            'px-5 py-3.5 rounded-2xl rounded-br-md',
+            'rounded-2xl rounded-br-md',
             'bg-accent text-accent-foreground',
-            'whitespace-pre-wrap break-words',
             'text-lg leading-relaxed',
           )}
         >
-          {content}
+          {/* Text area — clipped with thin gradient when collapsed */}
+          <div className="relative">
+            <div
+              style={collapsed ? { maxHeight: `${COLLAPSE_THRESHOLD}px` } : undefined}
+              className={cn(
+                'px-5 py-3.5 whitespace-pre-wrap break-words',
+                collapsed && 'overflow-hidden',
+              )}
+            >
+              <div ref={contentRef}>{content}</div>
+            </div>
+
+            {/* Thin gradient — fades the last line into the card background */}
+            {collapsed && (
+              <div
+                className="absolute bottom-0 inset-x-0 h-10 pointer-events-none"
+                style={{
+                  background: 'linear-gradient(to bottom, transparent, hsl(var(--accent)))',
+                }}
+              />
+            )}
+          </div>
+
+          {/* "Show more" / "Show less" — own row inside the card, left-aligned */}
+          {isCollapsible && (
+            <div className="px-5 pb-3">
+              <button
+                onClick={() => setIsExpanded((prev) => !prev)}
+                className="text-sm text-accent-foreground/70 hover:text-accent-foreground transition-colors duration-150"
+              >
+                {collapsed ? 'Show more' : 'Show less'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

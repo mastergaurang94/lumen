@@ -41,7 +41,7 @@ const LLM_SERVER_MODE = process.env.NEXT_PUBLIC_LLM_SERVER_MODE === 'true';
 function ChatPageInner() {
   const router = useRouter();
   const storageRef = React.useRef(createStorageService());
-  const { isAuthed } = useAuthSessionGuard();
+  const { isAuthed, session } = useAuthSessionGuard();
   const [sessionState, setSessionState] = React.useState<SessionState>('loading');
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [showEndSessionDialog, setShowEndSessionDialog] = React.useState(false);
@@ -103,6 +103,7 @@ function ChatPageInner() {
     storage: storageRef.current,
     router,
     isAuthed,
+    authenticatedUserId: session?.user_id ?? null,
     sessionState,
     setSessionState,
     onMessagesRestored: handleMessagesRestored,
@@ -491,6 +492,7 @@ function ChatPageInner() {
         onStop={abortConversation}
         isStreaming={isTyping || streamingContent !== null}
         disabled={!storageReady || !llmKeyReady || !llmKey}
+        scrollAreaRef={scrollAreaRef}
       />
 
       {/* End Session Dialog */}
