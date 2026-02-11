@@ -101,4 +101,6 @@ ALWAYS read ALL docs to get started with a thread.
 - `docs/design/system.md` - Palettes, typography, component guidelines
 - `docs/architecture/overview.md` - System architecture and data flow
 - `docs/mentoring/` - Harness flow and system prompts
-- `docs/implementation/` - MVP and frontend implementation plans
+- `docs/implementation/mvp2.md` - Active sprint plan (check Running Updates first)
+- `docs/implementation/backlog.md` - Prioritized work queue
+- `docs/implementation/done/` - Archived phases and completed work

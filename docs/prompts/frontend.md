@@ -5,21 +5,20 @@ You are a senior frontend engineer building Lumen. This prompt enables session c
 ## Starting a Session
 
 1. **Read all docs**: Read every file in `docs/` for full context. The folder is small and contains essential information:
-   - `implementation/frontend-plan.md` — current phase, progress, next tasks
-   - `implementation/done/frontend-phase*.md` — archived phase details
+   - `implementation/mvp2.md` — active sprint plan, progress, running updates
+   - `implementation/backlog.md` — prioritized work queue
+   - `implementation/done/` — archived phases and completed work
    - `design/system.md` — color palettes, typography, component guidelines
    - `product/spec.md` — product requirements and scope
    - `architecture/overview.md` — system architecture
    - `architecture/memory-schema.md` — memory and storage schema
    - `mentoring/harness-flow.md` — conversational harness design
-   - `mentoring/system-prompts.md` — AI companion prompts
-   - `implementation/mvp.md` — implementation phases overview
-   - `implementation/backlog.md` — prioritized work queue
+   - `mentoring/system-prompts-v1.md` — AI companion prompts
 
 2. **Check for in-progress work**:
-   - Look for 🔄 status in `docs/implementation/frontend-plan.md`
+   - Look for `🔄 In Progress` status markers in the active sprint doc
+   - Read the **Running Updates** section for latest session context
    - Check for `TODO` or `FIXME` comments in recent files
-   - Review any documented bugs or issues in the plan
 
 3. **Propose next steps** to the user based on what's available and unblocked
 
@@ -27,24 +26,23 @@ You are a senior frontend engineer building Lumen. This prompt enables session c
 
 ## While Working
 
-- **Update `docs/implementation/frontend-plan.md`** as you complete tasks (mark ✅, add implementation notes)
+- **Update the active sprint doc** as you complete tasks (mark `✅ Complete`, add implementation notes)
 - **Document issues** encountered — add to "Common Issues" section if reusable
 - **Note any incomplete work** with clear context so the next session can continue
 - **Test visually** — use Playwright to screenshot and verify UI changes
 - **Use theme colors** — all UI should adapt to dawn/day/dusk palettes
 
-## Phase Transitions
+## Sprint Transitions
 
-When a phase is complete:
+When a sprint is complete:
 
-1. **Archive the completed phase**: Move detailed step-by-step notes to `docs/implementation/done/frontend-phase{N}.md`
-2. **Update the active plan**: Replace `docs/implementation/frontend-plan.md` with the next phase as the active content
-3. **Keep a summary**: Add a brief "Previous Phases" section in the active plan linking to archives
-4. **Preserve common context**: Keep file structure, dependencies, and common issues sections current in the active plan
+1. **Archive**: Move the completed sprint doc to `docs/implementation/done/`
+2. **Create next sprint**: Start a new `mvp*.md` with Running Updates section
+3. **Update backlog**: Move completed items, reprioritize remaining work
 
-Archived phase docs are reference material — read them when:
+Archived docs are reference material — read them when:
 
-- Debugging issues in code from that phase
+- Debugging issues in code from that sprint
 - Understanding why something was built a certain way
 - Onboarding to the codebase
 
@@ -52,10 +50,10 @@ Archived phase docs are reference material — read them when:
 
 Before ending a session, ensure:
 
-- [ ] `docs/implementation/frontend-plan.md` reflects current state
-- [ ] Any in-progress step is marked 🔄 with notes on what remains
+- [ ] Active sprint doc has a dated Running Updates entry for this session
+- [ ] Any in-progress item is marked `🔄 In Progress` with notes on what remains
 - [ ] Bugs or blockers are documented
-- [ ] New files/components are listed in the plan
+- [ ] New files/components are noted in the sprint doc
 
 ---
 

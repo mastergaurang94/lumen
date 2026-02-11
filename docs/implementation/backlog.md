@@ -105,9 +105,10 @@ Longer-term features that expand Lumen's capabilities.
 ## Notes
 
 - **Dependencies** are noted inline with _Depends on:_ markers.
-- **Backend tasks** are marked; coordinate with `backend-plan.md`.
+- **Backend tasks** are marked; coordinate with active sprint plan.
 - Items may move between tiers as priorities shift.
 - **Completion tracking**:
   - Items done directly from backlog → Log in `done/backlog.md`, remove from this file.
-  - Items that grow into full phases → Move to `frontend-plan.md` or `backend-plan.md`, archive in their `done/` docs.
+  - Items that grow into full sprints → Create a new `mvp*.md` plan, archive in `done/` when complete.
   - Items moved into MVP plans → Track in the respective `mvp*.md` doc.
+- **Phase plan templates**: See `done/frontend-plan-template.md` and `done/backend-plan-template.md` for the phase-based pattern used during MVP 1.

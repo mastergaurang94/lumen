@@ -1,7 +1,25 @@
 # MVP 2 Implementation
 
-Last Updated: 2026-02-10
-Status: Planning
+Last Updated: 2026-02-11
+Status: In Progress
+
+> **Session protocol**: At the end of each working session, append a dated entry to
+> "Running Updates" summarizing what was completed, what's in progress, and any decisions
+> made. Mark items with status inline (`✅ Complete`, `🔄 In Progress`). This is how the
+> next session picks up context.
+
+> **Implementation guidance**: The code references, approaches, and implementation details
+> in each item below are _suggestions_, not prescriptions. They capture initial thinking
+> and context to help you get oriented, but you MUST apply your own judgement about the
+> best way to solve each item elegantly. If you find a simpler approach, a better root
+> cause, or a cleaner architecture — go with it. The goal is the outcome, not the recipe.
+
+---
+
+## Running Updates
+
+- 2026-02-11: Organized `docs/implementation/` — moved completed phase plans to
+  `done/` as templates, updated cross-references. MVP2 is now the single active WIP doc.
 
 ---
 
