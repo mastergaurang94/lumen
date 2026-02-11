@@ -10,6 +10,7 @@ Append one entry per backend deploy.
 - Commit(s): `<sha>`
 - Deployer: `<name>`
 - Type: `feature | fix | refactor | infra`
+- Risk: `low | medium | high`
 
 ### Changes
 
@@ -31,6 +32,7 @@ Append one entry per backend deploy.
 - Commit(s): `user_id and scoped-storage changes on main`
 - Deployer: `gaurang/codex`
 - Type: `feature`
+- Risk: `medium`
 
 ### Changes
 
@@ -50,6 +52,7 @@ Append one entry per backend deploy.
 - Commit(s): `cb60e92`
 - Deployer: `gaurang/codex`
 - Type: `infra`
+- Risk: `low`
 
 ### Changes
 
