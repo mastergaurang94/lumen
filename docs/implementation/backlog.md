@@ -2,55 +2,25 @@
 
 Last Updated: 2026-02-10
 
-Items are organized by time horizon (Now → Soon → Later) and category. Effort markers: `[S]`mall, `[M]`edium, `[L]`arge. Status: `🔄` = in progress (check before starting).
+Items are organized by time horizon (Now → Soon → Later) and category. Effort markers: `[S]`mall, `[M]`edium, `[L]`arge. Items tagged `MVP 3` are candidates for the next milestone. Items in the current sprint are tracked in `mvp2.md`.
 
 ---
 
-## Now (Bugs & Polish)
+## Now
 
-Immediate fixes and polish to ship a solid MVP.
-
-### Harness
-
-- [ ] `[S]` **Opening system prompt tone**: Make the opening system prompt less formulaic and more conversational/welcoming to avoid sounding overly AI-like.
-
-### UX
-
-- [ ] `[S]` **First Lumen message renders twice briefly**: When the chat UI opens and Lumen sends the initial message, it appears duplicated for a split second before resolving to one. Likely a React state/render race condition.
-  - _Code ref: `apps/web/app/chat/page.tsx` or `apps/web/lib/hooks/use-llm-conversation.ts`_
-- [ ] `[S]` **Streaming text pushes content upward**: While streaming, the response text shifts upward, making it hard to read in-progress. Stabilize the viewport so the user can comfortably read as tokens arrive.
-- [ ] `[M]` **Lumen message scroll behavior**: When a Lumen message appears, auto-scroll so the message is prominent (top 2/3 of viewport). Add sufficient whitespace below the last Lumen message so input field doesn't obscure it as user types longer responses.
-
-  <details>
-  <summary>Implementation prompt</summary>
-
-  As more text fills the input, it covers the message from Lumen. Add whitespace or scroll the page down so that when a Lumen message appears, it scrolls down and puts that message as the only message visible on screen. There should be enough whitespace after the last Lumen message (even after scrolling to the bottom of a long one) so that it only takes up ~2/3 of the page. The remaining whitespace at the bottom is intentional breathing room.
-
-  </details>
-
-### Sync & Export
-
-- [ ] `[M]` **View past session transcripts**: Users should be able to review their own conversation history. It's their data. Add a session history view with decrypted transcript display.
-- [ ] `[M]` **Export/import for recovery**: User-facing backup and restore of encrypted vault.
+_Empty — all current work tracked in `mvp2.md`._
 
 ---
 
-## Soon (Post-MVP)
+## Soon
 
-Near-term improvements after MVP is complete.
+Near-term improvements.
 
 ### Harness
 
 - [ ] `[S]` **Prompt versioning**: Track prompt changes for reproducibility. Correlate prompt versions with quality shifts.
 - [ ] `[M]` **Evaluation harness**: Minimal tooling to assess summary and closure quality. Define rubric or golden outputs for comparison.
 - [ ] `[M]` **Harness tests**: Deterministic context assembly verification and summary format validation.
-
-### Vault & Security
-
-- [ ] `[M]` **Scope vaults by user/email**: Each login should map to its own local vault, preventing data bleed between accounts on shared devices.
-- [ ] `[M]` **Reduce vault unlock churn**: Idle timeout + OS keychain / WebAuthn unlock to avoid repeated passphrase entry.
-  - _Desktop focus; may require native wrapper for keychain access._
-- [ ] `[M]` **Passphrase recovery mechanism**: Generate recovery key at setup, stored offline by user. Enables vault recovery if passphrase forgotten.
 
 ### Observability
 
@@ -65,29 +35,26 @@ Near-term improvements after MVP is complete.
 
 ---
 
-## Later (Post-MVP Vision)
+## Later
 
 Longer-term features that expand Lumen's capabilities.
 
 ### LLM Integration
 
 - [ ] `[L]` **Client-side model orchestration**: Policy enforcement entirely on client; no server-side plaintext handling.
-- [ ] `[L]` **Ephemeral token broker**: Short-lived, scope-limited tokens for LLM auth instead of raw API keys.
-- [ ] `[L]` **Provider auth + billing options**:
-  - _Monetizable path_: Hosted token broker that swaps user auth for scoped API tokens (server-held provider keys; billing/quotas enforced server-side).
+- [ ] `[L]` **Provider auth + billing options**: `MVP 3`
+  - _Monetizable path_: Hosted token broker that swaps user auth for scoped API tokens (server-held provider keys; billing/quotas enforced server-side). Includes ephemeral, short-lived, scope-limited tokens for LLM auth.
   - _Power-user path_: Continue supporting BYOK API keys as alternative.
 - [ ] `[M]` **Fallback provider abstraction**: Graceful failover between LLM providers on outage.
 
 ### Sync & Export
 
-- [ ] `[L]` **Zero-knowledge encrypted sync**: Ciphertext-only server storage enabling multi-device access.
+- [ ] `[L]` **Zero-knowledge encrypted sync**: Ciphertext-only server storage enabling multi-device access. `MVP 3`
   - Client sync queue for encrypted blobs (push/pull).
   - Server endpoints: upload/download ciphertext + metadata.
   - Server stores only ciphertext and headers (no plaintext).
   - Conflict strategy: last-write-wins (v1.1).
-- [ ] `[M]` **Export/import for recovery**: User-facing backup and restore of encrypted vault.
-- [ ] `[L]` **Resolve multi-device edits**: Merge strategy—last-write-wins vs CRDT vs user prompts on conflict.
-- [ ] `[M]` **Desktop wrapper**: Native filesystem access for local vault storage outside browser.
+  - _Includes multi-device edit resolution — merge strategy (LWW vs CRDT vs user prompts on conflict)._
 
 ### Memory
 
@@ -98,10 +65,7 @@ Longer-term features that expand Lumen's capabilities.
 
 ### Harness
 
-- [ ] `[M]` **Context compaction and recap rewriting**: Compress older context to fit more history in token budget.
-- [ ] `[M]` **Summary compaction for long histories**: Rolling recap that merges old summaries.
-- [ ] `[S]` **Tool-call trimming**: Remove irrelevant metadata before storage.
-- [ ] `[M]` **Summarize long pasted inputs**: Compress code/docs before storage to save space.
+- [ ] `[M]` **Context and summary compaction**: Compress older context and merge old summaries to fit more history in token budget. Less urgent with 1M context window (Opus 4.6) — relevant once users accumulate 100+ sessions.
 - [ ] `[L]` **Topic-based retrieval or thread pinning**: Long-horizon continuity for specific themes.
 - [ ] `[M]` **Priority weighting**: Boost commitments, recurring themes, recognition moments in context assembly.
 - [ ] `[S]` **Session boundary validation**: Avoid accidental context carryover between sessions.
@@ -115,11 +79,26 @@ Longer-term features that expand Lumen's capabilities.
 
 ### Trust & Safety
 
-- [ ] `[M]` **Define boundaries**: Clear non-therapeutic positioning in product and prompts.
+- [ ] `[M]` **Define boundaries and governance**: Clear non-therapeutic positioning in product and prompts. Includes guardrails for sensitive topics.
 - [ ] `[L]` **Crisis UX**: Immediate resources and escalation guidance when distress detected.
-- [ ] `[M]` **User reporting and content flagging**: Mechanism for users to report issues.
-- [ ] `[S]` **Safety policy references in system prompts**: Ensure lumen knows boundaries.
-- [ ] `[M]` **Governance checks for high-risk content**: Guardrails for sensitive topics.
+
+### Prompt Security
+
+- [ ] `[M]` **System prompt protection**: Prevent system prompt leakage in production. Remove from public GitHub (move to env/secrets), strip from client-visible payloads, and add prompt-level instruction for Lumen to not reveal system prompt contents. The mentoring philosophy and prompt architecture is core IP.
+
+### Voice
+
+- [ ] `[M]` **Voice input (speech-to-text)**: Native microphone input in chat UI. Browser Web Speech API for web; native STT for desktop wrapper. Reduces friction for users who prefer talking over typing. `MVP 3`
+
+### Desktop & Sync
+
+- [ ] `[L]` **Tauri desktop wrapper**: Native app shell enabling local filesystem vault, CLI/tool-calling extensibility, and foundation for zero-knowledge sync. `MVP 3`
+  - _Enables: zero-knowledge sync, local file storage, voice integration._
+  - [ ] `[M]` OS keychain / WebAuthn vault unlock (complements idle timeout from MVP 2).
+
+### CLI
+
+- [ ] `[M]` **CLI entry point**: Terminal-based interface for Lumen conversations. Enables power users and developers to interact with Lumen from the command line. Natural fit with Tauri desktop wrapper and OpenClaw plugin distribution.
 
 ---
 
@@ -131,3 +110,4 @@ Longer-term features that expand Lumen's capabilities.
 - **Completion tracking**:
   - Items done directly from backlog → Log in `done/backlog.md`, remove from this file.
   - Items that grow into full phases → Move to `frontend-plan.md` or `backend-plan.md`, archive in their `done/` docs.
+  - Items moved into MVP plans → Track in the respective `mvp*.md` doc.
