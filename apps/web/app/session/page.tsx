@@ -13,7 +13,6 @@ import { isUnlocked } from '@/lib/crypto/key-context';
 import { useAuthSessionGuard } from '@/lib/hooks/use-auth-session-guard';
 import { createStorageService } from '@/lib/storage/dexie-storage';
 import { getLastSession, getDaysSinceLastSession } from '@/lib/storage/queries';
-import { getOrCreateUserId } from '@/lib/storage/user';
 import type { SessionSpacing } from '@/types/session';
 
 const SESSION_SPACING_DAYS = 7;
@@ -24,7 +23,7 @@ const MOCK_EARLY_RETURN = process.env.NEXT_PUBLIC_MOCK_EARLY_RETURN === 'true';
 export default function SessionPage() {
   const router = useRouter();
   const storageRef = React.useRef(createStorageService());
-  const { isAuthed } = useAuthSessionGuard();
+  const { isAuthed, session } = useAuthSessionGuard();
   const [spacing, setSpacing] = React.useState<SessionSpacing | null>(null);
   const [mounted, setMounted] = React.useState(false);
   const [vaultReady, setVaultReady] = React.useState(false);
@@ -49,7 +48,11 @@ export default function SessionPage() {
       setVaultReady(true);
 
       // Load session spacing data from storage
-      const userId = getOrCreateUserId();
+      const userId = session?.user_id;
+      if (!userId) {
+        router.replace(withDevAuth('/login'));
+        return;
+      }
       const [lastSession, daysSince] = await Promise.all([
         getLastSession(storage, userId),
         getDaysSinceLastSession(storage, userId),
@@ -77,7 +80,7 @@ export default function SessionPage() {
     };
 
     checkVaultAndLoadSpacing();
-  }, [isAuthed, router]);
+  }, [isAuthed, router, session?.user_id]);
 
   // Loading state
   if (!mounted || !isAuthed || !vaultReady || !spacing) {

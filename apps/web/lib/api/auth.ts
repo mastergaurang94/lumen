@@ -9,9 +9,10 @@ type VerifyResponse = {
   status: 'ok';
 };
 
-type SessionStatusResponse = {
+export type SessionStatusResponse = {
   status: 'ok';
   email?: string;
+  user_id?: string;
 };
 
 /**
@@ -39,8 +40,8 @@ export function verifyMagicLink(token: string) {
  */
 export async function getAuthSession(): Promise<boolean> {
   try {
-    await apiFetch<SessionStatusResponse>('/v1/auth/session');
-    return true;
+    const session = await apiFetch<SessionStatusResponse>('/v1/auth/session');
+    return Boolean(session.user_id);
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
       return false;

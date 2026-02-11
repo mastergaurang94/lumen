@@ -21,9 +21,9 @@ import {
 import { getAuthSessionInfo, logout } from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
 import { isUnlocked, lockVault } from '@/lib/crypto/key-context';
-import { db } from '@/lib/db';
+import { getActiveDb } from '@/lib/db';
 import { createStorageService } from '@/lib/storage/dexie-storage';
-import { clearLocalUserId } from '@/lib/storage/user';
+import { setStorageScopeForUser } from '@/lib/storage/scope';
 import { cn } from '@/lib/utils';
 import { Z_INDEX } from '@/lib/z-index';
 
@@ -88,6 +88,9 @@ export function Sidebar() {
     setAuthStatus('checking');
     try {
       const session = await getAuthSessionInfo();
+      if (session.user_id) {
+        setStorageScopeForUser(session.user_id);
+      }
       setAuthEmail(session.email ?? null);
       setAuthStatus('authed');
     } catch (error) {
@@ -114,6 +117,9 @@ export function Sidebar() {
         setAuthStatus('checking');
         const session = await getAuthSessionInfo();
         if (!isActive) return;
+        if (session.user_id) {
+          setStorageScopeForUser(session.user_id);
+        }
         setAuthEmail(session.email ?? null);
         setAuthStatus('authed');
       } catch (error) {
@@ -153,8 +159,7 @@ export function Sidebar() {
   const handleReset = async () => {
     // Dev-only reset: clear vault data + local user id to simulate first run.
     await lockVault();
-    await db.delete();
-    clearLocalUserId();
+    await getActiveDb().delete();
     setVaultInitialized(false);
     setVaultUnlocked(false);
     setOpen(false);

@@ -20,7 +20,6 @@ import {
   DEFAULT_ENCRYPTION_VERSION,
   DEFAULT_KDF_ITERATIONS,
 } from '@/lib/storage/metadata';
-import { getOrCreateUserId } from '@/lib/storage/user';
 import type { UserProfile } from '@/types/storage';
 
 type PasswordStrength = 'weak' | 'fair' | 'good' | 'strong';
@@ -51,7 +50,7 @@ const strengthConfig: Record<PasswordStrength, { label: string; color: string; w
 export default function SetupPage() {
   const router = useRouter();
   const storageRef = React.useRef(createStorageService());
-  const { isAuthed } = useAuthSessionGuard();
+  const { isAuthed, session } = useAuthSessionGuard();
   const [passphrase, setPassphrase] = React.useState('');
   const [confirmPassphrase, setConfirmPassphrase] = React.useState('');
   const [showPassphrase, setShowPassphrase] = React.useState(false);
@@ -111,7 +110,11 @@ export default function SetupPage() {
       const metadata = buildVaultMetadata({ salt, iterations, version, keyCheck });
       await storageRef.current.saveVaultMetadata(metadata);
 
-      const userId = getOrCreateUserId();
+      const userId = session?.user_id;
+      if (!userId) {
+        router.replace(withDevAuth('/login'));
+        return;
+      }
       const now = new Date().toISOString();
       const profile: UserProfile = {
         user_id: userId,

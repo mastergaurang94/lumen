@@ -16,7 +16,7 @@ func TestBuildDependenciesInMemory(t *testing.T) {
 	cfg := config.Config{}
 	deps := buildDependencies(cfg)
 
-	if deps.Tokens == nil || deps.Sessions == nil || deps.Coaching == nil || deps.Emailer == nil {
+	if deps.Tokens == nil || deps.Sessions == nil || deps.Users == nil || deps.Coaching == nil || deps.Emailer == nil {
 		t.Fatalf("expected dependencies to be initialized")
 	}
 
@@ -25,6 +25,9 @@ func TestBuildDependenciesInMemory(t *testing.T) {
 	}
 	if _, ok := deps.Sessions.(*store.AuthSessionStore); !ok {
 		t.Fatalf("expected in-memory session store")
+	}
+	if _, ok := deps.Users.(*store.UserIdentityStore); !ok {
+		t.Fatalf("expected in-memory user identity store")
 	}
 	if _, ok := deps.Coaching.(*store.CoachingSessionStore); !ok {
 		t.Fatalf("expected in-memory coaching store")
@@ -51,6 +54,9 @@ func TestBuildDependenciesSQLiteAndResend(t *testing.T) {
 	}
 	if _, ok := deps.Sessions.(*sqlite.AuthSessionStore); !ok {
 		t.Fatalf("expected sqlite session store")
+	}
+	if _, ok := deps.Users.(*sqlite.UserIdentityStore); !ok {
+		t.Fatalf("expected sqlite user identity store")
 	}
 	if _, ok := deps.Coaching.(*sqlite.CoachingSessionStore); !ok {
 		t.Fatalf("expected sqlite coaching store")

@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { getAuthSession } from '@/lib/api/auth';
+import { getAuthSessionInfo, type SessionStatusResponse } from '@/lib/api/auth';
+import { setStorageScopeForUser } from '@/lib/storage/scope';
 
 type AuthStatus = 'checking' | 'authed' | 'unauth';
 
@@ -12,6 +13,7 @@ type AuthStatus = 'checking' | 'authed' | 'unauth';
 export function useAuthSessionGuard() {
   const router = useRouter();
   const [status, setStatus] = React.useState<AuthStatus>('checking');
+  const [session, setSession] = React.useState<SessionStatusResponse | null>(null);
 
   React.useEffect(() => {
     let isActive = true;
@@ -24,24 +26,36 @@ export function useAuthSessionGuard() {
 
     const check = async () => {
       if (bypassAuth) {
+        const devUserId = 'dev-user';
+        const devSession: SessionStatusResponse = {
+          status: 'ok',
+          user_id: devUserId,
+          email: 'dev@example.com',
+        };
+        setStorageScopeForUser(devUserId);
+        setSession(devSession);
         setStatus('authed');
         return;
       }
 
       try {
-        const hasSession = await getAuthSession();
+        const authSession = await getAuthSessionInfo();
         if (!isActive) return;
 
-        if (!hasSession) {
+        if (!authSession.user_id) {
           setStatus('unauth');
+          setSession(null);
           router.replace('/login');
           return;
         }
 
+        setStorageScopeForUser(authSession.user_id);
+        setSession(authSession);
         setStatus('authed');
       } catch {
         if (!isActive) return;
         setStatus('unauth');
+        setSession(null);
         router.replace('/login');
       }
     };
@@ -53,5 +67,5 @@ export function useAuthSessionGuard() {
     };
   }, [router]);
 
-  return { status, isAuthed: status === 'authed' };
+  return { status, isAuthed: status === 'authed', session };
 }
