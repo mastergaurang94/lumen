@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"crypto/rand"
+	"database/sql"
 	"encoding/hex"
 	"time"
 
@@ -28,15 +29,20 @@ func (s *UserIdentityStore) GetOrCreateByEmail(email string) string {
 	if err == nil && existingUserID != "" {
 		return existingUserID
 	}
+	if err != nil && err != sql.ErrNoRows {
+		return ""
+	}
 
 	userID := newUserID()
 	now := time.Now().UTC().Format(time.RFC3339)
-	_, _ = s.db.conn.Exec(
+	if _, err := s.db.conn.Exec(
 		`INSERT OR IGNORE INTO users (user_id, email, created_at) VALUES (?, ?, ?)`,
 		userID,
 		email,
 		now,
-	)
+	); err != nil {
+		return ""
+	}
 
 	// Re-read to handle races where another request inserted first.
 	err = s.db.conn.QueryRow(`SELECT user_id FROM users WHERE email = ?`, email).Scan(&existingUserID)
@@ -44,7 +50,7 @@ func (s *UserIdentityStore) GetOrCreateByEmail(email string) string {
 		return existingUserID
 	}
 
-	return userID
+	return ""
 }
 
 func newUserID() string {

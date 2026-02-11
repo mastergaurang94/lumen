@@ -151,7 +151,71 @@ func TestAuthLogoutClearsSession(t *testing.T) {
 	}
 }
 
+type failingUserIdentities struct{}
+
+func (failingUserIdentities) GetOrCreateByEmail(string) string {
+	return ""
+}
+
+func TestAuthVerifyFailsWhenUserIdentityCreationFails(t *testing.T) {
+	t.Parallel()
+
+	deps := server.Dependencies{
+		Tokens:   store.NewAuthTokenStore(),
+		Sessions: store.NewAuthSessionStore(),
+		Users:    failingUserIdentities{},
+		Coaching: store.NewCoachingSessionStore(),
+		Emailer:  &email.DevProvider{},
+	}
+	handler := newTestServerWithDeps(deps)
+
+	requestBody := map[string]string{"email": "person@example.com"}
+	bodyBytes, _ := json.Marshal(requestBody)
+	req := httptest.NewRequest(http.MethodPost, "/v1/auth/request-link", bytes.NewReader(bodyBytes))
+	resp := httptest.NewRecorder()
+
+	handler.ServeHTTP(resp, req)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", resp.Code)
+	}
+
+	var payload map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	link, ok := payload["magic_link"].(string)
+	if !ok || link == "" {
+		t.Fatalf("expected magic_link in response")
+	}
+
+	token := extractToken(t, link)
+	verifyBody, _ := json.Marshal(map[string]string{"token": token})
+	verifyReq := httptest.NewRequest(http.MethodPost, "/v1/auth/verify", bytes.NewReader(verifyBody))
+	verifyResp := httptest.NewRecorder()
+
+	handler.ServeHTTP(verifyResp, verifyReq)
+	if verifyResp.Code != http.StatusInternalServerError {
+		t.Fatalf("expected status 500, got %d", verifyResp.Code)
+	}
+
+	if len(verifyResp.Result().Cookies()) != 0 {
+		t.Fatalf("expected no auth session cookie on verify failure")
+	}
+}
+
 func newTestServer() http.Handler {
+	deps := server.Dependencies{
+		Tokens:   store.NewAuthTokenStore(),
+		Sessions: store.NewAuthSessionStore(),
+		Users:    store.NewUserIdentityStore(),
+		Coaching: store.NewCoachingSessionStore(),
+		Emailer:  &email.DevProvider{},
+	}
+	return newTestServerWithDeps(deps)
+}
+
+func newTestServerWithDeps(deps server.Dependencies) http.Handler {
 	cfg := config.Config{
 		Env:             "development",
 		Addr:            ":0",
@@ -161,14 +225,6 @@ func newTestServer() http.Handler {
 		SessionTTL:      30 * time.Minute,
 		AuthTokenSecret: "test-secret",
 		AuthCookieName:  "lumen_session",
-	}
-
-	deps := server.Dependencies{
-		Tokens:   store.NewAuthTokenStore(),
-		Sessions: store.NewAuthSessionStore(),
-		Users:    store.NewUserIdentityStore(),
-		Coaching: store.NewCoachingSessionStore(),
-		Emailer:  &email.DevProvider{},
 	}
 
 	return server.New(cfg, deps)

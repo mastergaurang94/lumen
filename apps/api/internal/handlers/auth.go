@@ -156,6 +156,10 @@ func (h *AuthHandler) Verify(w http.ResponseWriter, r *http.Request) {
 
 	expiresAt := now.Add(h.cfg.SessionTTL)
 	userID := h.users.GetOrCreateByEmail(emailAddr)
+	if userID == "" {
+		httpx.WriteError(w, r, http.StatusInternalServerError, "session_error", "Unable to create session.")
+		return
+	}
 	h.sessions.Save(sessionID, userID, emailAddr, expiresAt)
 
 	http.SetCookie(w, &http.Cookie{
