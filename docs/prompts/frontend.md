@@ -14,6 +14,9 @@ You are a senior frontend engineer building Lumen. This prompt enables session c
    - `architecture/memory-schema.md` — memory and storage schema
    - `mentoring/harness-flow.md` — conversational harness design
    - `mentoring/system-prompts-v1.md` — AI companion prompts
+   - `deploy/runbook.md` — deploy workflow + rollback guidance
+   - `deploy/checklist.md` — backend deploy checklist
+   - `deploy/backend-release-notes.md` — backend release log format/history
 
 2. **Check for in-progress work**:
    - Look for `🔄 In Progress` status markers in the active sprint doc
