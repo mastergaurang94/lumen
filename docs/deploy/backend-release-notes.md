@@ -9,28 +9,19 @@ Append one entry per backend deploy.
 
 - Commit(s): `<sha>`
 - Deployer: `<name>`
-- Fly app: `lumen-api`
 - Type: `feature | fix | refactor | infra`
-- Risk: `low | medium | high`
 
 ### Changes
 
 - ...
 
-### API / Contract Impact
+### API Impact (optional)
 
-- `none` or explicit endpoint/field changes
+- only include when backend API contract changed
 
-### Validation
+### Notes (optional)
 
-- `go test ./...`: pass/fail
-- `pnpm --filter web build`: pass/fail (if relevant)
-- Health check: pass/fail
-- Smoke script: pass/fail
-
-### Follow-ups
-
-- none / list
+- only include for incidents, rollbacks, or unusual deployment details
 ```
 
 ---
@@ -39,9 +30,7 @@ Append one entry per backend deploy.
 
 - Commit(s): `user_id and scoped-storage changes on main`
 - Deployer: `gaurang/codex`
-- Fly app: `lumen-api`
 - Type: `feature`
-- Risk: `medium`
 
 ### Changes
 
@@ -49,18 +38,21 @@ Append one entry per backend deploy.
 - `/v1/auth/session` now returns `user_id` and `email`
 - Added backend user identity persistence and migration support
 
-### API / Contract Impact
+### API Impact (optional)
 
 - `GET /v1/auth/session` response includes `user_id`
 - Frontend now requires `user_id` to scope local storage
 
-### Validation
+---
 
-- `go test ./...`: pass
-- `pnpm --filter web build`: pass
-- Health check: pass (`/v1/health` returned 200)
-- Smoke script: pending (script added after this deploy)
+## 2026-02-11 16:29 UTC — Deploy runbook and smoke automation
 
-### Follow-ups
+- Commit(s): `cb60e92`
+- Deployer: `gaurang/codex`
+- Type: `infra`
 
-- Use `apps/api/scripts/smoke.sh` on next deploy and mark result
+### Changes
+
+- Added backend deployment runbook/checklist docs under `docs/deploy/`
+- Added production smoke script at `apps/api/scripts/smoke.sh`
+- Added deploy-doc references in session startup docs (`CLAUDE.md`, `AGENTS.md`, `docs/prompts/frontend.md`)
