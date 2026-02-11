@@ -2,6 +2,11 @@ package store
 
 import "time"
 
+type AuthSession struct {
+	UserID string
+	Email  string
+}
+
 // AuthTokens defines the contract for magic-link token persistence.
 type AuthTokens interface {
 	Save(tokenHash, email string, expiresAt time.Time)
@@ -10,9 +15,14 @@ type AuthTokens interface {
 
 // AuthSessions defines the contract for login session persistence.
 type AuthSessions interface {
-	Save(sessionID, email string, expiresAt time.Time)
-	Validate(sessionID string, now time.Time) (string, bool)
+	Save(sessionID, userID, email string, expiresAt time.Time)
+	Validate(sessionID string, now time.Time) (AuthSession, bool)
 	Delete(sessionID string)
+}
+
+// UserIdentities defines stable user ID mapping for authenticated emails.
+type UserIdentities interface {
+	GetOrCreateByEmail(email string) string
 }
 
 // CoachingSessions defines the contract for coaching session metadata persistence.

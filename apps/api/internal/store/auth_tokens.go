@@ -1,6 +1,8 @@
 package store
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"sync"
 	"time"
 )
@@ -60,6 +62,7 @@ func (s *AuthTokenStore) Consume(tokenHash string, now time.Time) (string, bool)
 
 // AuthSessionRecord tracks a login session token.
 type AuthSessionRecord struct {
+	UserID    string
 	Email     string
 	ExpiresAt time.Time
 }
@@ -78,27 +81,31 @@ func NewAuthSessionStore() *AuthSessionStore {
 }
 
 // Save stores a new login session token.
-func (s *AuthSessionStore) Save(sessionID, email string, expiresAt time.Time) {
+func (s *AuthSessionStore) Save(sessionID, userID, email string, expiresAt time.Time) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.sessions[sessionID] = AuthSessionRecord{
+		UserID:    userID,
 		Email:     email,
 		ExpiresAt: expiresAt,
 	}
 }
 
-// Validate returns the email for a valid, unexpired login session token.
-func (s *AuthSessionStore) Validate(sessionID string, now time.Time) (string, bool) {
+// Validate returns user/session identity data for a valid, unexpired login session token.
+func (s *AuthSessionStore) Validate(sessionID string, now time.Time) (AuthSession, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	record, ok := s.sessions[sessionID]
 	if !ok || now.After(record.ExpiresAt) {
-		return "", false
+		return AuthSession{}, false
 	}
 
-	return record.Email, true
+	return AuthSession{
+		UserID: record.UserID,
+		Email:  record.Email,
+	}, true
 }
 
 // Delete removes a login session token.
@@ -107,4 +114,43 @@ func (s *AuthSessionStore) Delete(sessionID string) {
 	defer s.mu.Unlock()
 
 	delete(s.sessions, sessionID)
+}
+
+// Compile-time interface compliance check.
+var _ UserIdentities = (*UserIdentityStore)(nil)
+
+// UserIdentityStore maps login emails to stable user IDs.
+type UserIdentityStore struct {
+	mu      sync.RWMutex
+	byEmail map[string]string
+}
+
+// NewUserIdentityStore constructs an in-memory user identity store.
+func NewUserIdentityStore() *UserIdentityStore {
+	return &UserIdentityStore{
+		byEmail: make(map[string]string),
+	}
+}
+
+// GetOrCreateByEmail returns a stable user ID for the email.
+func (s *UserIdentityStore) GetOrCreateByEmail(email string) string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if existing, ok := s.byEmail[email]; ok && existing != "" {
+		return existing
+	}
+
+	userID := newUserID()
+	s.byEmail[email] = userID
+	return userID
+}
+
+func newUserID() string {
+	raw := make([]byte, 16)
+	if _, err := rand.Read(raw); err != nil {
+		// Extremely unlikely fallback; still unique enough for local in-memory mode.
+		return "user-" + hex.EncodeToString([]byte(time.Now().UTC().Format(time.RFC3339Nano)))
+	}
+	return hex.EncodeToString(raw)
 }

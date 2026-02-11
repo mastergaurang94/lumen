@@ -32,6 +32,7 @@ type AuthHandler struct {
 	cfg         config.Config
 	tokens      store.AuthTokens
 	sessions    store.AuthSessions
+	users       store.UserIdentities
 	emailer     email.Provider
 	rateLimiter *RateLimiter
 	clock       func() time.Time
@@ -39,11 +40,18 @@ type AuthHandler struct {
 }
 
 // NewAuthHandler wires dependencies for auth routes.
-func NewAuthHandler(cfg config.Config, tokens store.AuthTokens, sessions store.AuthSessions, emailer email.Provider) *AuthHandler {
+func NewAuthHandler(
+	cfg config.Config,
+	tokens store.AuthTokens,
+	sessions store.AuthSessions,
+	users store.UserIdentities,
+	emailer email.Provider,
+) *AuthHandler {
 	return &AuthHandler{
 		cfg:         cfg,
 		tokens:      tokens,
 		sessions:    sessions,
+		users:       users,
 		emailer:     emailer,
 		rateLimiter: NewRateLimiter(),
 		clock:       time.Now,
@@ -147,7 +155,8 @@ func (h *AuthHandler) Verify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	expiresAt := now.Add(h.cfg.SessionTTL)
-	h.sessions.Save(sessionID, emailAddr, expiresAt)
+	userID := h.users.GetOrCreateByEmail(emailAddr)
+	h.sessions.Save(sessionID, userID, emailAddr, expiresAt)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     h.cfg.AuthCookieName,
@@ -167,9 +176,13 @@ func (h *AuthHandler) Verify(w http.ResponseWriter, r *http.Request) {
 // SessionStatus handles GET /v1/auth/session.
 func (h *AuthHandler) SessionStatus(w http.ResponseWriter, r *http.Request) {
 	userID, _ := apimiddleware.UserIDFromContext(r.Context())
+	emailAddr, _ := apimiddleware.UserEmailFromContext(r.Context())
 	response := map[string]string{"status": "ok"}
 	if userID != "" {
-		response["email"] = userID
+		response["user_id"] = userID
+	}
+	if emailAddr != "" {
+		response["email"] = emailAddr
 	}
 	httpx.WriteJSON(w, http.StatusOK, response)
 }

@@ -20,30 +20,33 @@ func NewAuthSessionStore(db *DB) *AuthSessionStore {
 }
 
 // Save stores a new login session.
-func (s *AuthSessionStore) Save(sessionID, email string, expiresAt time.Time) {
+func (s *AuthSessionStore) Save(sessionID, userID, email string, expiresAt time.Time) {
 	_, _ = s.db.conn.Exec(
-		`INSERT OR REPLACE INTO auth_sessions (session_id, email, expires_at) VALUES (?, ?, ?)`,
-		sessionID, email, expiresAt.Format(time.RFC3339),
+		`INSERT OR REPLACE INTO auth_sessions (session_id, user_id, email, expires_at) VALUES (?, ?, ?, ?)`,
+		sessionID, userID, email, expiresAt.Format(time.RFC3339),
 	)
 }
 
-// Validate returns the email for a valid, unexpired session.
-func (s *AuthSessionStore) Validate(sessionID string, now time.Time) (string, bool) {
-	var email, expiresAtStr string
+// Validate returns identity details for a valid, unexpired session.
+func (s *AuthSessionStore) Validate(sessionID string, now time.Time) (store.AuthSession, bool) {
+	var userID, email, expiresAtStr string
 	err := s.db.conn.QueryRow(
-		`SELECT email, expires_at FROM auth_sessions WHERE session_id = ?`,
+		`SELECT user_id, email, expires_at FROM auth_sessions WHERE session_id = ?`,
 		sessionID,
-	).Scan(&email, &expiresAtStr)
+	).Scan(&userID, &email, &expiresAtStr)
 	if err != nil {
-		return "", false
+		return store.AuthSession{}, false
 	}
 
 	expiresAt, err := time.Parse(time.RFC3339, expiresAtStr)
 	if err != nil || now.After(expiresAt) {
-		return "", false
+		return store.AuthSession{}, false
 	}
 
-	return email, true
+	return store.AuthSession{
+		UserID: userID,
+		Email:  email,
+	}, true
 }
 
 // Delete removes a login session.

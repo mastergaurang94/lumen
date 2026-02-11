@@ -53,6 +53,11 @@ func (db *DB) migrate() error {
 			email      TEXT NOT NULL,
 			expires_at TEXT NOT NULL
 		)`,
+		`CREATE TABLE IF NOT EXISTS users (
+			user_id    TEXT PRIMARY KEY,
+			email      TEXT NOT NULL UNIQUE,
+			created_at TEXT NOT NULL
+		)`,
 		`CREATE TABLE IF NOT EXISTS coaching_sessions (
 			session_id      TEXT PRIMARY KEY,
 			user_id         TEXT NOT NULL,
@@ -68,5 +73,49 @@ func (db *DB) migrate() error {
 		}
 	}
 
+	if err := db.ensureAuthSessionUserIDColumn(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *DB) ensureAuthSessionUserIDColumn() error {
+	rows, err := db.conn.Query(`PRAGMA table_info(auth_sessions)`)
+	if err != nil {
+		return fmt.Errorf("sqlite migrate auth_sessions info: %w", err)
+	}
+	defer rows.Close()
+
+	hasUserID := false
+	for rows.Next() {
+		var (
+			cid       int
+			name      string
+			colType   string
+			notNull   int
+			defaultV  sql.NullString
+			primaryID int
+		)
+		if err := rows.Scan(&cid, &name, &colType, &notNull, &defaultV, &primaryID); err != nil {
+			return fmt.Errorf("sqlite migrate auth_sessions scan: %w", err)
+		}
+		if name == "user_id" {
+			hasUserID = true
+			break
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("sqlite migrate auth_sessions iterate: %w", err)
+	}
+
+	if hasUserID {
+		return nil
+	}
+
+	if _, err := db.conn.Exec(`ALTER TABLE auth_sessions ADD COLUMN user_id TEXT`); err != nil {
+		return fmt.Errorf("sqlite migrate auth_sessions add user_id: %w", err)
+	}
 	return nil
 }

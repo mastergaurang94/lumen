@@ -13,6 +13,7 @@ import (
 type contextKey string
 
 const userIDKey contextKey = "userID"
+const userEmailKey contextKey = "userEmail"
 
 // RequireAuthSession enforces a valid auth session cookie and stores the user ID in context.
 func RequireAuthSession(cfg config.Config, sessions store.AuthSessions) func(http.Handler) http.Handler {
@@ -24,13 +25,14 @@ func RequireAuthSession(cfg config.Config, sessions store.AuthSessions) func(htt
 				return
 			}
 
-			userID, ok := sessions.Validate(cookie.Value, time.Now())
-			if !ok {
+			session, ok := sessions.Validate(cookie.Value, time.Now())
+			if !ok || session.UserID == "" {
 				httpx.WriteError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required.")
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), userIDKey, userID)
+			ctx := context.WithValue(r.Context(), userIDKey, session.UserID)
+			ctx = context.WithValue(ctx, userEmailKey, session.Email)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -40,4 +42,10 @@ func RequireAuthSession(cfg config.Config, sessions store.AuthSessions) func(htt
 func UserIDFromContext(ctx context.Context) (string, bool) {
 	userID, ok := ctx.Value(userIDKey).(string)
 	return userID, ok
+}
+
+// UserEmailFromContext returns the authenticated user email, if present.
+func UserEmailFromContext(ctx context.Context) (string, bool) {
+	email, ok := ctx.Value(userEmailKey).(string)
+	return email, ok
 }

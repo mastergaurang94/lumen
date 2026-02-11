@@ -51,11 +51,13 @@ func buildDependencies(cfg config.Config) server.Dependencies {
 		}
 		deps.Tokens = sqlite.NewAuthTokenStore(db)
 		deps.Sessions = sqlite.NewAuthSessionStore(db)
+		deps.Users = sqlite.NewUserIdentityStore(db)
 		deps.Coaching = sqlite.NewCoachingSessionStore(db)
 		log.Printf("using sqlite store: %s", cfg.DatabaseURL)
 	} else {
 		deps.Tokens = store.NewAuthTokenStore()
 		deps.Sessions = store.NewAuthSessionStore()
+		deps.Users = store.NewUserIdentityStore()
 		deps.Coaching = store.NewCoachingSessionStore()
 		log.Print("using in-memory store")
 	}

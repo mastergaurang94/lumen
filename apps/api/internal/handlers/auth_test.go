@@ -67,6 +67,17 @@ func TestAuthRequestAndVerifyFlow(t *testing.T) {
 		t.Fatalf("expected status 200, got %d", sessionResp.Code)
 	}
 
+	var sessionPayload map[string]string
+	if err := json.NewDecoder(sessionResp.Body).Decode(&sessionPayload); err != nil {
+		t.Fatalf("decode session response: %v", err)
+	}
+	if sessionPayload["email"] != "person@example.com" {
+		t.Fatalf("expected session email, got %q", sessionPayload["email"])
+	}
+	if sessionPayload["user_id"] == "" {
+		t.Fatalf("expected session user_id")
+	}
+
 	unauthReq := httptest.NewRequest(http.MethodGet, "/v1/auth/session", nil)
 	unauthResp := httptest.NewRecorder()
 
@@ -155,6 +166,7 @@ func newTestServer() http.Handler {
 	deps := server.Dependencies{
 		Tokens:   store.NewAuthTokenStore(),
 		Sessions: store.NewAuthSessionStore(),
+		Users:    store.NewUserIdentityStore(),
 		Coaching: store.NewCoachingSessionStore(),
 		Emailer:  &email.DevProvider{},
 	}

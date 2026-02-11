@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { getActiveDb } from '@/lib/db';
 import { decodeJson, encodeJson, encrypt, decrypt, generateIV, hashTranscript } from '@/lib/crypto';
 import type { StorageService } from '@/lib/storage';
 import type {
@@ -151,25 +151,30 @@ export class DexieStorageService implements StorageService {
   }
 
   async getProfile(userId: string): Promise<UserProfile | null> {
+    const db = getActiveDb();
     const record = await db.userProfiles.get(userId);
     if (!record) return null;
     return this.decryptProfile(record);
   }
 
   async saveProfile(profile: UserProfile): Promise<void> {
+    const db = getActiveDb();
     const encrypted = await this.encryptProfile(profile);
     await db.userProfiles.put(encrypted);
   }
 
   async getTranscript(sessionId: string): Promise<SessionTranscript | null> {
+    const db = getActiveDb();
     return (await db.sessionTranscripts.get(sessionId)) ?? null;
   }
 
   async saveTranscript(transcript: SessionTranscript): Promise<void> {
+    const db = getActiveDb();
     await db.sessionTranscripts.put(transcript);
   }
 
   async listTranscripts(userId: string): Promise<SessionTranscript[]> {
+    const db = getActiveDb();
     // Sort by started_at then reverse to keep newest-first ordering.
     const transcripts = await db.sessionTranscripts
       .where('user_id')
@@ -179,26 +184,31 @@ export class DexieStorageService implements StorageService {
   }
 
   async saveTranscriptChunk(chunk: SessionTranscriptChunk): Promise<void> {
+    const db = getActiveDb();
     await db.sessionTranscriptChunks.put(chunk);
   }
 
   async listTranscriptChunks(sessionId: string): Promise<SessionTranscriptChunk[]> {
+    const db = getActiveDb();
     // Ensure chunks are returned in write order.
     return db.sessionTranscriptChunks.where('session_id').equals(sessionId).sortBy('chunk_index');
   }
 
   async getSummary(sessionId: string): Promise<SessionSummary | null> {
+    const db = getActiveDb();
     const record = await db.sessionSummaries.get(sessionId);
     if (!record) return null;
     return this.decryptSummary(record);
   }
 
   async saveSummary(summary: SessionSummary): Promise<void> {
+    const db = getActiveDb();
     const encrypted = await this.encryptSummary(summary);
     await db.sessionSummaries.put(encrypted);
   }
 
   async listSummaries(userId: string, limit = 10): Promise<SessionSummary[]> {
+    const db = getActiveDb();
     const summaries = await db.sessionSummaries
       .where('user_id')
       .equals(userId)
@@ -208,21 +218,25 @@ export class DexieStorageService implements StorageService {
   }
 
   async getLlmProviderKey(provider: LlmProvider): Promise<LlmProviderKey | null> {
+    const db = getActiveDb();
     const record = await db.llmProviderKeys.get(provider);
     if (!record) return null;
     return this.decryptLlmProviderKey(record);
   }
 
   async saveLlmProviderKey(record: LlmProviderKey): Promise<void> {
+    const db = getActiveDb();
     const encrypted = await this.encryptLlmProviderKey(record);
     await db.llmProviderKeys.put(encrypted);
   }
 
   async getVaultMetadata(): Promise<VaultMetadata | null> {
+    const db = getActiveDb();
     return (await db.vaultMetadata.get('vault')) ?? null;
   }
 
   async saveVaultMetadata(metadata: VaultMetadata): Promise<void> {
+    const db = getActiveDb();
     await db.vaultMetadata.put(metadata);
   }
 }

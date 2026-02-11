@@ -19,6 +19,7 @@ import (
 type Dependencies struct {
 	Tokens   store.AuthTokens
 	Sessions store.AuthSessions
+	Users    store.UserIdentities
 	Coaching store.CoachingSessions
 	Emailer  email.Provider
 }
@@ -39,7 +40,7 @@ func New(cfg config.Config, deps Dependencies) http.Handler {
 		MaxAge:           300,
 	}))
 
-	authHandler := handlers.NewAuthHandler(cfg, deps.Tokens, deps.Sessions, deps.Emailer)
+	authHandler := handlers.NewAuthHandler(cfg, deps.Tokens, deps.Sessions, deps.Users, deps.Emailer)
 	coachingSessionsHandler := handlers.NewCoachingSessionsHandler(deps.Coaching)
 
 	router.Route("/v1", func(r chi.Router) {

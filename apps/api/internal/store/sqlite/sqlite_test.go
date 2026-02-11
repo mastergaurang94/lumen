@@ -55,17 +55,46 @@ func TestAuthSessionValidateAndDelete(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
 	expiresAt := now.Add(30 * time.Minute)
 	sessionID := "session-123"
+	userID := "user-123"
 	email := "person@example.com"
 
-	store.Save(sessionID, email, expiresAt)
+	store.Save(sessionID, userID, email, expiresAt)
 
-	if gotEmail, ok := store.Validate(sessionID, now); !ok || gotEmail != email {
-		t.Fatalf("expected validate to return %q, got %q (ok=%v)", email, gotEmail, ok)
+	session, ok := store.Validate(sessionID, now)
+	if !ok {
+		t.Fatalf("expected validate ok")
+	}
+	if session.Email != email {
+		t.Fatalf("expected email %q, got %q", email, session.Email)
+	}
+	if session.UserID != userID {
+		t.Fatalf("expected user_id %q, got %q", userID, session.UserID)
 	}
 
 	store.Delete(sessionID)
-	if gotEmail, ok := store.Validate(sessionID, now); ok || gotEmail != "" {
-		t.Fatalf("expected validate after delete to fail, got %q (ok=%v)", gotEmail, ok)
+	if gotSession, ok := store.Validate(sessionID, now); ok || gotSession.Email != "" {
+		t.Fatalf("expected validate after delete to fail, got %#v (ok=%v)", gotSession, ok)
+	}
+}
+
+func TestUserIdentityStablePerEmail(t *testing.T) {
+	t.Parallel()
+
+	db := openTestDB(t)
+	store := NewUserIdentityStore(db)
+
+	first := store.GetOrCreateByEmail("person@example.com")
+	second := store.GetOrCreateByEmail("person@example.com")
+	third := store.GetOrCreateByEmail("other@example.com")
+
+	if first == "" || second == "" || third == "" {
+		t.Fatalf("expected non-empty user IDs")
+	}
+	if first != second {
+		t.Fatalf("expected stable user ID for same email")
+	}
+	if first == third {
+		t.Fatalf("expected distinct user IDs for different emails")
 	}
 }
 

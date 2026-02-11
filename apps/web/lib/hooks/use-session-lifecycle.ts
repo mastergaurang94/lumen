@@ -7,7 +7,6 @@ import { getKey, isUnlocked } from '@/lib/crypto/key-context';
 import { enqueueSessionStart, flushSessionOutbox } from '@/lib/outbox/session-outbox';
 import { getSessionNumber } from '@/lib/storage/queries';
 import { deserializeMessages, serializeMessages } from '@/lib/storage/transcript';
-import { getOrCreateUserId } from '@/lib/storage/user';
 import type { StorageService } from '@/lib/storage';
 import { DEFAULT_MODEL_ID } from '@/lib/llm/model-config';
 import type { Message, SessionState } from '@/types/session';
@@ -17,6 +16,7 @@ type UseSessionLifecycleParams = {
   storage: StorageService;
   router: AppRouterInstance;
   isAuthed: boolean;
+  authenticatedUserId: string | null;
   sessionState: SessionState;
   setSessionState: React.Dispatch<React.SetStateAction<SessionState>>;
   onMessagesRestored: (messages: Message[]) => void;
@@ -55,6 +55,7 @@ export function useSessionLifecycle({
   storage,
   router,
   isAuthed,
+  authenticatedUserId,
   sessionState,
   setSessionState,
   onMessagesRestored,
@@ -178,14 +179,18 @@ export function useSessionLifecycle({
         router.push(withDevAuth('/unlock'));
         return;
       }
+      if (!authenticatedUserId) {
+        router.push(withDevAuth('/login'));
+        return;
+      }
       vaultMetadataRef.current = metadata;
       storage.setVaultContext({ key, metadata });
-      userIdRef.current = getOrCreateUserId();
+      userIdRef.current = authenticatedUserId;
       setVaultReady(true);
     };
 
     checkVault();
-  }, [isAuthed, router, storage]);
+  }, [authenticatedUserId, isAuthed, router, storage]);
 
   // Flush pending session metadata when the user is online.
   React.useEffect(() => {
