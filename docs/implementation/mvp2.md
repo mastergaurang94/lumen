@@ -1,6 +1,6 @@
 # MVP 2 Implementation
 
-Last Updated: 2026-02-11
+Last Updated: 2026-02-12
 Status: In Progress
 
 > **Session protocol**: At the end of each working session, append a dated entry to
@@ -18,6 +18,9 @@ Status: In Progress
 
 ## Running Updates
 
+- 2026-02-12: `1.8 ✅ Complete` — surfaced conversation continuity in UI by adding
+  session number to chat header (`Conversation N - <date>`), sourced from the
+  transcript `session_number`.
 - 2026-02-11: Organized `docs/implementation/` — moved completed phase plans to
   `done/` as templates, updated cross-references. MVP2 is now the single active WIP doc.
 - 2026-02-11: Tier 1 kickoff. `1.1 ✅ Complete` by fixing a render-state handoff bug in
@@ -261,6 +264,8 @@ For a product built on presence and trust, silent failures are the opposite of w
 ---
 
 ### 1.8 Session number visible in UI `[S]`
+
+**Status**: ✅ Complete (2026-02-12)
 
 **Problem**: The system computes `session_number` for context assembly, but the user never sees it. Displaying it creates a sense of journey and continuity — "Conversation 5" feels like a relationship, not a one-off chat.
 

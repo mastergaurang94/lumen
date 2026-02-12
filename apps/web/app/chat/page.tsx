@@ -441,6 +441,7 @@ function ChatPageInner() {
   }
 
   const showProviderGate = sessionState === 'active' && storageReady && llmKeyReady && !llmKey;
+  const sessionNumber = transcriptRef.current?.session_number ?? 1;
 
   return (
     <div className="atmosphere h-screen flex flex-col overflow-hidden">
@@ -463,7 +464,11 @@ function ChatPageInner() {
       )}
 
       {/* Title - centered */}
-      <ChatHeader sessionDate={sessionDateRef.current} elapsedTime={elapsedTime} />
+      <ChatHeader
+        sessionDate={sessionDateRef.current}
+        elapsedTime={elapsedTime}
+        sessionNumber={sessionNumber}
+      />
 
       {/* Messages area */}
       <main className="flex-1 min-h-0 overflow-hidden">
