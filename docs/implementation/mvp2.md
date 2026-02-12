@@ -18,6 +18,11 @@ Status: In Progress
 
 ## Running Updates
 
+- 2026-02-12: `1.6 ✅ Complete` — replaced immediate vault lock on `pagehide`
+  with visibility-based idle locking. `VaultProvider` now starts a configurable
+  timeout (default 30 minutes via `NEXT_PUBLIC_VAULT_IDLE_TIMEOUT_MINUTES`)
+  when the tab is hidden, cancels it on return, and locks only after timeout.
+  Kept immediate lock on `beforeunload` for full close security.
 - 2026-02-12: `1.8 ✅ Complete` — surfaced conversation continuity in UI by adding
   session number to chat header (`Conversation N - <date>`), sourced from the
   transcript `session_number`.
@@ -222,6 +227,8 @@ These are the specific experiences we're engineering for. Every item in this pla
 ---
 
 ### 1.6 Reduce vault unlock churn — idle timeout `[M]`
+
+**Status**: ✅ Complete (2026-02-12)
 
 **Problem**: Every time a user closes the tab and returns, they must re-enter their passphrase. For testers coming back for session 2, this friction could kill the return visit.
 
