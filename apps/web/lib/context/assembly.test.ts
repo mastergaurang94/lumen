@@ -1,7 +1,7 @@
 import { webcrypto } from 'crypto';
 import 'fake-indexeddb/auto';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { db } from '@/lib/db';
+import { getActiveDb } from '@/lib/db';
 import { deriveKey, encrypt, generateIV, generateSalt, hashTranscript } from '@/lib/crypto';
 import { createStorageService } from '@/lib/storage/dexie-storage';
 import { buildVaultMetadata, createKeyCheck } from '@/lib/storage/metadata';
@@ -16,11 +16,11 @@ beforeAll(() => {
 });
 
 beforeEach(async () => {
-  await db.open();
+  await getActiveDb().open();
 });
 
 afterEach(async () => {
-  await db.delete();
+  await getActiveDb().delete();
 });
 
 async function setupVault(storage: ReturnType<typeof createStorageService>, passphrase: string) {
