@@ -1,6 +1,6 @@
 # Lumen Backlog
 
-Last Updated: 2026-02-10
+Last Updated: 2026-02-12
 
 Items are organized by time horizon (Now → Soon → Later) and category. Effort markers: `[S]`mall, `[M]`edium, `[L]`arge. Items tagged `MVP 3` are candidates for the next milestone. Items in the current sprint are tracked in `mvp2.md`.
 
@@ -32,6 +32,7 @@ Near-term improvements.
 ### Design
 
 - [ ] `[M]` **Theme iteration**: Current dawn/dusk/afternoon palettes need refinement. Incorporate more atmospheric elements like OmmWriter — richer backgrounds, subtle textures, more immersive feel.
+- [ ] `[S]` **Base text + icon scale pass**: Increase body text and icon sizing across chat/auth/sidebar surfaces as part of the same atmospheric polish pass, keeping touch targets comfortable and proportions consistent.
 
 ---
 
