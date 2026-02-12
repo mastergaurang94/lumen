@@ -137,6 +137,9 @@ function ClosureFinal({
   sessionDate,
   partingWords,
   actionSteps,
+  summaryError,
+  isRetryingSummary,
+  onRetrySummary,
   suggestedNextSession,
   canShare,
   onShare,
@@ -148,6 +151,9 @@ function ClosureFinal({
   sessionDate: Date;
   partingWords?: string | null;
   actionSteps: string[];
+  summaryError: string | null;
+  isRetryingSummary: boolean;
+  onRetrySummary: () => void;
   suggestedNextSession: Date;
   canShare: boolean;
   onShare: () => void;
@@ -208,6 +214,21 @@ function ClosureFinal({
               </p>
             </blockquote>
           </div>
+        </motion.div>
+      )}
+
+      {/* Next session suggestion */}
+      {summaryError && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.65, duration: 0.4 }}
+          className="rounded-xl border border-border/70 bg-muted/40 px-4 py-4 text-left space-y-3"
+        >
+          <p className="text-sm text-foreground">{summaryError}</p>
+          <Button size="sm" variant="outline" onClick={onRetrySummary} disabled={isRetryingSummary}>
+            {isRetryingSummary ? 'Retrying...' : 'Try reflection again'}
+          </Button>
         </motion.div>
       )}
 
@@ -320,6 +341,9 @@ interface SessionClosureProps {
   partingWords?: string | null;
   actionSteps?: string[];
   closureStep?: ClosureStep;
+  summaryError?: string | null;
+  isRetryingSummary?: boolean;
+  onRetrySummary?: () => void;
 }
 
 export function SessionClosure({
@@ -327,6 +351,9 @@ export function SessionClosure({
   partingWords,
   actionSteps = [],
   closureStep = 'done',
+  summaryError = null,
+  isRetryingSummary = false,
+  onRetrySummary = () => {},
 }: SessionClosureProps) {
   const [showActionSteps, setShowActionSteps] = React.useState(false);
   const [shareStatus, setShareStatus] = React.useState<'idle' | 'success' | 'error'>('idle');
@@ -422,6 +449,9 @@ export function SessionClosure({
               sessionDate={sessionDate}
               partingWords={partingWords}
               actionSteps={actionSteps}
+              summaryError={summaryError}
+              isRetryingSummary={isRetryingSummary}
+              onRetrySummary={onRetrySummary}
               suggestedNextSession={suggestedNextSession}
               canShare={canShare}
               onShare={handleShare}

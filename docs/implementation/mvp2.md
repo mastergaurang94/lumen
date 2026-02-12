@@ -18,6 +18,13 @@ Status: In Progress
 
 ## Running Updates
 
+- 2026-02-12: `1.7 ✅ Complete` — added graceful recovery UX for response and
+  reflection failures. In-chat streaming interruptions now preserve partial
+  text and show an inline retry prompt ("I lost my train of thought...") with
+  `Try again`. Session closure now surfaces summary-generation failures with
+  honest copy and a `Try reflection again` action instead of silently finishing
+  with empty reflection content. Added regression coverage for interrupted
+  streaming/retry flow and closure error-state rendering.
 - 2026-02-12: `1.6 ✅ Complete` — replaced immediate vault lock on `pagehide`
   with visibility-based idle locking. `VaultProvider` now starts a configurable
   timeout (default 30 minutes via `NEXT_PUBLIC_VAULT_IDLE_TIMEOUT_MINUTES`)
@@ -71,9 +78,6 @@ Status: In Progress
   - Double-render fix: `setStreamingContent(null)` before `setMessages()` prevents one-frame duplicate
   - Removed blinking cursor in favor of lightbulb-only indicator
   - Code review pass: removed dead refs (`messagesEndRef`, `footerRef`), unused exports, stale comments
-- 2026-02-11: Added `3.5` — Increase base text and icon sizes (desktop readability + proportional
-  icon scaling). Added Enter key shortcut to session page "Let's go" / "Continue" button for
-  keyboard flow after vault unlock.
 - 2026-02-11: Added `1.9`, `1.10`, `1.11` — Show More/Less, Scroll-to-bottom button, Copy action.
   Added accessibility and responsive notes to `3.4`.
 - 2026-02-11: `1.9 ✅ Complete`, `1.10 ✅ Complete`, `1.11 ✅ Complete` — Chat interaction features.
@@ -250,6 +254,8 @@ These are the specific experiences we're engineering for. Every item in this pla
 ---
 
 ### 1.7 Graceful error feedback for streaming and summary failures `[S]`
+
+**Status**: ✅ Complete (2026-02-12)
 
 **Problem**: Two silent failure modes exist:
 
@@ -676,23 +682,6 @@ Keep it minimal and integrated into the existing voice. Not a separate "safety" 
 - Screen reader announcement for streaming completion ("Response complete")
 
 **Key concern**: iOS Safari handles viewport height differently when the keyboard is open (`100vh` includes the keyboard). The chat footer and input area need to account for this.
-
----
-
-### 3.5 Increase base text and icon sizes `[S]`
-
-**Problem**: Body text and icons across the app look a bit small, especially on desktop. The chat page is the primary concern (message text, input, metadata), but this likely extends to the entire UI — auth pages, session page, sidebar, etc.
-
-**Approach**:
-
-- Audit base font sizes across the app — body text should feel generous and readable at a comfortable distance
-- Increase message text size in the chat (both user and assistant bubbles)
-- Scale up small icons (copy, show more/less, scroll-to-bottom, sidebar icons) to match the larger text
-- Check input fields, labels, and muted helper text — these should scale proportionally
-- Ensure touch targets remain comfortable on mobile after the size bump (minimum 44px)
-- This is a pass, not a redesign — adjust sizes within the existing type scale
-
-**Scope note**: Combine with 3.4 mobile testing if convenient — both involve visual comfort at different viewport sizes.
 
 ---
 

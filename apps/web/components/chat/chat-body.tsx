@@ -5,6 +5,7 @@ import { Shield } from 'lucide-react';
 import { LumenMessage, TypingIndicator, UserMessage } from '@/components/chat';
 import { MessageActions } from '@/components/chat/message-actions';
 import { ProviderGate } from '@/components/chat/provider-gate';
+import { Button } from '@/components/ui/button';
 import type { Message } from '@/types/session';
 
 type ChatBodyProps = {
@@ -17,6 +18,9 @@ type ChatBodyProps = {
   messages: Message[];
   isTyping: boolean;
   streamingContent: string | null;
+  streamInterruptedPartial: string | null;
+  onRetryInterruptedStream: () => void;
+  onDismissInterruptedStream: () => void;
   scrollAreaRef: RefObject<HTMLDivElement | null>;
 };
 
@@ -31,6 +35,9 @@ export function ChatBody({
   messages,
   isTyping,
   streamingContent,
+  streamInterruptedPartial,
+  onRetryInterruptedStream,
+  onDismissInterruptedStream,
   scrollAreaRef,
 }: ChatBodyProps) {
   if (showProviderGate) {
@@ -88,6 +95,28 @@ export function ChatBody({
 
           {/* Streaming message */}
           {streamingContent !== null && <LumenMessage key="streaming" content={streamingContent} />}
+
+          {/* Inline interruption feedback with retry action */}
+          {streamInterruptedPartial !== null && (
+            <div className="space-y-4">
+              {streamInterruptedPartial.length > 0 && (
+                <LumenMessage content={streamInterruptedPartial} />
+              )}
+              <div className="rounded-xl border border-border/70 bg-muted/40 px-4 py-3">
+                <p className="text-sm text-foreground">
+                  I lost my train of thought. Want me to try again?
+                </p>
+                <div className="mt-3 flex items-center gap-2">
+                  <Button size="sm" onClick={onRetryInterruptedStream}>
+                    Try again
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={onDismissInterruptedStream}>
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Pulsing lightbulb — visible during thinking and streaming */}
           <AnimatePresence>
