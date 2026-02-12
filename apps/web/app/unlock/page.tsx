@@ -20,6 +20,7 @@ export default function UnlockPage() {
   const router = useRouter();
   const storageRef = React.useRef(createStorageService());
   const { isAuthed } = useAuthSessionGuard();
+  const inputRef = React.useRef<HTMLInputElement>(null);
   const [passphrase, setPassphrase] = React.useState('');
   const [showPassphrase, setShowPassphrase] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -74,6 +75,7 @@ export default function UnlockPage() {
       if (!isValid) {
         setError('Incorrect passphrase. Try again.');
         setIsSubmitting(false);
+        requestAnimationFrame(() => inputRef.current?.focus());
         return;
       }
 
@@ -83,6 +85,7 @@ export default function UnlockPage() {
       console.error('Failed to unlock vault', unlockError);
       setError('Something went wrong. Please try again.');
       setIsSubmitting(false);
+      requestAnimationFrame(() => inputRef.current?.focus());
     }
   };
 
@@ -133,6 +136,7 @@ export default function UnlockPage() {
             </label>
             <div className="relative">
               <Input
+                ref={inputRef}
                 id="passphrase"
                 type={showPassphrase ? 'text' : 'password'}
                 placeholder="Enter your passphrase"
