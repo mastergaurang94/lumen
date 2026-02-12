@@ -18,6 +18,15 @@ Status: In Progress
 
 ## Running Updates
 
+- 2026-02-12: Replaced `pb-[80vh]` with dynamic ResizeObserver-driven spacer
+  system (`flex-spacer-scroll` branch). Fixes 6 scroll/layout bugs: excess
+  whitespace below content, pin-to-top snap-back, 48px shift at streaming
+  commit, lightbulb bounce, tight text/indicator gap, and footer height swing
+  from ScrollToBottom mount/unmount. Added 20 E2E regression tests covering
+  all 6 bug fixes + general chat stability (pin-to-top, show more/less, copy,
+  shift+enter, input overlap, scroll-to-bottom, session resume, scroll during
+  thinking). Tests use route mocking with sequenced SSE responses and run in
+  CI via existing `e2e` workflow. Resolves the known issue from 1.9/1.10/1.11.
 - 2026-02-12: `1.7 ✅ Complete` — added graceful recovery UX for response and
   reflection failures. In-chat streaming interruptions now preserve partial
   text and show an inline retry prompt ("I lost my train of thought...") with
@@ -89,8 +98,6 @@ Status: In Progress
     content end, AnimatePresence enter/exit animation.
   - **Copy action** (1.11): Clipboard copy on all messages. Always visible on latest Lumen message,
     hover-revealed on older messages (both Lumen and user). Check icon feedback on copy.
-  - **Known issue**: `pb-[80vh]` padding creates scrollbar inaccuracy and excess white space at
-    bottom. Needs a proper solution — deferred to next session.
 
 ---
 
