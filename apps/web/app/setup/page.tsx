@@ -51,6 +51,7 @@ export default function SetupPage() {
   const router = useRouter();
   const storageRef = React.useRef(createStorageService());
   const { isAuthed, session } = useAuthSessionGuard();
+  const inputRef = React.useRef<HTMLInputElement>(null);
   const [passphrase, setPassphrase] = React.useState('');
   const [confirmPassphrase, setConfirmPassphrase] = React.useState('');
   const [showPassphrase, setShowPassphrase] = React.useState(false);
@@ -133,6 +134,7 @@ export default function SetupPage() {
     } catch (error) {
       console.error('Failed to initialize vault', error);
       setIsSubmitting(false);
+      requestAnimationFrame(() => inputRef.current?.focus());
     }
   };
 
@@ -186,6 +188,7 @@ export default function SetupPage() {
             </label>
             <div className="relative">
               <Input
+                ref={inputRef}
                 id="passphrase"
                 type={showPassphrase ? 'text' : 'password'}
                 placeholder="Enter a passphrase"
