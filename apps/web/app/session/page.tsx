@@ -113,11 +113,23 @@ export default function SessionPage() {
 }
 
 function SessionContent({ spacing, chatHref }: { spacing: SessionSpacing; chatHref: string }) {
+  const router = useRouter();
   const [greeting, setGreeting] = React.useState('');
 
   React.useEffect(() => {
     setGreeting(getTimeGreeting());
   }, []);
+
+  // Allow Enter key to proceed directly to the chat
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
+        router.push(chatHref);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [chatHref, router]);
 
   const { isFirstSession, hasActiveSession, state, daysSinceLastSession, lastSessionDate } =
     spacing;

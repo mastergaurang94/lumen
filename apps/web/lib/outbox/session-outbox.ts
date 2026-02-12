@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { getActiveDb } from '@/lib/db';
 import { endSession, startSession } from '@/lib/api/sessions';
 import type { SessionOutboxEvent, SessionOutboxEventType } from '@/types/storage';
 
@@ -19,7 +19,7 @@ function computeBackoffMs(attempts: number) {
 }
 
 async function findExistingEvent(sessionId: string, type: SessionOutboxEventType) {
-  const matches = await db.sessionOutbox.where('session_id').equals(sessionId).toArray();
+  const matches = await getActiveDb().sessionOutbox.where('session_id').equals(sessionId).toArray();
   return matches.find((event) => event.type === type) ?? null;
 }
 
@@ -29,7 +29,7 @@ async function updateEvent(event: SessionOutboxEvent, patch: Partial<SessionOutb
     ...patch,
     updated_at: nowIso(),
   };
-  await db.sessionOutbox.put(updated);
+  await getActiveDb().sessionOutbox.put(updated);
   return updated;
 }
 
@@ -54,7 +54,7 @@ export async function enqueueSessionStart(sessionId: string) {
     last_error: null,
   };
 
-  await db.sessionOutbox.put(event);
+  await getActiveDb().sessionOutbox.put(event);
   return event;
 }
 
@@ -84,7 +84,7 @@ export async function enqueueSessionEnd(sessionId: string, transcriptHash: strin
     last_error: null,
   };
 
-  await db.sessionOutbox.put(event);
+  await getActiveDb().sessionOutbox.put(event);
   return event;
 }
 
@@ -119,7 +119,7 @@ async function processEvent(event: SessionOutboxEvent) {
       }
       await endSession(event.session_id, event.transcript_hash);
     }
-    await db.sessionOutbox.delete(event.id);
+    await getActiveDb().sessionOutbox.delete(event.id);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     await markFailure(event, message);
@@ -137,8 +137,8 @@ export function flushSessionOutbox() {
 
   flushPromise = (async () => {
     const now = nowIso();
-    const due = await db.sessionOutbox
-      .where('available_at')
+    const due = await getActiveDb()
+      .sessionOutbox.where('available_at')
       .belowOrEqual(now)
       .and((event) => event.status === 'pending')
       .sortBy('created_at');
