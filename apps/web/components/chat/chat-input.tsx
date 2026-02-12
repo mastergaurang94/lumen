@@ -89,7 +89,7 @@ export function ChatInput({
           onInput={(e) => setValue(e.currentTarget.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          disabled={disabled || isStreaming}
+          disabled={disabled}
           rows={1}
           className={cn(
             'flex-1 min-h-[52px] max-h-[200px] py-3 px-4',
