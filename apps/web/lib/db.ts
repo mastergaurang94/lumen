@@ -54,9 +54,6 @@ function getOrCreateDb(scope: string): LumenDB {
   return created;
 }
 
-// Legacy/default DB handle used by existing tests and tooling.
-export const db = getOrCreateDb(DEFAULT_SCOPE);
-
 export function setActiveDbScope(scope: string) {
   activeScope = scope.trim() || DEFAULT_SCOPE;
   getOrCreateDb(activeScope);

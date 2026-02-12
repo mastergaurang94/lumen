@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { db } from '@/lib/db';
+import { getActiveDb } from '@/lib/db';
 import {
   enqueueSessionEnd,
   enqueueSessionStart,
@@ -14,12 +14,12 @@ vi.mock('@/lib/api/sessions', () => ({
 }));
 
 beforeEach(async () => {
-  await db.open();
+  await getActiveDb().open();
   vi.clearAllMocks();
 });
 
 afterEach(async () => {
-  await db.delete();
+  await getActiveDb().delete();
 });
 
 describe('session outbox', () => {
@@ -27,7 +27,7 @@ describe('session outbox', () => {
     await enqueueSessionStart('session-1');
     await enqueueSessionStart('session-1');
 
-    const events = await db.sessionOutbox.toArray();
+    const events = await getActiveDb().sessionOutbox.toArray();
     expect(events).toHaveLength(1);
     expect(events[0].type).toBe('session_start');
   });
@@ -43,7 +43,7 @@ describe('session outbox', () => {
 
     expect(startSession).toHaveBeenCalledTimes(1);
     expect(endSession).toHaveBeenCalledTimes(1);
-    expect(await db.sessionOutbox.count()).toBe(0);
+    expect(await getActiveDb().sessionOutbox.count()).toBe(0);
   });
 
   it('retains events when delivery fails', async () => {
@@ -52,7 +52,7 @@ describe('session outbox', () => {
     await enqueueSessionStart('session-2');
     await flushSessionOutbox();
 
-    const events = await db.sessionOutbox.toArray();
+    const events = await getActiveDb().sessionOutbox.toArray();
     expect(events).toHaveLength(1);
     expect(events[0].attempts).toBe(1);
     expect(events[0].status).toBe('pending');

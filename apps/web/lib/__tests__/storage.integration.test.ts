@@ -2,7 +2,7 @@ import { webcrypto } from 'crypto';
 // Use fake IndexedDB for Node test environment.
 import 'fake-indexeddb/auto';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { db } from '@/lib/db';
+import { getActiveDb } from '@/lib/db';
 import {
   decodeJson,
   decrypt,
@@ -34,11 +34,11 @@ beforeAll(() => {
 });
 
 beforeEach(async () => {
-  await db.open();
+  await getActiveDb().open();
 });
 
 afterEach(async () => {
-  await db.delete();
+  await getActiveDb().delete();
 });
 
 describe('storage integration', () => {
@@ -135,7 +135,9 @@ describe('storage integration', () => {
 
     await storage.saveProfile(profile);
 
-    const storedProfile = (await db.userProfiles.get(profile.user_id)) as EncryptedUserProfile;
+    const storedProfile = (await getActiveDb().userProfiles.get(
+      profile.user_id,
+    )) as EncryptedUserProfile;
     expect(storedProfile).toBeTruthy();
     expect(new Uint8Array(storedProfile.encrypted_blob)).not.toEqual(
       new Uint8Array(encodeJson(profile)),
@@ -158,7 +160,7 @@ describe('storage integration', () => {
 
     await storage.saveSummary(summary);
 
-    const storedSummary = (await db.sessionSummaries.get(
+    const storedSummary = (await getActiveDb().sessionSummaries.get(
       summary.session_id,
     )) as EncryptedSessionSummary;
     expect(storedSummary).toBeTruthy();
@@ -294,7 +296,9 @@ describe('storage integration', () => {
 
     await storage.saveLlmProviderKey(providerKey);
 
-    const stored = (await db.llmProviderKeys.get(providerKey.provider)) as EncryptedLlmProviderKey;
+    const stored = (await getActiveDb().llmProviderKeys.get(
+      providerKey.provider,
+    )) as EncryptedLlmProviderKey;
     expect(stored).toBeTruthy();
     expect(new Uint8Array(stored.encrypted_blob)).not.toEqual(
       new Uint8Array(encodeJson(providerKey)),
