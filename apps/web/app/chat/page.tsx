@@ -51,6 +51,8 @@ function ChatPageInner() {
   const [llmKeyError, setLlmKeyError] = React.useState<string | null>(null);
   const [isSavingKey, setIsSavingKey] = React.useState(false);
   const [sessionSummary, setSessionSummary] = React.useState<SessionSummary | null>(null);
+  const [summaryError, setSummaryError] = React.useState<string | null>(null);
+  const [isRetryingSummary, setIsRetryingSummary] = React.useState(false);
   const [closureStep, setClosureStep] = React.useState<ClosureStep>('wrapping-up');
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const previousMessageCountRef = React.useRef(0);
@@ -111,7 +113,15 @@ function ChatPageInner() {
     onResumeActiveTimer: handleResumeActiveTimer,
     onNewSessionActiveTimer: handleNewSessionActiveTimer,
   });
-  const { isTyping, streamingContent, handleSend, abortConversation } = useLlmConversation({
+  const {
+    isTyping,
+    streamingContent,
+    streamInterruptedPartial,
+    clearStreamInterruption,
+    retryLastResponse,
+    handleSend,
+    abortConversation,
+  } = useLlmConversation({
     messages,
     setMessages,
     sessionId,
@@ -265,6 +275,55 @@ function ChatPageInner() {
     setShowEndSessionDialog(true);
   }, []);
 
+  const generateAndStoreSummary = React.useCallback(
+    async ({
+      userId,
+      sessionIdValue,
+      messagesSnapshot,
+      nowIso,
+    }: {
+      userId: string;
+      sessionIdValue: string;
+      messagesSnapshot: Message[];
+      nowIso: string;
+    }) => {
+      if (!llmKey) {
+        throw new Error('LLM key missing');
+      }
+      const sessionNumber = transcriptRef.current?.session_number ?? 1;
+      const systemPrompt = buildSystemPrompt({
+        sessionNumber,
+        sessionContext: sessionContextRef.current ?? '',
+      });
+      const summaryText = await callLlmWithRetry({
+        apiKey: llmKey,
+        modelId: DEFAULT_MODEL_ID,
+        systemPrompt,
+        messages: [
+          ...buildLlmMessages(messagesSnapshot),
+          { role: 'user', content: SUMMARY_PROMPT },
+        ],
+        temperature: 0.2,
+        maxTokens: 800,
+      });
+      const parsed = parseSummaryResponse(summaryText);
+      const summary: SessionSummary = {
+        session_id: sessionIdValue,
+        user_id: userId,
+        summary_text: parsed.summary_text,
+        parting_words: parsed.parting_words,
+        action_steps: parsed.action_steps,
+        open_threads: parsed.open_threads,
+        notes: null,
+        created_at: nowIso,
+        updated_at: nowIso,
+      };
+      await storageRef.current.saveSummary(summary);
+      return summary;
+    },
+    [llmKey, sessionContextRef, transcriptRef],
+  );
+
   const confirmEndSession = React.useCallback(async () => {
     const MIN_STEP_MS = 600;
 
@@ -272,6 +331,8 @@ function ChatPageInner() {
     abortConversation();
     setShowEndSessionDialog(false);
     setClosureStep('wrapping-up');
+    setSummaryError(null);
+    setIsRetryingSummary(false);
     setSessionState('complete');
 
     // Step 1: Wrapping up — flush and stop
@@ -324,44 +385,19 @@ function ChatPageInner() {
     if (userId && sid && llmKey) {
       setClosureStep('reflecting');
       try {
-        const sessionNumber = transcriptRef.current?.session_number ?? 1;
-        const systemPrompt = buildSystemPrompt({
-          sessionNumber,
-          sessionContext: sessionContextRef.current ?? '',
+        const summary = await generateAndStoreSummary({
+          userId,
+          sessionIdValue: sid,
+          messagesSnapshot,
+          nowIso: now,
         });
-        const summaryText = await callLlmWithRetry({
-          apiKey: llmKey,
-          modelId: DEFAULT_MODEL_ID,
-          systemPrompt,
-          messages: [
-            ...buildLlmMessages(messagesSnapshot),
-            { role: 'user', content: SUMMARY_PROMPT },
-          ],
-          temperature: 0.2,
-          maxTokens: 800,
-        });
-        let parsed;
-        try {
-          parsed = parseSummaryResponse(summaryText);
-        } catch (parseError) {
-          console.error('Summary JSON parse failed. Raw response:', summaryText.slice(0, 500));
-          throw parseError;
-        }
-        const summary: SessionSummary = {
-          session_id: sid,
-          user_id: userId,
-          summary_text: parsed.summary_text,
-          parting_words: parsed.parting_words,
-          action_steps: parsed.action_steps,
-          open_threads: parsed.open_threads,
-          notes: null,
-          created_at: now,
-          updated_at: now,
-        };
-        await storageRef.current.saveSummary(summary);
         setSessionSummary(summary);
+        setSummaryError(null);
       } catch (error) {
         console.error('Failed to generate session summary', error);
+        setSummaryError(
+          "I wasn't able to capture a full reflection this time, but your conversation is saved.",
+        );
       }
     }
 
@@ -371,10 +407,40 @@ function ChatPageInner() {
     abortConversation,
     clearActiveTimer,
     flushPendingMessages,
+    generateAndStoreSummary,
     llmKey,
     messages,
     stopActiveSegment,
   ]);
+
+  const retrySummaryGeneration = React.useCallback(async () => {
+    const userId = userIdRef.current;
+    const sid = sessionIdRef.current;
+    if (!userId || !sid || !llmKey) {
+      return;
+    }
+    setIsRetryingSummary(true);
+    setSummaryError(null);
+    setClosureStep('reflecting');
+    try {
+      const nowIso = new Date().toISOString();
+      const summary = await generateAndStoreSummary({
+        userId,
+        sessionIdValue: sid,
+        messagesSnapshot: [...messages],
+        nowIso,
+      });
+      setSessionSummary(summary);
+    } catch (error) {
+      console.error('Failed to retry session summary', error);
+      setSummaryError(
+        "I wasn't able to capture a full reflection this time, but your conversation is saved.",
+      );
+    } finally {
+      setIsRetryingSummary(false);
+      setClosureStep('done');
+    }
+  }, [generateAndStoreSummary, llmKey, messages, userIdRef, sessionIdRef]);
 
   // Loading state
   if (!vaultReady || sessionState === 'loading') {
@@ -436,6 +502,9 @@ function ChatPageInner() {
         partingWords={sessionSummary?.parting_words ?? null}
         actionSteps={sessionSummary?.action_steps ?? []}
         closureStep={closureStep}
+        summaryError={summaryError}
+        isRetryingSummary={isRetryingSummary}
+        onRetrySummary={retrySummaryGeneration}
       />
     );
   }
@@ -487,6 +556,11 @@ function ChatPageInner() {
           messages={messages}
           isTyping={isTyping}
           streamingContent={streamingContent}
+          streamInterruptedPartial={streamInterruptedPartial}
+          onRetryInterruptedStream={() => {
+            void retryLastResponse();
+          }}
+          onDismissInterruptedStream={clearStreamInterruption}
           scrollAreaRef={scrollAreaRef}
         />
       </main>
