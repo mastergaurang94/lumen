@@ -1,6 +1,6 @@
 # MVP 2 Implementation
 
-Last Updated: 2026-02-12
+Last Updated: 2026-02-13
 Status: In Progress
 
 > **Session protocol**: At the end of each working session, append a dated entry to
@@ -18,6 +18,26 @@ Status: In Progress
 
 ## Running Updates
 
+- 2026-02-13: `2.1–2.8 ✅ Complete` — Tier 2 system prompt v2 and summary prompt
+  rewrite. Collaborative session to evolve Lumen's identity from v1 → v2.
+  Key additions: 5-lens peripheral vision (Calling, Relationships, Vitality,
+  Prosperity, Spirit) as Simon's lived experience — not a framework, just how
+  he listens. Enhanced PRESENCE with responsibility-as-empowerment, strong
+  container/backbone, self-reliance over dependency, and reading-what's-unsaid.
+  Added humor permission to VOICE (wit from clarity, not deflection). Rewrote
+  THE CONVERSATION with rich first-session intake guidance and context-responsive
+  returning-user openings. Added CONTINUITY section (friend who remembers vs.
+  system that tracks). Added CLOSURE section (say the truest thing, not a recap).
+  Added "don't narrate your own process" guardrail. Integrated safety/crisis
+  awareness. Updated summary generation prompt: parting_words now must be
+  something NEW they haven't heard — "the kind of thing a wise friend says at
+  the door that stops you in your tracks." Perspective source material drawn
+  from external mentoring prompts (6 files, merged Performance+Contribution →
+  Calling = 5 lenses). New docs: `docs/mentoring/perspectives/` (5 files),
+  `docs/mentoring/system-prompts-v2.md`, `docs/mentoring/summary-prompt.md`.
+  Code changes: `prompts.ts` (7→11 constants), `summary.ts` (SUMMARY_PROMPT
+  v2). No changes needed in `assembly.ts` — existing YAML front matter wiring
+  already supports the new CONTINUITY instructions.
 - 2026-02-12: Replaced `pb-[80vh]` with dynamic ResizeObserver-driven spacer
   system (`flex-spacer-scroll` branch). Fixes 6 scroll/layout bugs: excess
   whitespace below content, pin-to-top snap-back, 48px shift at streaming
@@ -364,6 +384,8 @@ This tier is fundamentally one connected piece of work: **rewriting who Simon is
 
 ### 2.1 System prompt v2: 5-lens Simon `[M]`
 
+**Status**: ✅ Complete (2026-02-13)
+
 **Problem**: Simon currently speaks with one undifferentiated perspective. The product vision describes five mentoring lenses — Career/Calling, Relationships, Vitality, Prosperity, Spirit — that together give Simon "peripheral vision." Without them, conversations stay surface-level on whatever topic the user brings up.
 
 **Design target**: Moment #1 — _"It said something no one has ever said to me."_
@@ -406,6 +428,8 @@ see the whole picture.
 
 ### 2.2 Explicit thread and action continuity `[S]`
 
+**Status**: ✅ Complete (2026-02-13)
+
 **Problem**: The system stores `open_threads` and `action_steps` from each session summary and includes them in YAML front matter. But there's no explicit instruction telling Lumen what to do with them. The "it remembered" moment is left to chance — Lumen might pick up on threads from raw transcripts, or it might not.
 
 **Design target**: Moment #2 — _"It remembered."_
@@ -443,6 +467,8 @@ it's the feeling of being known.
 ---
 
 ### 2.3 First-session intake guidance `[S]`
+
+**Status**: ✅ Complete (2026-02-13)
 
 **Problem**: The current first-session instruction is: _"Begin the conversation with a warm, simple greeting. Be glad to be here."_ That's all. The product spec says the first session should be a guided intake that seeds the long-term relationship. Without it, session 2's context is just a raw transcript of a generic conversation with no structured knowledge of who this person is.
 
@@ -483,6 +509,8 @@ next time feels like catching up with a friend, not meeting a stranger.
 
 ### 2.4 Opening prompt tone `[S]`
 
+**Status**: ✅ Complete (2026-02-13)
+
 **Problem**: The current opening greeting for returning users can sound formulaic — a known issue from the v1 prompt. Combined with the 5-lens and continuity work, the opening should feel like a friend who's genuinely glad to see you and carries awareness of your story.
 
 **Design target**: Moment #3 — _"It knew what I needed before I did."_
@@ -503,6 +531,8 @@ This work is naturally combined with 2.1-2.3 since it's all prompt writing.
 ---
 
 ### 2.5 Humor permission and guidance `[S]`
+
+**Status**: ✅ Complete (2026-02-13)
 
 **Problem**: The v1 prompt doesn't explicitly give Lumen permission to be funny. Real mentors use humor — not to deflect, but because seeing things clearly is sometimes hilarious. Without this permission, Lumen defaults to earnest intensity, which can feel heavy and one-dimensional.
 
@@ -527,6 +557,8 @@ is a real relationship, not a performance.
 ---
 
 ### 2.6 Reading what's unsaid `[S]`
+
+**Status**: ✅ Complete (2026-02-13)
 
 **Problem**: The v1 prompt mentions "read their energy, their tone, what's said and unsaid" but doesn't give concrete guidance on what this looks like in a text-based conversation. With prosody analysis (voice) in the future, this is the text-based version of "it knew what I needed."
 
@@ -553,6 +585,8 @@ what you notice.
 
 ### 2.7 Closure recognition over homework `[S]`
 
+**Status**: ✅ Complete (2026-02-13)
+
 **Problem**: The closure prompt generates `parting_words` + `action_steps`. But the product vision draws a clear line: coaching asks "what will you do this week?" — mentoring asks "what are you learning about yourself?" The last thing Lumen says in a session is what the user carries into their week. It should feel like being seen, not being assigned.
 
 **Code ref**:
@@ -569,6 +603,8 @@ what you notice.
 ---
 
 ### 2.8 Safety policy integration `[S]`
+
+**Status**: ✅ Complete (2026-02-13)
 
 **Problem**: Lumen needs basic safety boundaries baked into the system prompt — not a full trust & safety framework, but awareness that it's not a therapist and knows when to gently point toward professional resources.
 
