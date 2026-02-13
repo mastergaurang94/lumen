@@ -85,7 +85,7 @@ func (db *DB) ensureAuthSessionUserIDColumn() error {
 	if err != nil {
 		return fmt.Errorf("sqlite migrate auth_sessions info: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	hasUserID := false
 	for rows.Next() {

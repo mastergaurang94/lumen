@@ -10,7 +10,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { LumenUnavailable } from '@/components/lumen-unavailable';
 import { SessionClosure, EndSessionDialog } from '@/components/chat';
 import { ChatHeader } from '@/components/chat/chat-header';
-import { ChatBody } from '@/components/chat/chat-body';
+import { ChatBody, type SpacerControl } from '@/components/chat/chat-body';
 import { ChatFooter } from '@/components/chat/chat-footer';
 import { Z_INDEX } from '@/lib/z-index';
 import { arrayBufferToHex } from '@/lib/crypto';
@@ -55,6 +55,7 @@ function ChatPageInner() {
   const [isRetryingSummary, setIsRetryingSummary] = React.useState(false);
   const [closureStep, setClosureStep] = React.useState<ClosureStep>('wrapping-up');
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+  const spacerControlRef = React.useRef<SpacerControl | null>(null);
   const previousMessageCountRef = React.useRef(0);
   const [activeSessionId, setActiveSessionId] = React.useState<string | null>(null);
   const {
@@ -189,6 +190,11 @@ function ChatPageInner() {
   // The only auto-scroll is when the user sends a message: we pin their message
   // to the top of the viewport so the full visible area is available for the
   // response to grow into. Everything else (streaming, finalization) is hands-off.
+  //
+  // The spacer is inflated to 100vh before scrolling so the browser has enough
+  // scroll room to place the message at the top. The spacer then enters
+  // "recovering" mode and gradually shrinks as the response streams in — no
+  // abrupt jump because it only deflates as new content fills the gap.
   React.useEffect(() => {
     const scrollArea = scrollAreaRef.current;
     if (!scrollArea) return;
@@ -200,9 +206,6 @@ function ChatPageInner() {
 
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.role === 'user') {
-      // Pin the user message to the top of the scroll container. We use
-      // getBoundingClientRect for a precise offset relative to the container
-      // rather than scrollIntoView which may scroll ancestor overflow containers.
       requestAnimationFrame(() => {
         const els = scrollArea.querySelectorAll('[data-message-role="user"]');
         const el = els[els.length - 1] as HTMLElement | null;
@@ -210,6 +213,12 @@ function ChatPageInner() {
           const containerTop = scrollArea.getBoundingClientRect().top;
           const elTop = el.getBoundingClientRect().top;
           const target = scrollArea.scrollTop + (elTop - containerTop);
+
+          // Inflate the spacer with the scroll target so recovering mode
+          // knows the ceiling — prevents ResizeObserver from shrinking the
+          // spacer below what the smooth scroll animation needs.
+          spacerControlRef.current?.inflate(target);
+
           scrollArea.scrollTo({ top: target, behavior: 'smooth' });
         }
       });
@@ -562,6 +571,7 @@ function ChatPageInner() {
           }}
           onDismissInterruptedStream={clearStreamInterruption}
           scrollAreaRef={scrollAreaRef}
+          spacerControlRef={spacerControlRef}
         />
       </main>
 
