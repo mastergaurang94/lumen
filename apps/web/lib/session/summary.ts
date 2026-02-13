@@ -8,23 +8,25 @@ export type LlmSummaryResponse = {
 /**
  * Prompt for generating session summaries.
  * Uses explicit JSON framing to override conversational system prompt.
+ * Keep in sync with docs/mentoring/summary-prompt.md.
  */
 export const SUMMARY_PROMPT = `[SYSTEM: Output JSON only. Do not include any text before or after the JSON object.]
 
 Generate a session summary as a JSON object with these exact keys:
 {
-  "summary_text": "8-12 line summary of what was explored",
-  "parting_words": "warm, meaningful words to carry forward — an insight, encouragement, or reflection",
-  "action_steps": ["something they might try", "only if it emerged naturally"],
-  "open_threads": ["something left to explore"]
+  "summary_text": "8-12 line summary of what was explored — capture the emotional arc, not just the topics",
+  "parting_words": "A single insight, piece of wisdom, or unexpected observation they haven't heard yet in this conversation. Not a summary of what was discussed — something NEW that they'll carry with them. The kind of thing a wise friend says at the door that stops you in your tracks.",
+  "action_steps": ["something they mentioned wanting to try or explore — only if it emerged naturally from the conversation"],
+  "open_threads": ["something left unfinished or worth returning to next time"]
 }
 
 Rules:
 - Output ONLY the JSON object, nothing else
 - No markdown code fences
 - No conversational text before or after
-- parting_words should be 1-2 sentences max, heartfelt not clinical
-- action_steps should only include things that came up naturally — don't manufacture them; empty array is fine`;
+- parting_words should be 1-2 sentences max — pithy, warm, and specific to THIS conversation. Not generic inspiration. Not a recap. Something they'll still be thinking about in three days
+- action_steps should only include things that came up naturally — don't manufacture them; empty array is fine
+- open_threads should capture genuine loose ends, not forced cliffhangers; empty array is fine`;
 
 /**
  * Parse LLM summary response, tolerating markdown code fences that models sometimes emit.
