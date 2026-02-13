@@ -158,10 +158,13 @@ async function clearIndexedDb(page: Page) {
   );
 }
 
-/** Full setup: clear DB → mocks → passphrase → session → chat → token → greeting. */
+/** Full setup: mocks → clear DB → passphrase → session → chat → token → greeting. */
 async function setupChat(page: Page, state: MockState) {
-  await clearIndexedDb(page);
+  // Register mocks BEFORE any navigation so auth/API calls during page load
+  // are intercepted. Without this, the first goto('/') triggers real API calls
+  // that can fail or timeout in CI, leaving the app in a broken state.
   await registerChatMocks(page, state);
+  await clearIndexedDb(page);
 
   await page.goto('/setup');
   await page.locator('#passphrase').fill('test-passphrase-secure-123');
@@ -179,8 +182,8 @@ async function setupChat(page: Page, state: MockState) {
 
   // Race: whichever appears first tells us which mode we're in.
   const firstVisible = await Promise.race([
-    tokenInput.waitFor({ state: 'visible', timeout: 15000 }).then(() => 'token' as const),
-    messageInput.waitFor({ state: 'visible', timeout: 15000 }).then(() => 'input' as const),
+    tokenInput.waitFor({ state: 'visible', timeout: 30000 }).then(() => 'token' as const),
+    messageInput.waitFor({ state: 'visible', timeout: 30000 }).then(() => 'input' as const),
   ]);
 
   if (firstVisible === 'token') {
@@ -188,8 +191,8 @@ async function setupChat(page: Page, state: MockState) {
     await page.getByRole('button', { name: /save/i }).click();
   }
 
-  await expect(messageInput).toBeEnabled({ timeout: 15000 });
-  await expect(page.getByText("I'm Lumen")).toBeVisible({ timeout: 15000 });
+  await expect(messageInput).toBeEnabled({ timeout: 30000 });
+  await expect(page.getByText("I'm Lumen")).toBeVisible({ timeout: 30000 });
 
   // Let layout fully settle after greeting renders
   await page.waitForTimeout(800);
@@ -303,6 +306,9 @@ async function restoreLlmMock(page: Page, state: MockState) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 test.describe('Chat Regression', () => {
+  // CI is ~4x slower than local — give every test ample room.
+  test.describe.configure({ timeout: 120_000 });
+
   // ─── Bug Fix Regressions (FAIL on main, PASS on worktree) ──────────────────
 
   test.describe('Bug Fix Regressions', () => {
@@ -366,7 +372,6 @@ test.describe('Chat Regression', () => {
     });
 
     test('2b · no excess whitespace below content after long conversation', async ({ page }) => {
-      test.setTimeout(120_000);
       const state = createMockState();
       await setupChat(page, state);
       await buildConversationHistory(page, state, 5);
@@ -423,7 +428,6 @@ test.describe('Chat Regression', () => {
     });
 
     test('3 · pin-to-top survives without snapping back', async ({ page }) => {
-      test.setTimeout(90_000);
       const state = createMockState();
       await setupChat(page, state);
       await buildConversationHistory(page, state, 5);
@@ -453,7 +457,6 @@ test.describe('Chat Regression', () => {
     });
 
     test('4 · no position shift at streaming commit', async ({ page }) => {
-      test.setTimeout(90_000);
       const state = createMockState();
       await setupChat(page, state);
 
@@ -615,7 +618,6 @@ test.describe('Chat Regression', () => {
     });
 
     test('17 · lightbulb indicator shares wrapper with streaming text', async ({ page }) => {
-      test.setTimeout(90_000);
       const state = createMockState();
       await setupChat(page, state);
 
@@ -657,7 +659,6 @@ test.describe('Chat Regression', () => {
     });
 
     test('18 · content height reservation maintains stable layout at commit', async ({ page }) => {
-      test.setTimeout(90_000);
       const state = createMockState();
       await setupChat(page, state);
 
@@ -719,7 +720,6 @@ test.describe('Chat Regression', () => {
 
   test.describe('General Chat Stability', () => {
     test('7 · pin-to-top works on user message send', async ({ page }) => {
-      test.setTimeout(90_000);
       const state = createMockState();
       await setupChat(page, state);
       await buildConversationHistory(page, state, 5);
@@ -748,7 +748,6 @@ test.describe('Chat Regression', () => {
     });
 
     test('8 · pin-to-top works from top, middle, and bottom positions', async ({ page }) => {
-      test.setTimeout(120_000);
       const state = createMockState();
       await setupChat(page, state);
       await buildConversationHistory(page, state, 5);
@@ -788,7 +787,6 @@ test.describe('Chat Regression', () => {
     });
 
     test('9 · manual scroll after pin does not snap to bottom', async ({ page }) => {
-      test.setTimeout(90_000);
       const state = createMockState();
       await setupChat(page, state);
       await buildConversationHistory(page, state, 5);
@@ -985,7 +983,6 @@ test.describe('Chat Regression', () => {
     test('15 · scroll-to-bottom button appears when scrolled up and scrolls to content end', async ({
       page,
     }) => {
-      test.setTimeout(90_000);
       const state = createMockState();
       await setupChat(page, state);
       await buildConversationHistory(page, state, 6);
@@ -1050,7 +1047,6 @@ test.describe('Chat Regression', () => {
     });
 
     test('16 · session resume restores messages after reload', async ({ page }) => {
-      test.setTimeout(90_000);
       const state = createMockState();
       await setupChat(page, state);
 
@@ -1089,7 +1085,6 @@ test.describe('Chat Regression', () => {
     });
 
     test('19 · user scroll during thinking phase is respected', async ({ page }) => {
-      test.setTimeout(90_000);
       const state = createMockState();
       await setupChat(page, state);
       await buildConversationHistory(page, state, 5);
