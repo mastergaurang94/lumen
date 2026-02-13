@@ -18,6 +18,13 @@ Status: In Progress
 
 ## Running Updates
 
+- 2026-02-13: `3.1 ✅ Complete` — Session history feature + 19 regression tests.
+  History list page (`/history`), detail page (`/history/[sessionId]`),
+  session card and summary components, transcript viewer with decrypt
+  pipeline, sidebar "Past conversations" link, `formatShortDate` utility.
+  Tests: 3 format, 5 session-summary rendering, 5 session-card rendering
+  - truncation, 6 transcript-loader integration (encrypt→store→decrypt
+    round-trip, multi-chunk concat, wrong-key error path).
 - 2026-02-13: `2.1–2.8 ✅ Complete` — Tier 2 system prompt v2 and summary prompt
   rewrite. Collaborative session to evolve Lumen's identity from v1 → v2.
   Key additions: 5-lens peripheral vision (Calling, Relationships, Vitality,
@@ -632,6 +639,8 @@ Keep it minimal and integrated into the existing voice. Not a separate "safety" 
 
 ### 3.1 View past session transcripts `[M]`
 
+**Status**: ✅ Complete (2026-02-13)
+
 **Problem**: Users have no way to review their conversation history. For a privacy-first product where the user owns their data, not being able to see it undermines the value proposition. It's also how testers verify the "it remembered" moment — they can go back and check.
 
 **Code refs**:
@@ -762,20 +771,26 @@ Anchors:
 
 ## Code Reference Index
 
-| Area              | File                                           | Key Functions                                           |
-| ----------------- | ---------------------------------------------- | ------------------------------------------------------- |
-| Model config      | `apps/web/lib/llm/model-config.ts`             | `DEFAULT_MODEL_ID`, `MODEL_CONFIGS`, `getModelConfig()` |
-| System prompt     | `apps/web/lib/llm/prompts.ts`                  | `buildSystemPrompt()`                                   |
-| Context assembly  | `apps/web/lib/context/assembly.ts`             | `buildSessionContext()`, `getSessionNumber()`           |
-| Chat page         | `apps/web/app/chat/page.tsx`                   | `ChatPage` component                                    |
-| Chat body         | `apps/web/components/chat/chat-body.tsx`       | `ChatBody` — message list, scroll                       |
-| Chat footer       | `apps/web/components/chat/chat-footer.tsx`     | `ChatFooter` — input, sticky positioning                |
-| LLM hook          | `apps/web/lib/hooks/use-llm-conversation.ts`   | `useLlmConversation()`, `handleSend`                    |
-| Session lifecycle | `apps/web/lib/hooks/use-session-lifecycle.ts`  | `useSessionLifecycle()`                                 |
-| Encryption        | `apps/web/lib/crypto.ts`                       | `encrypt()`, `decrypt()`, `deriveKey()`                 |
-| Key context       | `apps/web/lib/crypto/key-context.ts`           | `setKey()`, `getKey()`, `lockVault()`                   |
-| Vault provider    | `apps/web/components/vault-provider.tsx`       | Key cleanup on page unload                              |
-| Session closure   | `apps/web/components/chat/session-closure.tsx` | `SessionClosure` — 4-step progress                      |
-| Session page      | `apps/web/app/session/page.tsx`                | Pre-session gate, greeting                              |
-| Unlock page       | `apps/web/app/unlock/page.tsx`                 | Passphrase verification                                 |
-| Setup page        | `apps/web/app/setup/page.tsx`                  | Vault initialization                                    |
+| Area              | File                                                | Key Functions                                           |
+| ----------------- | --------------------------------------------------- | ------------------------------------------------------- |
+| Model config      | `apps/web/lib/llm/model-config.ts`                  | `DEFAULT_MODEL_ID`, `MODEL_CONFIGS`, `getModelConfig()` |
+| System prompt     | `apps/web/lib/llm/prompts.ts`                       | `buildSystemPrompt()`                                   |
+| Context assembly  | `apps/web/lib/context/assembly.ts`                  | `buildSessionContext()`, `getSessionNumber()`           |
+| Chat page         | `apps/web/app/chat/page.tsx`                        | `ChatPage` component                                    |
+| Chat body         | `apps/web/components/chat/chat-body.tsx`            | `ChatBody` — message list, scroll                       |
+| Chat footer       | `apps/web/components/chat/chat-footer.tsx`          | `ChatFooter` — input, sticky positioning                |
+| LLM hook          | `apps/web/lib/hooks/use-llm-conversation.ts`        | `useLlmConversation()`, `handleSend`                    |
+| Session lifecycle | `apps/web/lib/hooks/use-session-lifecycle.ts`       | `useSessionLifecycle()`                                 |
+| Encryption        | `apps/web/lib/crypto.ts`                            | `encrypt()`, `decrypt()`, `deriveKey()`                 |
+| Key context       | `apps/web/lib/crypto/key-context.ts`                | `setKey()`, `getKey()`, `lockVault()`                   |
+| Vault provider    | `apps/web/components/vault-provider.tsx`            | Key cleanup on page unload                              |
+| Session closure   | `apps/web/components/chat/session-closure.tsx`      | `SessionClosure` — 4-step progress                      |
+| Session page      | `apps/web/app/session/page.tsx`                     | Pre-session gate, greeting                              |
+| Unlock page       | `apps/web/app/unlock/page.tsx`                      | Passphrase verification                                 |
+| Setup page        | `apps/web/app/setup/page.tsx`                       | Vault initialization                                    |
+| History list      | `apps/web/app/history/page.tsx`                     | Past conversations list                                 |
+| History detail    | `apps/web/app/history/[sessionId]/page.tsx`         | Single transcript view with summary                     |
+| Session card      | `apps/web/components/history/session-card.tsx`      | Journal-style card for history list                     |
+| Session summary   | `apps/web/components/history/session-summary.tsx`   | Summary block (parting words + action steps)            |
+| Transcript viewer | `apps/web/components/history/transcript-viewer.tsx` | Read-only transcript display                            |
+| Transcript loader | `apps/web/lib/hooks/use-transcript-loader.ts`       | Decrypt chunks → Message[] hook                         |
