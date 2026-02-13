@@ -80,6 +80,13 @@ export function formatDuration(minutes: number): string {
 }
 
 /**
+ * Format a date as "Feb 5, 2026" for compact display.
+ */
+export function formatShortDate(date: Date): string {
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+/**
  * Format elapsed time since a start date.
  * Returns "Just started", "5 min", "1 hr 30 min"
  */

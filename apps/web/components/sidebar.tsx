@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, Sun, Moon, Monitor, X } from 'lucide-react';
+import { Menu, Sun, Moon, Monitor, X, BookOpen } from 'lucide-react';
 import { useTimeOfDay } from '@/components/theme-provider';
 import {
   AlertDialog,
@@ -21,6 +21,7 @@ import {
 import { getAuthSessionInfo, logout } from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
 import { isUnlocked, lockVault } from '@/lib/crypto/key-context';
+import { withDevAuth } from '@/lib/hooks/dev-auth';
 import { getActiveDb } from '@/lib/db';
 import { createStorageService } from '@/lib/storage/dexie-storage';
 import { setStorageScopeForUser } from '@/lib/storage/scope';
@@ -240,16 +241,28 @@ export function Sidebar() {
             <SettingsSection title="Appearance">
               <AppearanceOptions />
               <PaletteOptions />
-              {isDev && (
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="w-full rounded-lg border border-destructive/40 px-3 py-2 text-sm text-destructive/80 hover:text-destructive hover:bg-destructive/5 hover:border-destructive transition-colors"
-                >
-                  Reset local data
-                </button>
-              )}
             </SettingsSection>
+            {vaultInitialized && vaultUnlocked && (
+              <SettingsSection title="History">
+                <Link
+                  href={withDevAuth('/history')}
+                  onClick={() => setOpen(false)}
+                  className="inline-flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                >
+                  <BookOpen className="h-4 w-4" strokeWidth={1.5} />
+                  Past conversations
+                </Link>
+              </SettingsSection>
+            )}
+            {isDev && (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="w-full rounded-lg border border-destructive/40 px-3 py-2 text-sm text-destructive/80 hover:text-destructive hover:bg-destructive/5 hover:border-destructive transition-colors"
+              >
+                Reset local data
+              </button>
+            )}
           </div>
 
           {/* Footer */}
