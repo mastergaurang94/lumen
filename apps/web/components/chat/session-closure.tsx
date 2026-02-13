@@ -226,9 +226,16 @@ function ClosureFinal({
           className="rounded-xl border border-border/70 bg-muted/40 px-4 py-4 text-left space-y-3"
         >
           <p className="text-sm text-foreground">{summaryError}</p>
-          <Button size="sm" variant="outline" onClick={onRetrySummary} disabled={isRetryingSummary}>
-            {isRetryingSummary ? 'Retrying...' : 'Try reflection again'}
-          </Button>
+          <div className="flex justify-center">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onRetrySummary}
+              disabled={isRetryingSummary}
+            >
+              {isRetryingSummary ? 'Retrying...' : 'Try reflection again'}
+            </Button>
+          </div>
         </motion.div>
       )}
 
