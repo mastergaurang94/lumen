@@ -32,6 +32,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@next/eslint-plugin-next": "^16.1.6",
+    "@playwright/test": "^1.49.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^25.0.10",
     "@types/react": "^19.2.10",
@@ -43,7 +44,7 @@
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.54.0",
-    "vitest": "^2.1.8",
-    "@playwright/test": "^1.49.1"
+    "vite": "^6",
+    "vitest": "^3.2.4"
   }
 }
