@@ -6,6 +6,12 @@ import {
   streamLlmWithRetry,
 } from '@/lib/llm/client';
 
+// Silence structured logs during tests — they're useful in production, noisy in CI.
+vi.mock('@/lib/llm/logger', () => ({
+  llmLogger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+  withTiming: async <T>(fn: () => Promise<T>): Promise<[T, number]> => [await fn(), 0],
+}));
+
 beforeAll(() => {
   if (!globalThis.window) {
     globalThis.window = { setTimeout, clearTimeout } as unknown as Window & typeof globalThis;
