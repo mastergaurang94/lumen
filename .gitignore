@@ -22,3 +22,6 @@ dev-artifacts/
 
 # Mentoring folder — prompts, discovery transcripts, product thinking (kept local only)
 docs/mentoring/
+
+# User feedback — raw transcripts and session notes (kept local only)
+docs/feedback/
