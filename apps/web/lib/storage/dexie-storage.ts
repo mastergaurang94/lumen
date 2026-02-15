@@ -5,12 +5,16 @@ import type {
   EncryptionHeader,
   EncryptedLlmProviderKey,
   EncryptedSessionSummary,
+  EncryptedSessionNotebook,
+  EncryptedUserArc,
   EncryptedUserProfile,
   LlmProvider,
   LlmProviderKey,
   SessionTranscript,
   SessionTranscriptChunk,
   SessionSummary,
+  SessionNotebook,
+  UserArc,
   UserProfile,
   VaultMetadata,
 } from '@/types/storage';
@@ -120,6 +124,64 @@ export class DexieStorageService implements StorageService {
     return decodeJson<SessionSummary>(plaintext);
   }
 
+  private async encryptNotebook(notebook: SessionNotebook): Promise<EncryptedSessionNotebook> {
+    const { key, metadata } = this.getVaultContext();
+    const iv = generateIV();
+    const header = this.buildHeader(metadata, iv);
+    const ciphertext = await encrypt(encodeJson(notebook), key, iv);
+    const transcript_hash = await hashTranscript(ciphertext, header);
+
+    return {
+      session_id: notebook.session_id,
+      user_id: notebook.user_id,
+      encrypted_blob: ciphertext,
+      encryption_header: header,
+      transcript_hash,
+      created_at: notebook.created_at,
+      updated_at: notebook.updated_at,
+    };
+  }
+
+  private async decryptNotebook(record: EncryptedSessionNotebook): Promise<SessionNotebook> {
+    const { key } = this.getVaultContext();
+    await this.assertTranscriptHash(
+      record.encrypted_blob,
+      record.encryption_header,
+      record.transcript_hash,
+    );
+    const plaintext = await decrypt(record.encrypted_blob, key, record.encryption_header.iv);
+    return decodeJson<SessionNotebook>(plaintext);
+  }
+
+  private async encryptArc(arc: UserArc): Promise<EncryptedUserArc> {
+    const { key, metadata } = this.getVaultContext();
+    const iv = generateIV();
+    const header = this.buildHeader(metadata, iv);
+    const ciphertext = await encrypt(encodeJson(arc), key, iv);
+    const transcript_hash = await hashTranscript(ciphertext, header);
+
+    return {
+      user_id: arc.user_id,
+      encrypted_blob: ciphertext,
+      encryption_header: header,
+      transcript_hash,
+      version: arc.version,
+      created_at: arc.created_at,
+      updated_at: arc.updated_at,
+    };
+  }
+
+  private async decryptArc(record: EncryptedUserArc): Promise<UserArc> {
+    const { key } = this.getVaultContext();
+    await this.assertTranscriptHash(
+      record.encrypted_blob,
+      record.encryption_header,
+      record.transcript_hash,
+    );
+    const plaintext = await decrypt(record.encrypted_blob, key, record.encryption_header.iv);
+    return decodeJson<UserArc>(plaintext);
+  }
+
   // LLM provider keys are encrypted with the same vault key as transcripts.
   // This ensures the API key is only accessible when the vault is unlocked.
   private async encryptLlmProviderKey(record: LlmProviderKey): Promise<EncryptedLlmProviderKey> {
@@ -215,6 +277,42 @@ export class DexieStorageService implements StorageService {
       .sortBy('created_at');
     const newestFirst = summaries.reverse().slice(0, limit);
     return Promise.all(newestFirst.map((record) => this.decryptSummary(record)));
+  }
+
+  async getNotebook(sessionId: string): Promise<SessionNotebook | null> {
+    const db = getActiveDb();
+    const record = await db.sessionNotebooks.get(sessionId);
+    if (!record) return null;
+    return this.decryptNotebook(record);
+  }
+
+  async saveNotebook(notebook: SessionNotebook): Promise<void> {
+    const db = getActiveDb();
+    const encrypted = await this.encryptNotebook(notebook);
+    await db.sessionNotebooks.put(encrypted);
+  }
+
+  async listNotebooks(userId: string): Promise<SessionNotebook[]> {
+    const db = getActiveDb();
+    const notebooks = await db.sessionNotebooks
+      .where('user_id')
+      .equals(userId)
+      .sortBy('created_at');
+    const newestFirst = notebooks.reverse();
+    return Promise.all(newestFirst.map((record) => this.decryptNotebook(record)));
+  }
+
+  async getArc(userId: string): Promise<UserArc | null> {
+    const db = getActiveDb();
+    const record = await db.userArcs.get(userId);
+    if (!record) return null;
+    return this.decryptArc(record);
+  }
+
+  async saveArc(arc: UserArc): Promise<void> {
+    const db = getActiveDb();
+    const encrypted = await this.encryptArc(arc);
+    await db.userArcs.put(encrypted);
   }
 
   async getLlmProviderKey(provider: LlmProvider): Promise<LlmProviderKey | null> {

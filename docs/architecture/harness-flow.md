@@ -1,7 +1,8 @@
-# Conversational Harness Flow v0
+# Conversational Harness Flow
 
-Date: 2026-01-26
-Status: Draft (MVP)
+Date: 2026-02-15
+Status: Active
+Evolves: v0 (2026-01-26)
 
 ## Goals
 
@@ -12,51 +13,63 @@ Status: Draft (MVP)
 
 ## High-Level Flow
 
-1. Load user state (profile + last session summary + open threads).
-2. Select context for this session.
-3. Run the lumen prompt.
+1. Load user state (Arc + session notebooks + raw transcripts).
+2. Assemble context for this session (budget-aware).
+3. Run the Lumen prompt.
 4. Detect session completion.
-5. Generate and store session summary + updates.
+5. Generate Session Notebook + update the Arc.
 
-## Context Selection
+## Context Assembly
 
-Inputs:
+Assembly priority (loaded in this order, each within budget):
 
-- UserProfile (minimal)
-- Last N session summaries (default N=3)
-- Open threads from most recent summary
-- Current time/seasonal context
-- Session spacing context:
-  - `days_since_last_session: number | null` (null if first session)
-  - `last_session_action_steps: string[]` (for follow-up)
-  - `session_number: number` (1 = intake, 2+ = ongoing)
+```
+1. YAML front matter              session_number, current_date, days_since_last_session
+2. The Arc                        ~3K tokens   [always, if exists]
+3. All session notebooks          ~1.3K each   [always, newest first]
+4. Last 2-3 raw transcripts       ~12K each    [always if budget allows]
+5. Random older transcripts       ~12K each    [fill remaining budget]
+```
 
-Rules:
+Budget adapts to model context window. With 200K (current), the above works
+comfortably for 50+ sessions. Larger windows load more transcripts automatically.
 
-- Prefer raw transcripts unless they exceed budget, then fall back to summaries.
-- Use raw transcripts for the last 10 sessions if budget allows.
-- Include only what directly informs the next move.
-- If the session number is 1, do not include prior sessions.
+See `docs/mentoring/notebook-and-arc-prompts.md` for full context assembly reference.
 
-Token budget (MVP heuristic, model-aware):
+Code ref: `apps/web/lib/context/assembly.ts` — `buildSessionContext()`
 
-- Default context window: 200K tokens (model-aware, override per model).
-- Reserve room for system prompt and model response (default reserve: 60K tokens).
-- Target ~70–75% of the context window for input.
-- If raw transcripts exceed budget, fall back to summaries.
+### Budget Rules
 
-Determinism (MVP):
+- Default context window: 200K tokens (model-aware, configurable per model).
+- Reserve ~60K tokens for system prompt + model response.
+- Fill remaining budget with Arc → notebooks → transcripts.
+- Random selection of older transcripts uses Fisher-Yates shuffle (mimics human
+  memory — serendipitous recall rather than strict recency).
 
-- Deterministic context assembly for a given input state and budget.
-- Log context selection decisions for replay in tests.
+## Session Closure (Memory Writes)
 
-## Memory Hygiene
+After each session, two LLM calls produce the continuity documents:
 
-- After each session, write:
-  - Full transcript (raw, immutable)
-  - Summary (short, actionable)
-  - Update to UserProfile (only if new stable info emerges)
-- Avoid overfitting the profile; keep it sparse and stable.
+1. **Session Notebook** — markdown reflection on the conversation (~1K-1.5K tokens).
+   Written as the mentor's private notes. Sections: What Happened, Their Words,
+   What Opened, What Moved, Mentor's Notebook, Parting Words.
+
+2. **The Arc** — rewritten understanding of the person (~2K tokens). Not appended,
+   rewritten. Sections: Who You Are, Your Current Chapter, What's Aligned, What's
+   Unfinished, Patterns I've Noticed, Your Words, Our Journey.
+
+Additionally stored (unchanged from v0):
+
+- Full transcript (raw, immutable, encrypted)
+- Session metadata sent to server (timestamps, transcript hash)
+
+See `docs/mentoring/notebook-and-arc-prompts.md` for prompt details and design notes.
+
+Code refs:
+
+- `apps/web/lib/session/summary.ts` — `NOTEBOOK_PROMPT`
+- `apps/web/lib/session/arc.ts` — `ARC_CREATION_PROMPT`, `ARC_UPDATE_PROMPT`
+- `apps/web/app/chat/page.tsx` — `generateNotebookAndArc()`
 
 ## Safety & Governance
 
@@ -74,12 +87,12 @@ Signals:
 
 Action:
 
-- On user end, conclude with summary, parting words, and any next steps that emerged naturally.
+- On user end, generate Session Notebook → update Arc → display Parting Words on closure screen.
 
 ## Harness Quality
 
-- Prompt versioning tied to summaries and transcript metadata.
+- Prompt versioning tied to notebooks and transcript metadata.
 - Minimal evaluation harness:
-  - Summary quality checks (brevity, warmth, natural flow).
-  - Closure checks (summary + parting words format).
+  - Notebook quality checks (specificity, verbatim quotes, natural flow).
+  - Arc coherence checks (thread lifecycle, pattern depth).
   - Deterministic context assembly replay tests.

@@ -3,6 +3,8 @@ import type {
   SessionTranscript,
   SessionTranscriptChunk,
   SessionSummary,
+  SessionNotebook,
+  UserArc,
   LlmProvider,
   LlmProviderKey,
   VaultMetadata,
@@ -25,6 +27,13 @@ export interface StorageService {
   getSummary(sessionId: string): Promise<SessionSummary | null>;
   saveSummary(summary: SessionSummary): Promise<void>;
   listSummaries(userId: string, limit?: number): Promise<SessionSummary[]>;
+
+  getNotebook(sessionId: string): Promise<SessionNotebook | null>;
+  saveNotebook(notebook: SessionNotebook): Promise<void>;
+  listNotebooks(userId: string): Promise<SessionNotebook[]>;
+
+  getArc(userId: string): Promise<UserArc | null>;
+  saveArc(arc: UserArc): Promise<void>;
 
   getLlmProviderKey(provider: LlmProvider): Promise<LlmProviderKey | null>;
   saveLlmProviderKey(record: LlmProviderKey): Promise<void>;

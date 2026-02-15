@@ -97,14 +97,14 @@ this layer. This should draw from frontier-lab patterns (like coding harnesses)
 but adapted for conversations: context curation, memory hygiene, session closure
 behavior, and safety-aware governance.
 
-- Treat the harness as product-critical: tests, prompt versioning, and deterministic context assembly.
+- Treat the harness as product-critical: tests, prompt versioning, and reliable context assembly.
   - Minimal evaluation harness for summaries and session-closure quality.
 
 ### Context Assembly (MVP)
 
 - Model-aware context budgeting (default 200K window, 60K reserved for live session + system prompt).
 - Prefer raw transcripts (up to 10 recent sessions) before falling back to summaries.
-- Context preamble uses Markdown with YAML front matter metadata for clarity and determinism.
+- Context preamble uses Markdown with YAML front matter metadata for clarity and stable metadata shape.
 
 ## Auth
 

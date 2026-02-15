@@ -30,8 +30,14 @@ import {
 import { DEFAULT_MODEL_ID, DEFAULT_PROVIDER } from '@/lib/llm/model-config';
 import { buildSystemPrompt } from '@/lib/llm/prompts';
 import { buildLlmMessages } from '@/lib/session/messages';
-import { parseSummaryResponse, SUMMARY_PROMPT } from '@/lib/session/summary';
-import type { LlmProviderKey, SessionSummary } from '@/types/storage';
+import { NOTEBOOK_PROMPT, extractClosureFields } from '@/lib/session/summary';
+import {
+  ARC_CREATION_PROMPT,
+  ARC_UPDATE_PROMPT,
+  buildArcCreationMessages,
+  buildArcUpdateMessages,
+} from '@/lib/session/arc';
+import type { LlmProviderKey, SessionNotebook } from '@/types/storage';
 import type { ClosureStep, Message, SessionState } from '@/types/session';
 
 // When true, the server injects the LLM token — skip client-side key management.
@@ -50,7 +56,7 @@ function ChatPageInner() {
   const [llmKeyInput, setLlmKeyInput] = React.useState('');
   const [llmKeyError, setLlmKeyError] = React.useState<string | null>(null);
   const [isSavingKey, setIsSavingKey] = React.useState(false);
-  const [sessionSummary, setSessionSummary] = React.useState<SessionSummary | null>(null);
+  const [sessionNotebook, setSessionNotebook] = React.useState<SessionNotebook | null>(null);
   const [summaryError, setSummaryError] = React.useState<string | null>(null);
   const [isRetryingSummary, setIsRetryingSummary] = React.useState(false);
   const [closureStep, setClosureStep] = React.useState<ClosureStep>('wrapping-up');
@@ -284,7 +290,7 @@ function ChatPageInner() {
     setShowEndSessionDialog(true);
   }, []);
 
-  const generateAndStoreSummary = React.useCallback(
+  const generateNotebookAndArc = React.useCallback(
     async ({
       userId,
       sessionIdValue,
@@ -304,31 +310,78 @@ function ChatPageInner() {
         sessionNumber,
         sessionContext: sessionContextRef.current ?? '',
       });
-      const summaryText = await callLlmWithRetry({
+
+      // Step 1: Generate the Session Notebook (markdown)
+      const notebookMarkdown = await callLlmWithRetry({
         apiKey: llmKey,
         modelId: DEFAULT_MODEL_ID,
         systemPrompt,
         messages: [
           ...buildLlmMessages(messagesSnapshot),
-          { role: 'user', content: SUMMARY_PROMPT },
+          { role: 'user', content: NOTEBOOK_PROMPT },
         ],
-        temperature: 0.2,
-        maxTokens: 800,
+        maxTokens: 4096,
       });
-      const parsed = parseSummaryResponse(summaryText);
-      const summary: SessionSummary = {
+
+      const notebook: SessionNotebook = {
         session_id: sessionIdValue,
         user_id: userId,
-        summary_text: parsed.summary_text,
-        parting_words: parsed.parting_words,
-        action_steps: parsed.action_steps,
-        open_threads: parsed.open_threads,
-        notes: null,
+        session_number: sessionNumber,
+        markdown: notebookMarkdown.trim(),
         created_at: nowIso,
         updated_at: nowIso,
       };
-      await storageRef.current.saveSummary(summary);
-      return summary;
+      await storageRef.current.saveNotebook(notebook);
+
+      // Step 2: Build raw transcript text for the Arc call
+      const transcriptText = messagesSnapshot
+        .map((m) => `**${m.role}:** ${m.content}`)
+        .join('\n\n');
+
+      // Step 3: Generate/update the Arc
+      try {
+        const existingArc = await storageRef.current.getArc(userId);
+
+        let arcMarkdown: string;
+        if (!existingArc) {
+          // First session — create the Arc
+          arcMarkdown = await callLlmWithRetry({
+            apiKey: llmKey,
+            modelId: DEFAULT_MODEL_ID,
+            systemPrompt: ARC_CREATION_PROMPT,
+            messages: buildArcCreationMessages(transcriptText, notebookMarkdown),
+            maxTokens: 4096,
+          });
+        } else {
+          // Update the Arc with new understanding
+          arcMarkdown = await callLlmWithRetry({
+            apiKey: llmKey,
+            modelId: DEFAULT_MODEL_ID,
+            systemPrompt: ARC_UPDATE_PROMPT,
+            messages: buildArcUpdateMessages(
+              existingArc.arc_markdown,
+              transcriptText,
+              notebookMarkdown,
+              sessionNumber,
+            ),
+            maxTokens: 4096,
+          });
+        }
+
+        await storageRef.current.saveArc({
+          user_id: userId,
+          arc_markdown: arcMarkdown.trim(),
+          last_session_number: sessionNumber,
+          version: (existingArc?.version ?? 0) + 1,
+          created_at: existingArc?.created_at ?? nowIso,
+          updated_at: nowIso,
+        });
+      } catch (arcError) {
+        // Arc failure is non-fatal — notebook is saved, arc will catch up next time.
+        console.error('Failed to generate/update Arc (notebook saved successfully)', arcError);
+      }
+
+      return notebook;
     },
     [llmKey, sessionContextRef, transcriptRef],
   );
@@ -390,20 +443,20 @@ function ChatPageInner() {
       await new Promise((r) => setTimeout(r, MIN_STEP_MS - storeElapsed));
     }
 
-    // Step 3: Reflecting — LLM summary (the slow step)
+    // Step 3: Reflecting — notebook + arc generation (the slow step)
     if (userId && sid && llmKey) {
       setClosureStep('reflecting');
       try {
-        const summary = await generateAndStoreSummary({
+        const notebook = await generateNotebookAndArc({
           userId,
           sessionIdValue: sid,
           messagesSnapshot,
           nowIso: now,
         });
-        setSessionSummary(summary);
+        setSessionNotebook(notebook);
         setSummaryError(null);
       } catch (error) {
-        console.error('Failed to generate session summary', error);
+        console.error('Failed to generate session notebook', error);
         setSummaryError(
           "I wasn't able to capture a full reflection this time, but your conversation is saved.",
         );
@@ -416,13 +469,13 @@ function ChatPageInner() {
     abortConversation,
     clearActiveTimer,
     flushPendingMessages,
-    generateAndStoreSummary,
+    generateNotebookAndArc,
     llmKey,
     messages,
     stopActiveSegment,
   ]);
 
-  const retrySummaryGeneration = React.useCallback(async () => {
+  const retryNotebookGeneration = React.useCallback(async () => {
     const userId = userIdRef.current;
     const sid = sessionIdRef.current;
     if (!userId || !sid || !llmKey) {
@@ -433,15 +486,15 @@ function ChatPageInner() {
     setClosureStep('reflecting');
     try {
       const nowIso = new Date().toISOString();
-      const summary = await generateAndStoreSummary({
+      const notebook = await generateNotebookAndArc({
         userId,
         sessionIdValue: sid,
         messagesSnapshot: [...messages],
         nowIso,
       });
-      setSessionSummary(summary);
+      setSessionNotebook(notebook);
     } catch (error) {
-      console.error('Failed to retry session summary', error);
+      console.error('Failed to retry session notebook', error);
       setSummaryError(
         "I wasn't able to capture a full reflection this time, but your conversation is saved.",
       );
@@ -449,7 +502,7 @@ function ChatPageInner() {
       setIsRetryingSummary(false);
       setClosureStep('done');
     }
-  }, [generateAndStoreSummary, llmKey, messages, userIdRef, sessionIdRef]);
+  }, [generateNotebookAndArc, llmKey, messages, userIdRef, sessionIdRef]);
 
   // Loading state
   if (!vaultReady || sessionState === 'loading') {
@@ -508,12 +561,16 @@ function ChatPageInner() {
     return (
       <SessionClosure
         sessionDate={sessionDateRef.current}
-        partingWords={sessionSummary?.parting_words ?? null}
-        actionSteps={sessionSummary?.action_steps ?? []}
+        partingWords={
+          sessionNotebook ? extractClosureFields(sessionNotebook.markdown).partingWords : null
+        }
+        actionSteps={
+          sessionNotebook ? extractClosureFields(sessionNotebook.markdown).actionSteps : []
+        }
         closureStep={closureStep}
         summaryError={summaryError}
         isRetryingSummary={isRetryingSummary}
-        onRetrySummary={retrySummaryGeneration}
+        onRetrySummary={retryNotebookGeneration}
       />
     );
   }

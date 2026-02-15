@@ -1,10 +1,12 @@
 'use client';
 
+import * as React from 'react';
 import Link from 'next/link';
 import { LumenMessage } from '@/components/chat/lumen-message';
 import { UserMessage } from '@/components/chat/user-message';
 import { SessionSummary } from '@/components/history/session-summary';
 import { useTranscriptLoader } from '@/lib/hooks/use-transcript-loader';
+import { extractClosureFields } from '@/lib/session/summary';
 
 type TranscriptViewerProps = {
   sessionId: string;
@@ -12,7 +14,25 @@ type TranscriptViewerProps = {
 
 // Read-only transcript display using the same message components as the chat.
 export function TranscriptViewer({ sessionId }: TranscriptViewerProps) {
-  const { messages, summary, isLoading, error } = useTranscriptLoader(sessionId);
+  const { messages, summary, notebook, isLoading, error } = useTranscriptLoader(sessionId);
+
+  // Prefer notebook (new format) over summary (legacy) for display.
+  const displaySummary = React.useMemo(() => {
+    if (notebook) {
+      const { partingWords, actionSteps } = extractClosureFields(notebook.markdown);
+      return {
+        parting_words: partingWords,
+        action_steps: actionSteps,
+      };
+    }
+    if (summary) {
+      return {
+        parting_words: summary.parting_words,
+        action_steps: summary.action_steps,
+      };
+    }
+    return null;
+  }, [notebook, summary]);
 
   if (isLoading) {
     return (
@@ -50,10 +70,22 @@ export function TranscriptViewer({ sessionId }: TranscriptViewerProps) {
 
   return (
     <div className="px-6 py-8 max-w-2xl mx-auto">
-      {/* Session summary at top */}
-      {summary && (
+      {/* Session summary at top (from notebook or legacy summary) */}
+      {displaySummary && (
         <>
-          <SessionSummary summary={summary} />
+          <SessionSummary
+            summary={{
+              session_id: sessionId,
+              user_id: '',
+              summary_text: '',
+              parting_words: displaySummary.parting_words,
+              action_steps: displaySummary.action_steps,
+              open_threads: [],
+              notes: null,
+              created_at: '',
+              updated_at: '',
+            }}
+          />
           <div className="my-8 flex justify-center">
             <div className="w-16 h-px bg-border" />
           </div>

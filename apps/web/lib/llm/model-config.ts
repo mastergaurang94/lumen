@@ -30,8 +30,9 @@ const MODEL_CONFIGS: Record<string, ModelConfig> = {
     provider: 'anthropic',
     // Maps to claude-opus-4-6 per Anthropic's model naming. Variants like
     // claude-opus-4-6-20260115 may exist; use base ID for latest.
+    // We currently budget this model at 200K context for stability/cost control.
     providerModelId: 'claude-opus-4-6',
-    contextWindowTokens: 1000000,
+    contextWindowTokens: 200000,
   },
 };
 

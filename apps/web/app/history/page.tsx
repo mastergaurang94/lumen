@@ -11,7 +11,8 @@ import { withDevAuth } from '@/lib/hooks/dev-auth';
 import { getKey, isUnlocked } from '@/lib/crypto/key-context';
 import { useAuthSessionGuard } from '@/lib/hooks/use-auth-session-guard';
 import { createStorageService } from '@/lib/storage/dexie-storage';
-import type { SessionTranscript, SessionSummary } from '@/types/storage';
+import { parseNotebookSection } from '@/lib/session/summary';
+import type { SessionTranscript } from '@/types/storage';
 
 type HistoryEntry = {
   transcript: SessionTranscript;
@@ -60,11 +61,18 @@ export default function HistoryPage() {
       const transcripts = await storage.listTranscripts(userId);
       const completed = transcripts.filter((t) => t.ended_at !== null);
 
-      // Load summaries for parting words preview
+      // Load notebooks (new format) and summaries (legacy) for parting words preview.
+      // Notebooks take priority; fall back to old summaries for pre-migration sessions.
+      const notebooks = await storage.listNotebooks(userId);
+      const notebookPartingWords = new Map<string, string | null>();
+      for (const nb of notebooks) {
+        notebookPartingWords.set(nb.session_id, parseNotebookSection(nb.markdown, 'Parting Words'));
+      }
+
       const summaries = await storage.listSummaries(userId);
-      const summaryMap = new Map<string, SessionSummary>();
+      const summaryPartingWords = new Map<string, string | null>();
       for (const s of summaries) {
-        summaryMap.set(s.session_id, s);
+        summaryPartingWords.set(s.session_id, s.parting_words);
       }
 
       // Assign session numbers: completed sessions in chronological order
@@ -73,7 +81,10 @@ export default function HistoryPage() {
       const historyEntries: HistoryEntry[] = chronological.map((transcript, index) => ({
         transcript,
         sessionNumber: index + 1,
-        partingWords: summaryMap.get(transcript.session_id)?.parting_words ?? null,
+        partingWords:
+          notebookPartingWords.get(transcript.session_id) ??
+          summaryPartingWords.get(transcript.session_id) ??
+          null,
       }));
 
       // Return to newest-first for display

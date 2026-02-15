@@ -4,6 +4,8 @@ import type {
   SessionTranscript,
   SessionTranscriptChunk,
   EncryptedSessionSummary,
+  EncryptedSessionNotebook,
+  EncryptedUserArc,
   EncryptedLlmProviderKey,
   VaultMetadata,
   SessionOutboxEvent,
@@ -18,6 +20,8 @@ export class LumenDB extends Dexie {
   sessionTranscripts!: Table<SessionTranscript, string>;
   sessionTranscriptChunks!: Table<SessionTranscriptChunk, [string, number]>;
   sessionSummaries!: Table<EncryptedSessionSummary, string>;
+  sessionNotebooks!: Table<EncryptedSessionNotebook, string>;
+  userArcs!: Table<EncryptedUserArc, string>;
   llmProviderKeys!: Table<EncryptedLlmProviderKey, string>;
   vaultMetadata!: Table<VaultMetadata, string>;
   sessionOutbox!: Table<SessionOutboxEvent, string>;
@@ -34,6 +38,12 @@ export class LumenDB extends Dexie {
       llmProviderKeys: '&provider',
       vaultMetadata: '&id',
       sessionOutbox: '&id, status, available_at, created_at, session_id',
+    });
+
+    // v2: Session notebooks (rich markdown reflections) and user arcs (evolving understanding).
+    this.version(2).stores({
+      sessionNotebooks: '&session_id, user_id, created_at',
+      userArcs: '&user_id',
     });
   }
 }

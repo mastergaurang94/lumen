@@ -42,7 +42,7 @@ Status: Draft (MVP)
 2. Web app computes days since last session locally; lumen handles spacing conversationally.
 3. Web app loads local memory and builds context.
 4. Web app sends prompt + context directly to the LLM provider.
-5. Response returns to web app; transcript + summary stored locally.
+5. Response returns to web app; transcript stored locally. At session end, Session Notebook + Arc generated and stored locally (encrypted).
 6. Web app sends session metadata (start/end + transcript hash) to Go service.
 
 ## Security Notes
@@ -53,7 +53,7 @@ Status: Draft (MVP)
   - Store encryption header (kdf params, salt, iv, version) with each encrypted blob.
   - Key rotation: versioned KDF params; re-encrypt all local records when version changes.
 - Transcript hash computed client-side over the encrypted blob + encryption header.
-- No server-side storage of transcripts or summaries.
+- No server-side storage of transcripts, notebooks, or arcs.
 - Explicit UI line for privacy and local storage.
 - Passphrase required before first session to unlock local data.
 

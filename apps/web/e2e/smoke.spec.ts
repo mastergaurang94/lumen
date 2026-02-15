@@ -211,17 +211,22 @@ test.describe('Smoke Test', () => {
     // Step 5: Should navigate to chat
     await expect(page).toHaveURL(/\/chat$/);
 
-    // Step 6: Wait for LLM key input to appear (BYOK flow)
-    // The placeholder is "sk-ant-oat..."
+    // Step 6: Support both provider modes:
+    // - BYOK: token input is shown and must be saved.
+    // - Server-managed: chat input is immediately available.
     const tokenInput = page.getByPlaceholder('sk-ant-oat...');
-    await expect(tokenInput).toBeVisible({ timeout: 15000 });
+    const messageInput = page.getByLabel('Message input');
+    const firstVisible = await Promise.race([
+      tokenInput.waitFor({ state: 'visible', timeout: 30000 }).then(() => 'token' as const),
+      messageInput.waitFor({ state: 'visible', timeout: 30000 }).then(() => 'input' as const),
+    ]);
 
-    // Enter a mock OAuth token (sk-ant-oat prefix required)
-    await tokenInput.fill('sk-ant-oat-mock-test-token-12345');
-    await page.getByRole('button', { name: /save/i }).click();
+    if (firstVisible === 'token') {
+      await tokenInput.fill('sk-ant-oat-mock-test-token-12345');
+      await page.getByRole('button', { name: /save/i }).click();
+    }
 
     // Step 7: Wait for message input to be enabled (LLM key verified)
-    const messageInput = page.getByLabel('Message input');
     await expect(messageInput).toBeEnabled({ timeout: 15000 });
 
     // Step 8: Send a message

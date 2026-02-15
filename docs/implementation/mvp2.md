@@ -18,6 +18,13 @@ Status: In Progress
 
 ## Running Updates
 
+- 2026-02-15: **Session Notebook + Arc system** — Replaced JSON `SessionSummary` with
+  markdown Session Notebooks and a living Arc document. Two LLM calls at session end
+  (notebook → arc update). Context assembly rewritten: Arc → all notebooks → last 3
+  transcripts → random older transcripts (Fisher-Yates). Opus 4.6 context window
+  corrected from 1M to 200K. New Dexie v2 schema (`sessionNotebooks`, `userArcs`).
+  History UI updated to prefer notebooks over legacy summaries. All 48 tests pass.
+  Docs: `notebook-and-arc-prompts.md`, updated `harness-flow.md`.
 - 2026-02-13: `3.1 ✅ Complete` — Session history feature + 19 regression tests.
   History list page (`/history`), detail page (`/history/[sessionId]`),
   session card and summary components, transcript viewer with decrypt
@@ -144,7 +151,7 @@ These are the specific experiences we're engineering for. Every item in this pla
 | #   | Moment                                           | How We Hit It                                                                               |
 | --- | ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
 | 1   | _"It said something no one has ever said to me"_ | 5-lens system prompt — sees the relationship pattern underneath the work complaint          |
-| 2   | _"It remembered"_                                | Explicit thread/action continuity in prompt + 1M context window (Opus 4.6)                  |
+| 2   | _"It remembered"_                                | Session Notebooks + Arc + raw transcripts loaded into 200K context window                   |
 | 3   | _"It knew what I needed before I did"_           | Prompt instructions to notice tone, energy, what's _not_ being said                         |
 | 4   | _Humor — real lightness from seeing clearly_     | Prompt permission + anti-pattern guidance (not jokes to lighten mood, but wit from clarity) |
 
@@ -743,7 +750,7 @@ These are explicitly out of scope for this sprint. They're captured in the backl
 
 - **Theme iteration / atmospheric design** — Nice but not blocking feedback
 - **Evaluation harness / prompt versioning** — Internal tooling, not user-facing
-- **Context compaction / summary compaction** — Less urgent with 1M context window
+- **Context compaction / summary compaction** — Less urgent with notebook/arc system
 - **Session insights / analytics endpoint** — Can ask testers directly
 - **Zero-knowledge encrypted sync** — MVP 3
 - **Desktop wrapper (Tauri)** — MVP 3
@@ -794,3 +801,6 @@ Anchors:
 | Session summary   | `apps/web/components/history/session-summary.tsx`   | Summary block (parting words + action steps)            |
 | Transcript viewer | `apps/web/components/history/transcript-viewer.tsx` | Read-only transcript display                            |
 | Transcript loader | `apps/web/lib/hooks/use-transcript-loader.ts`       | Decrypt chunks → Message[] hook                         |
+| Notebook prompt   | `apps/web/lib/session/summary.ts`                   | `NOTEBOOK_PROMPT`, `extractClosureFields()`             |
+| Arc prompts       | `apps/web/lib/session/arc.ts`                       | `ARC_CREATION_PROMPT`, `ARC_UPDATE_PROMPT`              |
+| Storage types     | `apps/web/types/storage.ts`                         | `SessionNotebook`, `UserArc`                            |

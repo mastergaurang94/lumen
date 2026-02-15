@@ -16,6 +16,10 @@ _Empty — all current work tracked in `mvp2.md`._
 
 Near-term improvements.
 
+### Storage
+
+- [ ] `[S]` **Remove legacy sessionSummaries schema**: Drop Dexie v1 `sessionSummaries` table and related code (`parseSummaryResponse`, `SessionSummary` type, `getSummary`/`saveSummary`/`listSummaries` storage methods). Replaced by `sessionNotebooks` + `userArcs` in v2. Wait until no users have legacy-only data (or provide a one-time migration).
+
 ### Harness
 
 - [ ] `[S]` **Prompt versioning**: Track prompt changes for reproducibility. Correlate prompt versions with quality shifts.
@@ -66,7 +70,7 @@ Longer-term features that expand Lumen's capabilities.
 
 ### Harness
 
-- [ ] `[M]` **Context and summary compaction**: Compress older context and merge old summaries to fit more history in token budget. Less urgent with 1M context window (Opus 4.6) — relevant once users accumulate 100+ sessions.
+- [ ] `[M]` **Context compaction**: Compress older notebooks and transcripts to fit more history in token budget. Less urgent with notebook/arc system (200K window handles 50+ sessions comfortably) — relevant once users accumulate 100+ sessions.
 - [ ] `[L]` **Topic-based retrieval or thread pinning**: Long-horizon continuity for specific themes.
 - [ ] `[M]` **Priority weighting**: Boost commitments, recurring themes, recognition moments in context assembly.
 - [ ] `[S]` **Session boundary validation**: Avoid accidental context carryover between sessions.
