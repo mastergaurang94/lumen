@@ -640,6 +640,34 @@ Keep it minimal and integrated into the existing voice. Not a separate "safety" 
 
 ---
 
+### 2.9 Individual mentor mode (architecture only) `[L]`
+
+**Problem**: Lumen currently offers one unified Simon voice with all five perspectives baked in. The product vision is to eventually let users talk to individual mentors — each with their own distinct voice, deep in one domain — while Lumen remains available as the synthesizing conductor. Users would start with Lumen and over time choose to go deeper with a specific mentor, or go directly to a mentor if they prefer.
+
+**Design target**: Optionality — some people want one wise companion, others want to go deep with a specialist. Both should feel like part of the same world.
+
+**Architecture**:
+
+The system already has the building blocks:
+
+- **Shared perspective content** (`docs/mentoring/perspectives/`) — domain expertise for each of the five lenses. Used by both Lumen (loads all five) and individual mentors (loads one)
+- **Lumen voice layer** (`prompts.ts`) — the meta-framework (SOUL, PRESENCE, VOICE, etc.) that wraps all perspectives into one unified persona. Already complete
+- **Individual mentor voice layer** — each mentor gets their own voice/style wrapper around their single perspective. These exist as tested prompts in the external mentoring system and would be adapted for Lumen
+
+**What this item covers**:
+
+- Design the `buildSystemPrompt()` extension to accept a `mode` parameter (unified vs. individual mentor)
+- For individual mode: load a mentor-specific voice wrapper + that mentor's perspective instead of all five
+- Individual mentor prompts would include: domain-specific tracking instructions (what to notice across sessions), mentoring style guidance (how this mentor asks questions and gives feedback), depth escalation (how directness increases over sessions), and opening instructions (how to start a returning conversation)
+- UI: mentor selection on the session page (could be as simple as a dropdown or avatar row)
+- Storage: tag sessions by mentor type for context assembly
+
+**Not in scope**: Building/shipping this. This is the architecture and prompt design so it's ready when we build it.
+
+**Source**: Tested mentor prompts live at `~/Documents/conversations/mentoring-prompts/` — the individual voice wrappers there have been refined across 10+ sessions and should be the starting point for Lumen's individual mentor prompts.
+
+---
+
 ## Tier 3 — "Make it trustworthy"
 
 **Goal**: Users can see their data, take their data with them, recover from mistakes, and use Lumen comfortably on their phone.
