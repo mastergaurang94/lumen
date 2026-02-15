@@ -100,7 +100,8 @@ ALWAYS read ALL docs to get started with a thread.
 - `docs/product/spec.md` - Product requirements (locked for MVP)
 - `docs/design/system.md` - Palettes, typography, component guidelines
 - `docs/architecture/overview.md` - System architecture and data flow
-- `docs/mentoring/` - Harness flow and system prompts
+- `docs/architecture/harness-flow.md` - Context assembly and session closure flow
+- `docs/mentoring/` - System prompts, perspectives, notebook/arc prompt design
 - `docs/implementation/mvp2.md` - Active sprint plan (check Running Updates first)
 - `docs/implementation/backlog.md` - Prioritized work queue
 - `docs/implementation/done/` - Archived phases and completed work

@@ -25,8 +25,8 @@ describe('model config', () => {
       reservedTokens: 60000,
     });
     expect(getModelContextBudget('opus-4.6')).toEqual({
-      totalTokens: 1000000,
-      reservedTokens: 300000,
+      totalTokens: 200000,
+      reservedTokens: 60000,
     });
   });
 

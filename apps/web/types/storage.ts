@@ -44,6 +44,7 @@ export interface SessionTranscriptChunk {
 }
 
 // SessionSummary is the decrypted runtime shape used by the app.
+// Kept for backward compatibility with existing stored data.
 export interface SessionSummary {
   session_id: string;
   user_id: string;
@@ -52,6 +53,28 @@ export interface SessionSummary {
   action_steps: string[];
   open_threads: string[];
   notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// SessionNotebook is the mentor's private reflection after a session (markdown).
+// Replaces SessionSummary for new sessions going forward.
+export interface SessionNotebook {
+  session_id: string;
+  user_id: string;
+  session_number: number;
+  markdown: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// UserArc is the mentor's evolving understanding of a person (markdown).
+// One per user, rewritten after each session.
+export interface UserArc {
+  user_id: string;
+  arc_markdown: string;
+  last_session_number: number;
+  version: number;
   created_at: string;
   updated_at: string;
 }
@@ -73,6 +96,28 @@ export interface EncryptedSessionSummary {
   encrypted_blob: ArrayBuffer;
   encryption_header: EncryptionHeader;
   transcript_hash: ArrayBuffer;
+  created_at: string;
+  updated_at: string;
+}
+
+// EncryptedSessionNotebook is the on-disk shape stored in IndexedDB.
+export interface EncryptedSessionNotebook {
+  session_id: string;
+  user_id: string;
+  encrypted_blob: ArrayBuffer;
+  encryption_header: EncryptionHeader;
+  transcript_hash: ArrayBuffer;
+  created_at: string;
+  updated_at: string;
+}
+
+// EncryptedUserArc is the on-disk shape stored in IndexedDB.
+export interface EncryptedUserArc {
+  user_id: string;
+  encrypted_blob: ArrayBuffer;
+  encryption_header: EncryptionHeader;
+  transcript_hash: ArrayBuffer;
+  version: number;
   created_at: string;
   updated_at: string;
 }

@@ -103,13 +103,21 @@ test('vault smoke flow', async ({ page }) => {
 
   await expect(page).toHaveURL(/\/chat$/);
 
-  // Enter OAuth token to enable message input
+  // Support both provider modes:
+  // - BYOK: token input appears and must be saved.
+  // - Server-managed: chat input is already available.
   const tokenInput = page.getByPlaceholder('sk-ant-oat...');
-  await expect(tokenInput).toBeVisible({ timeout: 15000 });
-  await tokenInput.fill('sk-ant-oat-mock-test-token');
-  await page.getByRole('button', { name: /save/i }).click();
-
   const input = page.getByLabel('Message input');
+  const firstVisible = await Promise.race([
+    tokenInput.waitFor({ state: 'visible', timeout: 30000 }).then(() => 'token' as const),
+    input.waitFor({ state: 'visible', timeout: 30000 }).then(() => 'input' as const),
+  ]);
+
+  if (firstVisible === 'token') {
+    await tokenInput.fill('sk-ant-oat-mock-test-token');
+    await page.getByRole('button', { name: /save/i }).click();
+  }
+
   await expect(input).toBeEnabled({ timeout: 15000 });
 
   await input.fill('Testing encrypted storage.');
