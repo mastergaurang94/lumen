@@ -717,7 +717,7 @@ The system already has the building blocks:
 
 ---
 
-### 3.4 Mobile testing pass + accessibility `[M]`
+### 3.3 Mobile testing pass + accessibility `[M]`
 
 **Problem**: Testers will try Lumen on their phones. The chat input, sidebar overlay, passphrase entry, and closure flow all need to work comfortably on mobile viewports. Additionally, basic accessibility standards should be met.
 
@@ -746,6 +746,55 @@ The system already has the building blocks:
 - Screen reader announcement for streaming completion ("Response complete")
 
 **Key concern**: iOS Safari handles viewport height differently when the keyboard is open (`100vh` includes the keyboard). The chat footer and input area need to account for this.
+
+---
+
+### 3.4 Prompt quality iteration — session feedback `[M]`
+
+**Problem**: After 10+ sessions, several patterns have emerged where Lumen's conversational behavior doesn't match the intended companion experience. These are prompt-level issues — not bugs, but places where the system prompt needs refinement based on real usage.
+
+**Observations from recent sessions**:
+
+#### 1. Rote openings — "sitting with something"
+
+Lumen tends to open with variations of "I've been sitting with something from last time..." or similar formulaic phrasing. It feels repeated and predictable across sessions. The Vitality session opening was particularly off. Openings should feel genuinely varied and responsive to context, not templated.
+
+#### 2. Iterate on session transcripts for insights
+
+Have Lumen iterate on session transcripts to find prompt improvement opportunities. Explore a lightweight "mini evaluation" approach — not a formal harness, but a way to use real transcripts to identify where the prompt falls short and test improvements. A scratchpad or reflection process during sessions could help Lumen self-correct in real time.
+
+#### 3. Story consistency — Lumen's self-referential narratives
+
+In session 10, Lumen mentioned consulting in his late 30s. There's no mechanism to prevent contradicting this in future sessions. **Resolution**: Lumen's stories and anecdotes should NOT be about himself. They should reference other people he's known — patients, friends, colleagues, mentees. This sidesteps the consistency problem entirely and is more aligned with a mentor who draws from a lifetime of witnessing others' journeys.
+
+#### 4. Response verbosity and conversational pacing
+
+Several related issues:
+
+- **Wall of text**: When the user shares a lot, Lumen mirrors that volume back. The assistant should NOT match the user's verbosity — it should distill and respond with intentionality.
+- **Too many questions at once**: Lumen sometimes fires multiple questions in a single response, which breaks the natural conversation feel. One thread at a time.
+- **Thinking out loud**: Lumen often narrates its own reflections ("I notice that...", "What strikes me is...") instead of keeping those observations internal and communicating directly. Lumen should share what's most meaningful, not everything it's processing.
+- **Incentivize natural pacing**: Just because Lumen can process everything at once doesn't mean the human can respond that way. Lumen should model the conversational rhythm it wants — short, direct, one thing at a time. It can hold threads and return to them later.
+
+See the beginning of session 10 for examples of all of the above.
+
+#### 5. Core sessions vs. tactical midweek check-ins
+
+Lumen currently treats every session with equal weight, emphasizing "last session" regardless of its nature. There should be a distinction:
+
+- **Core sessions** (weekly): The main event. "Here's what we're exploring this week." These are the relationship-building conversations.
+- **Tactical/midweek sessions**: Quick check-ins, specific questions, lighter touch. These should NOT count as "the last session" in terms of continuity framing.
+
+The system should preserve the primacy of core sessions in how it frames continuity and returning-user openings. A midweek tactical check-in shouldn't reset the "last time we talked about..." anchor.
+
+**Approach**: Iterate on the system prompt (`docs/mentoring/system-prompts-v2.md` and `apps/web/lib/llm/prompts.ts`) to address each observation. Use real session transcripts as test cases — review before/after prompt changes against actual conversation flow. Consider whether session type metadata (core vs. tactical) needs to be stored or if it can be inferred from session length/depth.
+
+**Code refs**:
+
+- `apps/web/lib/llm/prompts.ts` — `buildSystemPrompt()`, all prompt sections
+- `docs/mentoring/system-prompts-v2.md` — active prompt reference
+- `apps/web/lib/session/arc.ts` — Arc update prompts (relevant to story consistency)
+- `apps/web/lib/context/assembly.ts` — context assembly, session ordering
 
 ---
 
