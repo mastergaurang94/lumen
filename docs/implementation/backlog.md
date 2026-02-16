@@ -71,6 +71,10 @@ Longer-term features that expand Lumen's capabilities.
     - No server involvement: Recovery key is generated and used entirely client-side.
   - _UX note_: The recovery key display should feel important but not scary. Frame it as empowerment: "This is your backup key. Keep it somewhere safe - a password manager, a note in your desk, wherever you won't lose it."
 
+### Mentoring
+
+- [ ] `[L]` **Individual mentor mode**: `MVP 3` — Per-mentor voices (one perspective each) alongside unified Lumen. Each mentor gets their own voice/style wrapper around a single perspective domain. Includes: `buildSystemPrompt()` mode parameter (unified vs. individual), mentor selection UI, session tagging by mentor type for context assembly, domain-specific tracking instructions, depth escalation across sessions. Source prompts at `~/Documents/conversations/mentoring-prompts/`. Deferred from MVP 2 (`2.9`) — unified voice quality comes first.
+
 ### Memory
 
 - [ ] `[L]` **Pattern index**: Track loops and dynamics across sessions for lumen awareness.
