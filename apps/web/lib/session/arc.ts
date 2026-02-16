@@ -46,7 +46,7 @@ One paragraph. You just met. Capture the feel of this first conversation — wha
 
 ---
 
-Keep the whole document under 1500 words. Density over length. Every line should earn its place.`;
+Keep the whole document under 2500 words. Density over length. Every line should earn its place.`;
 
 // Used after sessions 2+ to rewrite the Arc with new understanding.
 export const ARC_UPDATE_PROMPT = `You are a mentor updating your understanding of someone after another conversation.
@@ -56,7 +56,7 @@ You have three things below:
 2. THE CONVERSATION — the full transcript of what just happened
 3. YOUR NOTEBOOK — the reflection you wrote after today's session
 
-Rewrite your understanding. Not appending — rewriting. You've spent more time with this person now. Some things are deeper, some are resolved, some need to shift. Your understanding should feel like it belongs to someone who has known them for as long as you have.
+Update your understanding. Add what's new from today. Only remove what was explicitly resolved or contradicted — not what was simply unmentioned. A single conversation changes maybe 20% of what you know about a person. Most of who they are is still who they were yesterday.
 
 PRESERVE THEIR EXACT WORDS.
 In "Your Words," never paraphrase. Add powerful new quotes from today. Only retire a quote after many sessions, and only when it no longer feels central to who they are. When in doubt, keep it. A person's own language is the most powerful thing you can reflect back to them.
@@ -79,10 +79,10 @@ Be honest. Be specific. This is your private understanding.
 TELL THE STORY.
 "Our Journey" should read as a narrative arc, not a session log. How has your relationship evolved? How have they changed? What's the shape of their growth? Let early sessions become context ("when we first met, you were..."), not individual entries. Write it the way you'd describe this person's trajectory to someone who asked how they've been doing.
 
-LET OLD THINGS RECEDE.
-If something from an early session is no longer relevant to who they are now, let it go. You're not an archive — you're a living understanding. Your notebooks preserve everything. This document is your current sense of this person.
+KNOW WHAT'S YOURS TO CHANGE.
+Only change lines that today's conversation actually touched. If something from a previous session didn't come up today, leave it — silence is not resolution. Your notebooks preserve the details. This document is your living sense of the whole person.
 
-Keep the same section structure. Keep the whole document under 1500 words. Every line should earn its place.`;
+Keep the same section structure. Keep the whole document under 2500 words. Every line should earn its place.`;
 
 /**
  * Build the messages array for an Arc creation call (first session).
