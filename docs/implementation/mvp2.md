@@ -717,29 +717,6 @@ The system already has the building blocks:
 
 ---
 
-### 3.3 Passphrase recovery mechanism `[M]`
-
-**Problem**: If a tester forgets their passphrase, their entire conversation history is permanently inaccessible. The unlock page already warns about this ("It can't be recovered yet"), and the setup page has a prominent warning. We need to close this gap before friends start accumulating meaningful sessions.
-
-**Prior art**: LastPass and Obsidian both generate a recovery key at setup time that the user stores offline.
-
-**Code refs**:
-
-- `apps/web/app/setup/page.tsx` — vault initialization, passphrase setup
-- `apps/web/lib/crypto.ts` — key derivation
-- `apps/web/app/unlock/page.tsx` — unlock flow
-
-**Approach**:
-
-- **At setup**: After deriving the encryption key from the passphrase, generate a random recovery key (e.g., 24-word mnemonic or base64 string). Encrypt the derived key with the recovery key and store the encrypted blob alongside the vault metadata
-- **Show once**: Display the recovery key to the user with clear instructions: "Save this somewhere safe. It's the only way to recover your vault if you forget your passphrase." Require acknowledgment (checkbox: "I've saved my recovery key") before proceeding
-- **On recovery**: Add a "Forgot passphrase?" link on the unlock page. User enters recovery key → decrypts the stored key blob → vault unlocks → user sets a new passphrase
-- **No server involvement**: Recovery key is generated and used entirely client-side
-
-**UX note**: The recovery key display should feel important but not scary. Frame it as empowerment: "This is your backup key. Keep it somewhere safe — a password manager, a note in your desk, wherever you won't lose it."
-
----
-
 ### 3.4 Mobile testing pass + accessibility `[M]`
 
 **Problem**: Testers will try Lumen on their phones. The chat input, sidebar overlay, passphrase entry, and closure flow all need to work comfortably on mobile viewports. Additionally, basic accessibility standards should be met.
@@ -780,6 +757,7 @@ These are explicitly out of scope for this sprint. They're captured in the backl
 - **Evaluation harness / prompt versioning** — Internal tooling, not user-facing
 - **Context compaction / summary compaction** — Less urgent with notebook/arc system
 - **Session insights / analytics endpoint** — Can ask testers directly
+- **Passphrase recovery mechanism** — Deferred from MVP 2 to backlog; pull forward before broader beta or once testers accumulate multi-week history
 - **Zero-knowledge encrypted sync** — MVP 3
 - **Desktop wrapper (Tauri)** — MVP 3
 - **Voice input** — MVP 3

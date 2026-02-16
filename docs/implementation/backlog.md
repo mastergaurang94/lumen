@@ -1,6 +1,6 @@
 # Lumen Backlog
 
-Last Updated: 2026-02-12
+Last Updated: 2026-02-16
 
 Items are organized by time horizon (Now → Soon → Later) and category. Effort markers: `[S]`mall, `[M]`edium, `[L]`arge. Items tagged `MVP 3` are candidates for the next milestone. Items in the current sprint are tracked in `mvp2.md`.
 
@@ -60,6 +60,16 @@ Longer-term features that expand Lumen's capabilities.
   - Server stores only ciphertext and headers (no plaintext).
   - Conflict strategy: last-write-wins (v1.1).
   - _Includes multi-device edit resolution — merge strategy (LWW vs CRDT vs user prompts on conflict)._
+- [ ] `[M]` **Passphrase recovery mechanism**: Deferred from MVP 2 (`3.3`). Pull this forward when opening to broader beta or once testers accumulate meaningful multi-week history.
+  - _Problem_: If a tester forgets their passphrase, their entire conversation history is permanently inaccessible. The unlock page already warns about this ("It can't be recovered yet"), and the setup page has a prominent warning.
+  - _Prior art_: LastPass and Obsidian both generate a recovery key at setup time that the user stores offline.
+  - _Code refs_: `apps/web/app/setup/page.tsx` (vault initialization, passphrase setup), `apps/web/lib/crypto.ts` (key derivation), `apps/web/app/unlock/page.tsx` (unlock flow).
+  - _Approach_:
+    - At setup: After deriving the encryption key from the passphrase, generate a random recovery key (e.g., 24-word mnemonic or base64 string). Encrypt the derived key with the recovery key and store the encrypted blob alongside the vault metadata.
+    - Show once: Display the recovery key to the user with clear instructions: "Save this somewhere safe. It's the only way to recover your vault if you forget your passphrase." Require acknowledgment (checkbox: "I've saved my recovery key") before proceeding.
+    - On recovery: Add a "Forgot passphrase?" link on the unlock page. User enters recovery key -> decrypts the stored key blob -> vault unlocks -> user sets a new passphrase.
+    - No server involvement: Recovery key is generated and used entirely client-side.
+  - _UX note_: The recovery key display should feel important but not scary. Frame it as empowerment: "This is your backup key. Keep it somewhere safe - a password manager, a note in your desk, wherever you won't lose it."
 
 ### Memory
 
