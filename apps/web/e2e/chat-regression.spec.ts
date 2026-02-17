@@ -158,6 +158,113 @@ async function clearIndexedDb(page: Page) {
   );
 }
 
+/** Unlock vault only when the unlock form is visible. */
+async function unlockIfNeeded(page: Page) {
+  if (!page.url().includes('/unlock')) return;
+  const passphraseInput = page.locator('#passphrase');
+  await expect(passphraseInput).toBeVisible({ timeout: 15000 });
+  await passphraseInput.fill('test-passphrase-secure-123');
+
+  const unlockButton = page.getByRole('button', { name: 'Unlock' });
+  await expect(unlockButton).toBeEnabled({ timeout: 10000 });
+  await unlockButton.click();
+  await expect(page).not.toHaveURL(/\/unlock$/, { timeout: 15000 });
+}
+
+/** Normalize navigation so tests continue from chat regardless of setup/session/unlock state. */
+async function ensureChatReady(page: Page) {
+  const loadingText = page.getByText('Connecting to Lumen');
+
+  for (let i = 0; i < 20; i++) {
+    const url = page.url();
+    if (url.includes('/chat')) return;
+
+    if (await loadingText.isVisible()) {
+      await page.waitForTimeout(300);
+      continue;
+    }
+
+    if (url.includes('/setup')) {
+      const passphraseField = page.locator('#passphrase');
+      const confirmField = page.locator('#confirm');
+
+      // Setup can briefly remain on /setup with disabled inputs while submitting.
+      if ((await passphraseField.isDisabled()) || (await confirmField.isDisabled())) {
+        await page.waitForTimeout(300);
+        continue;
+      }
+
+      await passphraseField.fill('test-passphrase-secure-123');
+      await confirmField.fill('test-passphrase-secure-123');
+      const continueBtn = page.getByRole('button', { name: 'Continue' });
+      await expect(continueBtn).toBeEnabled({ timeout: 10000 });
+      await continueBtn.click();
+      await page.waitForTimeout(300);
+      continue;
+    }
+
+    if (url.includes('/unlock')) {
+      await unlockIfNeeded(page);
+      await page.waitForTimeout(300);
+      continue;
+    }
+
+    if (url.includes('/session')) {
+      const beginBtn = page.getByRole('button', { name: /let's go|continue/i });
+      if (await beginBtn.isVisible()) {
+        await beginBtn.click().catch(() => {
+          // Session CTA can detach during rerender/navigation; retry loop handles next state.
+        });
+      }
+      await Promise.race([
+        page.waitForURL(/\/(chat|unlock|setup)$/, { timeout: 5000 }).catch(() => null),
+        page.waitForTimeout(300),
+      ]);
+      continue;
+    }
+
+    await page.waitForTimeout(300);
+  }
+
+  throw new Error(`Unable to reach /chat. Last URL: ${page.url()}`);
+}
+
+/** In /chat, handle BYOK provider gate or direct-input mode and return ready message input. */
+async function ensureMessageInputReady(page: Page) {
+  const tokenInput = page.getByPlaceholder('sk-ant-oat...');
+  const messageInput = page.getByLabel('Message input');
+  const loadingText = page.getByText('Connecting to Lumen');
+
+  for (let i = 0; i < 40; i++) {
+    if (!page.url().includes('/chat')) {
+      await ensureChatReady(page);
+      await page.waitForTimeout(200);
+      continue;
+    }
+
+    if (await messageInput.isVisible()) {
+      await expect(messageInput).toBeEnabled({ timeout: 30000 });
+      return;
+    }
+
+    if (await tokenInput.isVisible()) {
+      await tokenInput.fill('sk-ant-oat-mock-test-token-12345');
+      await page.getByRole('button', { name: /save/i }).click();
+      await expect(messageInput).toBeEnabled({ timeout: 30000 });
+      return;
+    }
+
+    if (await loadingText.isVisible()) {
+      await page.waitForTimeout(300);
+      continue;
+    }
+
+    await page.waitForTimeout(300);
+  }
+
+  throw new Error(`Message input not ready on ${page.url()}`);
+}
+
 /** Full setup: mocks → clear DB → passphrase → session → chat → token → greeting. */
 async function setupChat(page: Page, state: MockState) {
   // Register mocks BEFORE any navigation so auth/API calls during page load
@@ -167,31 +274,9 @@ async function setupChat(page: Page, state: MockState) {
   await clearIndexedDb(page);
 
   await page.goto('/setup');
-  await page.locator('#passphrase').fill('test-passphrase-secure-123');
-  await page.locator('#confirm').fill('test-passphrase-secure-123');
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page).toHaveURL(/\/session$/);
+  await ensureChatReady(page);
 
-  await page.getByRole('button', { name: /let's go|continue/i }).click();
-  await expect(page).toHaveURL(/\/chat$/);
-
-  // In server mode (NEXT_PUBLIC_LLM_SERVER_MODE=true), the provider gate is
-  // skipped — no token input appears. In BYOK mode, we need to enter a token.
-  const tokenInput = page.getByPlaceholder('sk-ant-oat...');
-  const messageInput = page.getByLabel('Message input');
-
-  // Race: whichever appears first tells us which mode we're in.
-  const firstVisible = await Promise.race([
-    tokenInput.waitFor({ state: 'visible', timeout: 30000 }).then(() => 'token' as const),
-    messageInput.waitFor({ state: 'visible', timeout: 30000 }).then(() => 'input' as const),
-  ]);
-
-  if (firstVisible === 'token') {
-    await tokenInput.fill('sk-ant-oat-mock-test-token-12345');
-    await page.getByRole('button', { name: /save/i }).click();
-  }
-
-  await expect(messageInput).toBeEnabled({ timeout: 30000 });
+  await ensureMessageInputReady(page);
   await expect(page.getByText("I'm Lumen")).toBeVisible({ timeout: 30000 });
 
   // Let layout fully settle after greeting renders
@@ -244,19 +329,22 @@ async function getScrollMetrics(page: Page) {
 
 /** Assert a user message containing `text` is pinned near the top of the scroll area. */
 async function assertUserMessagePinned(page: Page, text: string, tolerance = 80) {
-  const offset = await page.evaluate((txt) => {
-    const sa = document.querySelector('.chat-scroll-area') as HTMLElement;
-    const msgs = sa?.querySelectorAll('[data-message-role="user"]');
-    if (!msgs) return null;
-    const target = Array.from(msgs).find((el) =>
-      el.textContent?.includes(txt),
-    ) as HTMLElement | null;
-    if (!target || !sa) return null;
-    return target.getBoundingClientRect().top - sa.getBoundingClientRect().top;
-  }, text);
-
-  expect(offset, `"${text}" should be near scroll area top`).not.toBeNull();
-  expect(Math.abs(offset!)).toBeLessThan(tolerance);
+  await expect
+    .poll(
+      async () =>
+        page.evaluate((txt) => {
+          const sa = document.querySelector('.chat-scroll-area') as HTMLElement;
+          const msgs = sa?.querySelectorAll('[data-message-role="user"]');
+          if (!msgs) return null;
+          const target = Array.from(msgs).find((el) =>
+            el.textContent?.includes(txt),
+          ) as HTMLElement | null;
+          if (!target || !sa) return Number.POSITIVE_INFINITY;
+          return Math.abs(target.getBoundingClientRect().top - sa.getBoundingClientRect().top);
+        }, text),
+      { timeout: 5000, intervals: [100, 200, 300] },
+    )
+    .toBeLessThan(tolerance);
 }
 
 // ─── Mock Override Helpers ─────────────────────────────────────────────────────
@@ -356,19 +444,19 @@ test.describe('Chat Regression', () => {
       // of content, needed = max(scrollTarget, 0) + clientHeight - h. Since
       // scrollTarget from the last pin is large, we clear it by triggering a
       // fresh ResizeObserver cycle with scrollTop=0.
-      const spacerAfterMessages = await page.evaluate(() => {
-        const sa = document.querySelector('.chat-scroll-area') as HTMLElement;
-        const spacer = sa?.querySelector('[data-scroll-spacer]') as HTMLElement;
-        return spacer?.offsetHeight ?? 0;
-      });
-
-      // The spacer should be meaningfully smaller with more content.
-      // Even if recovery is active, spacer is bounded by scroll area height.
-      // The key assertion: spacer shrinks as content grows (not fixed like pb-[80vh]).
-      expect(
-        spacerAfterMessages,
-        `spacer should shrink: greeting=${spacerWithGreeting} → after=${spacerAfterMessages}`,
-      ).toBeLessThan(spacerWithGreeting);
+      // The spacer should shrink as content grows. Poll because CI can lag
+      // through a few ResizeObserver cycles before recovery fully settles.
+      await expect
+        .poll(
+          async () =>
+            page.evaluate(() => {
+              const sa = document.querySelector('.chat-scroll-area') as HTMLElement;
+              const spacer = sa?.querySelector('[data-scroll-spacer]') as HTMLElement;
+              return spacer?.offsetHeight ?? 0;
+            }),
+          { timeout: 6000, intervals: [100, 200, 300] },
+        )
+        .toBeLessThan(spacerWithGreeting);
     });
 
     test('2b · no excess whitespace below content after long conversation', async ({ page }) => {
@@ -384,16 +472,8 @@ test.describe('Chat Regression', () => {
       // content. On main, pb-[80vh] is always present regardless of reload.
       await page.reload();
 
-      // Unlock vault after reload
-      await expect(page.locator('#passphrase')).toBeVisible({ timeout: 10000 });
-      await page.locator('#passphrase').fill('test-passphrase-secure-123');
-      await page.getByRole('button', { name: 'Unlock' }).click();
-      await expect(page).toHaveURL(/\/(session|chat)$/, { timeout: 10000 });
-      if (page.url().includes('/session')) {
-        await page.getByRole('button', { name: /let's go|continue/i }).click();
-      }
-      await expect(page).toHaveURL(/\/chat$/, { timeout: 10000 });
-      await expect(page.getByLabel('Message input')).toBeVisible({ timeout: 15000 });
+      await ensureChatReady(page);
+      await ensureMessageInputReady(page);
 
       // Wait for messages to restore and spacer to settle in normal mode
       await page.waitForTimeout(2000);
@@ -440,8 +520,6 @@ test.describe('Chat Regression', () => {
       await messageInput.fill('Deep thought about purpose');
       await page.keyboard.press('Enter');
 
-      // Wait for pin-to-top to settle (700ms)
-      await page.waitForTimeout(700);
       await assertUserMessagePinned(page, 'Deep thought about purpose', 40);
 
       // Wait another 1500ms (past the old 1000ms grace period on main)
@@ -737,8 +815,6 @@ test.describe('Chat Regression', () => {
       await messageInput.fill('A fresh perspective on growth');
       await page.keyboard.press('Enter');
 
-      // Wait for pin-to-top to settle
-      await page.waitForTimeout(700);
       await assertUserMessagePinned(page, 'A fresh perspective on growth');
 
       // Wait for response
@@ -996,39 +1072,39 @@ test.describe('Chat Regression', () => {
 
       // Button should be interactable (visible and clickable)
       const scrollBtn = page.locator('[aria-label="Scroll to bottom"]');
-      await expect(scrollBtn).toBeVisible({ timeout: 3000 });
+      await expect(scrollBtn).toBeVisible({ timeout: 5000 });
 
       // Click the button
       await scrollBtn.click();
-      await page.waitForTimeout(800);
 
       // Should be near content bottom (not spacer/padding bottom).
       // On the worktree, the spacer element provides the dead zone.
       // On main, pb-[80vh] padding does the same job.
-      const distanceFromContentEnd = await page.evaluate(() => {
-        const sa = document.querySelector('.chat-scroll-area') as HTMLElement;
-        if (!sa) return 9999;
+      await expect
+        .poll(
+          async () =>
+            page.evaluate(() => {
+              const sa = document.querySelector('.chat-scroll-area') as HTMLElement;
+              if (!sa) return 9999;
 
-        // Try worktree approach: subtract spacer height
-        const spacer = sa.querySelector('[data-scroll-spacer]') as HTMLElement | null;
-        let deadZone = spacer ? spacer.offsetHeight : 0;
+              // Try worktree approach: subtract spacer height
+              const spacer = sa.querySelector('[data-scroll-spacer]') as HTMLElement | null;
+              let deadZone = spacer ? spacer.offsetHeight : 0;
 
-        // Fallback for main: subtract pb-[80vh] padding
-        if (!spacer) {
-          const cw = sa.firstElementChild as HTMLElement | null;
-          const pb = cw ? parseFloat(getComputedStyle(cw).paddingBottom) : 0;
-          deadZone = pb;
-        }
+              // Fallback for main: subtract pb-[80vh] padding
+              if (!spacer) {
+                const cw = sa.firstElementChild as HTMLElement | null;
+                const pb = cw ? parseFloat(getComputedStyle(cw).paddingBottom) : 0;
+                deadZone = pb;
+              }
 
-        const contentEnd = sa.scrollHeight - deadZone;
-        const viewportBottom = sa.scrollTop + sa.clientHeight;
-        return Math.abs(contentEnd - viewportBottom);
-      });
-
-      expect(
-        distanceFromContentEnd,
-        `should be near content end, distance=${distanceFromContentEnd}`,
-      ).toBeLessThan(150);
+              const contentEnd = sa.scrollHeight - deadZone;
+              const viewportBottom = sa.scrollTop + sa.clientHeight;
+              return Math.abs(contentEnd - viewportBottom);
+            }),
+          { timeout: 5000, intervals: [100, 200, 300] },
+        )
+        .toBeLessThan(150);
 
       // Button should be hidden after scrolling to bottom.
       // On main, AnimatePresence removes the button from DOM, so check either
@@ -1059,23 +1135,8 @@ test.describe('Chat Regression', () => {
       // Reload the page
       await page.reload();
 
-      // Need to unlock the vault after reload
-      await expect(page.locator('#passphrase')).toBeVisible({ timeout: 10000 });
-      await page.locator('#passphrase').fill('test-passphrase-secure-123');
-      await page.getByRole('button', { name: 'Unlock' }).click();
-
-      // Should return to session page, then navigate to chat
-      await expect(page).toHaveURL(/\/(session|chat)$/, { timeout: 10000 });
-
-      // If on session page, click continue to get to chat
-      const currentUrl = page.url();
-      if (currentUrl.includes('/session')) {
-        await page.getByRole('button', { name: /let's go|continue/i }).click();
-        await expect(page).toHaveURL(/\/chat$/, { timeout: 10000 });
-      }
-
-      // Wait for message input (chat loaded)
-      await expect(page.getByLabel('Message input')).toBeVisible({ timeout: 15000 });
+      await ensureChatReady(page);
+      await ensureMessageInputReady(page);
 
       // Both user message and Lumen response should be restored
       await expect(page.getByText('Remember this message')).toBeVisible({ timeout: 10000 });
