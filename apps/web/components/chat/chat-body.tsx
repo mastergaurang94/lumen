@@ -1,5 +1,5 @@
-import { useRef, useEffect, type RefObject } from 'react';
-import { motion } from 'framer-motion';
+import { useRef, useEffect, useState, type RefObject } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Shield } from 'lucide-react';
 
 import { LumenMessage, TypingIndicator, UserMessage } from '@/components/chat';
@@ -53,6 +53,26 @@ export function ChatBody({
 }: ChatBodyProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
+  const shouldReduceMotion = useReducedMotion();
+  const isStreamingActive = isTyping || streamingContent !== null;
+  const [liveAnnouncement, setLiveAnnouncement] = useState('');
+  const wasStreamingRef = useRef(isStreamingActive);
+
+  useEffect(() => {
+    let clearAnnouncementTimer: ReturnType<typeof setTimeout> | undefined;
+
+    if (wasStreamingRef.current && !isStreamingActive) {
+      setLiveAnnouncement('Response complete');
+      clearAnnouncementTimer = setTimeout(() => setLiveAnnouncement(''), 1500);
+    }
+
+    wasStreamingRef.current = isStreamingActive;
+    return () => {
+      if (clearAnnouncementTimer) {
+        clearTimeout(clearAnnouncementTimer);
+      }
+    };
+  }, [isStreamingActive]);
 
   // Dynamic spacer with recovering mode for pin-to-top scroll animations.
   //
@@ -145,13 +165,17 @@ export function ChatBody({
 
   return (
     <div ref={scrollAreaRef} className="h-full chat-scroll-area">
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {liveAnnouncement}
+      </p>
       <div>
         <div ref={contentRef} className="max-w-3xl mx-auto px-6 pt-8">
           {/* Empty state before first message */}
           {messages.length === 0 && !isTyping && streamingContent === null && (
             <motion.div
-              initial={{ opacity: 0 }}
+              initial={shouldReduceMotion ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
               className="flex flex-col items-center justify-center py-20 text-center"
             >
               <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mb-4">
@@ -207,7 +231,7 @@ export function ChatBody({
             {/* Streaming response + typing indicator — kept as a single
                 block so the lightbulb doesn't jump when streaming begins.
                 Text grows above the indicator within the same wrapper. */}
-            {(isTyping || streamingContent !== null) && (
+            {isStreamingActive && (
               <div>
                 {streamingContent !== null && (
                   <LumenMessage key="streaming" content={streamingContent} />
@@ -226,7 +250,7 @@ export function ChatBody({
 
           {/* Height reservation matching the indicator — present when not
               streaming to keep content height stable at commit time. */}
-          {!(isTyping || streamingContent !== null) && <div className="h-8" aria-hidden="true" />}
+          {!isStreamingActive && <div className="h-8" aria-hidden="true" />}
         </div>
 
         {/* Scroll spacer — dynamically sized via ResizeObserver above.

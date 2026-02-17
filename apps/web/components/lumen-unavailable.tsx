@@ -94,7 +94,7 @@ export function LumenUnavailable({ onRetry, isRetrying = false }: LumenUnavailab
 
       {/* Footer */}
       <footer className="py-8 text-center px-6">
-        <p className="text-sm text-muted-foreground/60">
+        <p className="text-sm text-muted-foreground">
           If this persists, please try again later or contact support.
         </p>
       </footer>

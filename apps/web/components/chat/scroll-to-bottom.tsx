@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -22,6 +22,7 @@ const SCROLL_THRESHOLD = 100;
 // resized the scroll area and produced a visible "bounce" at the bottom.
 export function ScrollToBottom({ scrollAreaRef, className }: ScrollToBottomProps) {
   const [show, setShow] = React.useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   React.useEffect(() => {
     const el = scrollAreaRef.current;
@@ -51,13 +52,13 @@ export function ScrollToBottom({ scrollAreaRef, className }: ScrollToBottomProps
     const spacerHeight = spacer ? spacer.offsetHeight : 0;
 
     const target = el.scrollHeight - spacerHeight - el.clientHeight;
-    el.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
-  }, [scrollAreaRef]);
+    el.scrollTo({ top: Math.max(0, target), behavior: shouldReduceMotion ? 'auto' : 'smooth' });
+  }, [scrollAreaRef, shouldReduceMotion]);
 
   return (
     <motion.button
       animate={{ opacity: show ? 1 : 0, scale: show ? 1 : 0.8 }}
-      transition={{ duration: 0.15 }}
+      transition={{ duration: shouldReduceMotion ? 0 : 0.15 }}
       onClick={scrollToBottom}
       tabIndex={show ? 0 : -1}
       aria-hidden={!show}

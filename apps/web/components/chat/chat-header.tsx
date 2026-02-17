@@ -16,7 +16,7 @@ export function ChatHeader({ sessionDate, elapsedTime, sessionNumber }: ChatHead
       <h1 className="font-display text-lg text-foreground">
         Conversation {sessionNumber} - {formatSessionDate(sessionDate)}
       </h1>
-      <p className={cn('text-xs mt-1', elapsedTime ? 'text-muted-foreground/60' : 'invisible')}>
+      <p className={cn('text-xs mt-1', elapsedTime ? 'text-muted-foreground' : 'invisible')}>
         {elapsedTime || '\u00A0'}
       </p>
     </div>

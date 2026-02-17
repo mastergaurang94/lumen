@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface UserMessageProps {
@@ -15,8 +15,10 @@ const COLLAPSE_THRESHOLD = 200;
 // Subtle opacity-only entrance — no vertical shift that would displace sibling content.
 export function UserMessage({ content, className }: UserMessageProps) {
   const contentRef = React.useRef<HTMLDivElement>(null);
+  const contentId = React.useId();
   const [isCollapsible, setIsCollapsible] = React.useState(false);
   const [isExpanded, setIsExpanded] = React.useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   // Observe the natural height of the inner text to decide if collapse is needed.
   React.useEffect(() => {
@@ -34,9 +36,9 @@ export function UserMessage({ content, className }: UserMessageProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={shouldReduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
       data-message-role="user"
       className={cn('flex justify-end', className)}
     >
@@ -51,6 +53,7 @@ export function UserMessage({ content, className }: UserMessageProps) {
           {/* Text area — clipped with thin gradient when collapsed */}
           <div className="relative">
             <div
+              id={contentId}
               style={collapsed ? { maxHeight: `${COLLAPSE_THRESHOLD}px` } : undefined}
               className={cn(
                 'px-5 py-3.5 whitespace-pre-wrap break-words',
@@ -75,8 +78,11 @@ export function UserMessage({ content, className }: UserMessageProps) {
           {isCollapsible && (
             <div className="px-5 pb-3">
               <button
+                type="button"
                 onClick={() => setIsExpanded((prev) => !prev)}
-                className="text-sm text-accent-foreground/70 hover:text-accent-foreground transition-colors duration-150"
+                className="text-sm text-accent-foreground hover:text-accent-foreground transition-colors duration-150"
+                aria-expanded={!collapsed}
+                aria-controls={contentId}
               >
                 {collapsed ? 'Show more' : 'Show less'}
               </button>

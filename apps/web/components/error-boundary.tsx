@@ -105,7 +105,7 @@ export function ErrorFallback({
         </div>
 
         {/* Reassurance */}
-        <p className="text-sm text-muted-foreground/60">
+        <p className="text-sm text-muted-foreground">
           Your conversations and data remain safely stored on your device.
         </p>
       </div>

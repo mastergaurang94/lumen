@@ -41,8 +41,11 @@ export function ChatFooter({
             disabled={disabled}
             placeholder="Reply..."
           />
-          <p className="mt-3 text-xs text-muted-foreground/50 text-center">
-            Enter to send · Shift+Enter for new line · Lumen is AI-powered and can make mistakes
+          <p className="mt-3 text-xs text-muted-foreground text-center">
+            <span className="md:hidden">Lumen is AI-powered and can make mistakes</span>
+            <span className="hidden md:inline">
+              Enter to send · Shift+Enter for new line · Lumen is AI-powered and can make mistakes
+            </span>
           </p>
         </div>
       </div>

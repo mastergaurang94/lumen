@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -11,20 +11,30 @@ interface TypingIndicatorProps {
 
 // Pulsing lightbulb — Lumen's "thinking" indicator.
 export function TypingIndicator({ className }: TypingIndicatorProps) {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={shouldReduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
       className={cn('flex items-center', className)}
     >
       <motion.div
-        animate={{
-          opacity: [0.5, 1, 0.5],
-          scale: [0.95, 1.1, 0.95],
-        }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        animate={
+          shouldReduceMotion
+            ? { opacity: 1, scale: 1 }
+            : {
+                opacity: [0.5, 1, 0.5],
+                scale: [0.95, 1.1, 0.95],
+              }
+        }
+        transition={
+          shouldReduceMotion
+            ? { duration: 0 }
+            : { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+        }
         className="drop-shadow-[0_0_6px_rgba(210,170,60,0.5)]"
       >
         <Lightbulb
