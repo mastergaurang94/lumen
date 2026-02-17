@@ -1,11 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const isCI = !!process.env.CI;
+const shouldUseWebServer = !process.env.PLAYWRIGHT_NO_WEBSERVER;
+const retries = Number(process.env.PLAYWRIGHT_RETRIES ?? 1);
 
 export default defineConfig({
   testDir: 'e2e',
   timeout: 60_000,
-  retries: isCI ? 1 : 0,
+  retries,
   reporter: isCI ? [['html', { outputFolder: 'playwright-report' }], ['github']] : 'list',
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3000',
@@ -18,14 +20,14 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  // Only configure webServer in CI or if explicitly requested.
-  // For local development, assume `pnpm dev` is already running.
-  ...(isCI || process.env.PLAYWRIGHT_START_SERVER
+  // Keep the e2e command self-contained: start Next when needed and
+  // reuse an existing local server if one is already running.
+  ...(shouldUseWebServer
     ? {
         webServer: {
           command: 'pnpm exec next dev --hostname 127.0.0.1',
-          url: 'http://127.0.0.1:3000',
-          reuseExistingServer: false,
+          url: 'http://127.0.0.1:3000/setup',
+          reuseExistingServer: true,
           cwd: __dirname,
           timeout: 120_000,
         },

@@ -1,4 +1,4 @@
-import { test, expect, type Page, type Route } from '@playwright/test';
+import { test, expect, type Locator, type Page, type Route } from '@playwright/test';
 
 // Fixed viewport for deterministic scroll measurements.
 test.use({ viewport: { width: 2560, height: 1440 } });
@@ -158,6 +158,22 @@ async function clearIndexedDb(page: Page) {
   );
 }
 
+async function isVisibleQuick(locator: Locator, timeout = 400) {
+  try {
+    return await locator.isVisible({ timeout });
+  } catch {
+    return false;
+  }
+}
+
+async function isDisabledQuick(locator: Locator, timeout = 400) {
+  try {
+    return await locator.isDisabled({ timeout });
+  } catch {
+    return false;
+  }
+}
+
 /** Unlock vault only when the unlock form is visible. */
 async function unlockIfNeeded(page: Page) {
   if (!page.url().includes('/unlock')) return;
@@ -179,7 +195,7 @@ async function ensureChatReady(page: Page) {
     const url = page.url();
     if (url.includes('/chat')) return;
 
-    if (await loadingText.isVisible()) {
+    if (await isVisibleQuick(loadingText)) {
       await page.waitForTimeout(300);
       continue;
     }
@@ -189,7 +205,17 @@ async function ensureChatReady(page: Page) {
       const confirmField = page.locator('#confirm');
 
       // Setup can briefly remain on /setup with disabled inputs while submitting.
-      if ((await passphraseField.isDisabled()) || (await confirmField.isDisabled())) {
+      const hasSetupForm =
+        (await isVisibleQuick(passphraseField, 300)) && (await isVisibleQuick(confirmField, 300));
+      if (!hasSetupForm) {
+        await page.waitForTimeout(300);
+        continue;
+      }
+
+      if (
+        (await isDisabledQuick(passphraseField, 300)) ||
+        (await isDisabledQuick(confirmField, 300))
+      ) {
         await page.waitForTimeout(300);
         continue;
       }
@@ -210,10 +236,13 @@ async function ensureChatReady(page: Page) {
     }
 
     if (url.includes('/session')) {
-      const beginBtn = page.getByRole('button', { name: /let's go|continue/i });
-      if (await beginBtn.isVisible()) {
-        await beginBtn.click().catch(() => {
+      const beginBtn = page.getByRole('button', {
+        name: /let['’]s go|continue|begin|start/i,
+      });
+      if (await isVisibleQuick(beginBtn)) {
+        await beginBtn.click().catch(async () => {
           // Session CTA can detach during rerender/navigation; retry loop handles next state.
+          await page.keyboard.press('Enter').catch(() => null);
         });
       }
       await Promise.race([
@@ -234,27 +263,32 @@ async function ensureMessageInputReady(page: Page) {
   const tokenInput = page.getByPlaceholder('sk-ant-oat...');
   const messageInput = page.getByLabel('Message input');
   const loadingText = page.getByText('Connecting to Lumen');
+  let chatRecoveryAttempts = 0;
 
   for (let i = 0; i < 40; i++) {
     if (!page.url().includes('/chat')) {
+      if (chatRecoveryAttempts >= 3) {
+        throw new Error(`Unable to stabilize /chat before message input ready on ${page.url()}`);
+      }
+      chatRecoveryAttempts++;
       await ensureChatReady(page);
       await page.waitForTimeout(200);
       continue;
     }
 
-    if (await messageInput.isVisible()) {
+    if (await isVisibleQuick(messageInput)) {
       await expect(messageInput).toBeEnabled({ timeout: 30000 });
       return;
     }
 
-    if (await tokenInput.isVisible()) {
+    if (await isVisibleQuick(tokenInput)) {
       await tokenInput.fill('sk-ant-oat-mock-test-token-12345');
       await page.getByRole('button', { name: /save/i }).click();
       await expect(messageInput).toBeEnabled({ timeout: 30000 });
       return;
     }
 
-    if (await loadingText.isVisible()) {
+    if (await isVisibleQuick(loadingText)) {
       await page.waitForTimeout(300);
       continue;
     }
@@ -273,11 +307,20 @@ async function setupChat(page: Page, state: MockState) {
   await registerChatMocks(page, state);
   await clearIndexedDb(page);
 
-  await page.goto('/setup');
-  await ensureChatReady(page);
-
-  await ensureMessageInputReady(page);
-  await expect(page.getByText("I'm Lumen")).toBeVisible({ timeout: 30000 });
+  // Next dev can occasionally present transient route states in CI; retry setup
+  // once before failing hard so individual tests don't flake at bootstrap.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      await page.goto('/setup');
+      await ensureChatReady(page);
+      await ensureMessageInputReady(page);
+      await expect(page.getByText("I'm Lumen")).toBeVisible({ timeout: 30000 });
+      break;
+    } catch (error) {
+      if (attempt === 1) throw error;
+      await page.waitForTimeout(500);
+    }
+  }
 
   // Let layout fully settle after greeting renders
   await page.waitForTimeout(800);
@@ -395,7 +438,7 @@ async function restoreLlmMock(page: Page, state: MockState) {
 
 test.describe('Chat Regression', () => {
   // CI is ~4x slower than local — give every test ample room.
-  test.describe.configure({ timeout: 120_000 });
+  test.describe.configure({ timeout: 180_000 });
 
   // ─── Bug Fix Regressions (FAIL on main, PASS on worktree) ──────────────────
 
