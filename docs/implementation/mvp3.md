@@ -41,19 +41,20 @@ The signal: users trust Lumen enough to make it a habit, bring it to a new devic
 
 **Goal**: New users don't start from zero. Soul Vault seeds Lumen's understanding.
 
-### 1.1 Soul Vault import — web (file upload) `[M]`
+### 1.1 "Bring context" import — web `[M]`
 
-**Problem**: Every new Lumen user starts as a stranger. If they have a Soul Vault with months of AI conversation history, that context should bootstrap the relationship.
+**Problem**: Every new Lumen user starts as a stranger. Users who've been talking to other AIs for months already have a rich self-model — they shouldn't have to rebuild it from scratch.
 
 **Design target**: Target #1 — _"It already knew me."_
 
-**Approach**:
+**Default**: Start fresh. No import needed. Lumen works great from session 1.
 
-- Add "Import from Soul Vault" to Lumen's setup flow or settings
-- User runs `soul query --profile lumen` on their machine, gets a seed Arc markdown file
-- User uploads the file to Lumen via file picker
-- Lumen stores it as a `SeedArc` entry in the vault
-- Context assembly includes the seed Arc for the first session (and until the living Arc absorbs it)
+**Optional import** (settings or setup flow):
+
+- Text box: "Paste anything about yourself — a bio, notes, or output from another AI."
+- Collapsible helper: copyable prompt the user can run in Claude/ChatGPT/any AI to generate a summary of who they are
+- Soul Vault users: file upload option for `soul query --profile lumen` output
+- Result stored as a `SeedArc` — used to prime the first session, then absorbed into the living Arc
 
 **Code refs**:
 
@@ -62,7 +63,7 @@ The signal: users trust Lumen enough to make it a habit, bring it to a new devic
 
 **Integration doc**: `docs/architecture/soul-vault-integration.md`
 
-**Note**: This is the web-only version. Desktop gets direct filesystem access (see 3.1).
+**Note**: This is the web-only version. Desktop gets direct filesystem access for Soul Vault (see 3.1).
 
 ---
 

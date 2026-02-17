@@ -255,39 +255,54 @@ This lets both the user and the receiving app verify the result's basis.
 
 ## Lumen-Side Implementation
 
-### UI: Import from Soul Vault
+### Import Options
 
-**Location**: Settings page or first-run setup flow.
+The **default** is to start fresh — no import. Lumen works great from session 1 without any prior context. Import is entirely optional.
+
+When a user does want to bring context, there are two paths:
+
+#### Option A: Copy-paste with AI prompt helper (no install needed)
+
+**Location**: Settings page or setup flow — "Want Lumen to know you before your first conversation?"
 
 **Flow**:
 
-1. User taps "Import from Soul Vault"
-2. Lumen checks for `~/soul-vault/.exports/lumen-arc.md` — if present, offers to use it
-3. If not present, Lumen explains: "Run `soul query --profile lumen` to generate your context, then come back here"
-4. User confirms import
-5. Lumen reads the file, stores it as the seed Arc in the vault
-6. On next session, Lumen's context assembly includes the seed Arc
+1. User sees a text box: "Paste anything about yourself — a bio, notes, or output from another AI."
+2. Below the text box, a collapsible helper: "Need help? Here's a prompt you can run in Claude, ChatGPT, or any AI you've been talking to."
+3. The helper shows a copyable prompt:
 
-**For the web version** (pre-desktop):
+> "Based on everything you know about me from our conversations, write a 1-2 page summary of who I am — what I care about, what I'm working through, my key relationships, my values, and what a wise companion should know to truly see me. Write it as prose, not bullet points."
 
-- File upload: user runs `soul query`, gets the output file, uploads it to Lumen via a file picker
+4. User runs the prompt in their AI, copies the result back into the text box
+5. Lumen stores it as a seed Arc
+
+**This is the recommended path for most users.** No tools to install, works with any AI provider.
+
+#### Option B: Soul Vault (automated, for power users)
+
+**Location**: Same settings page — "Connect Soul Vault" option alongside the paste box.
+
+**Web flow**:
+
+- File upload: user runs `soul query --profile lumen`, gets the output file, uploads it to Lumen via a file picker
 - No direct filesystem access from the browser
 
-**For the desktop version** (Swift):
+**Desktop flow** (Swift):
 
 - Direct filesystem read from `~/soul-vault/.exports/lumen-arc.md`
-- Or: Swift calls `soul query --profile lumen` as subprocess
+- Or: Swift calls `soul query --profile lumen` as subprocess if export doesn't exist yet
+- One-click import, no file picker
 
 ### Storage: Seed Arc
 
-The imported document is stored as a special Arc entry:
+The imported document is stored as a special Arc entry, regardless of how it was created:
 
 ```typescript
 type SeedArc = {
-  source: 'soul-vault';
+  source: 'copy-paste' | 'soul-vault';
   content: string; // the markdown document
   importedAt: string; // ISO timestamp
-  vaultVersion: string; // from provenance footer
+  vaultVersion?: string; // from provenance footer (Soul Vault only)
 };
 ```
 
