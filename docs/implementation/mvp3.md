@@ -81,6 +81,26 @@ The signal: users trust Lumen enough to make it a habit, bring it to a new devic
 
 ---
 
+### 1.3 Transcript import script — developer migration `[S]`
+
+**Problem**: Existing conversation transcripts, notebooks, and Arc stored as local markdown files (e.g., `~/Documents/conversations/`) need to be imported into Lumen's encrypted storage so they appear as native sessions.
+
+**Approach**:
+
+- CLI script: `pnpm --filter web import-transcripts --source ~/Documents/conversations`
+- Parses `transcripts/` — splits on `**USER:**` / `**ASSISTANT:**` markers → `Message[]` per session
+- Parses `notebooks/` — reads matching notebook markdown per session, maps `## Mentor's Notebook` → parting words for closure UI
+- Reads `arc.md` → imports as `UserArc` with version set to session count
+- Assigns session metadata (session_id, session_number, date) from filenames (e.g., `contribution_5_2026-01-25.md`)
+- Encrypts everything with the user's vault passphrase (same PBKDF2 + AES-GCM pipeline)
+- Writes to Dexie (or SQLite if migration has landed)
+- No LLM calls — direct data hydration
+- No UI — run once from terminal, done
+
+**Result**: Lumen sees all imported sessions in history, notebooks feed context assembly, Arc reflects the full journey. Indistinguishable from sessions that happened natively in Lumen.
+
+---
+
 ## Tier 2 — "It lives on my machine"
 
 **Goal**: Lumen moves from a browser tab to a native app. Storage moves from IndexedDB to SQLite.
