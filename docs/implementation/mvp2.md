@@ -669,23 +669,11 @@ Keep it minimal and integrated into the existing voice. Not a separate "safety" 
 
 ---
 
-### 3.2 Export/import for recovery `[M]`
+### ~~3.2 Export/import for recovery~~ → Moved to MVP 3
 
-**Problem**: If a user clears their browser data, switches devices, or needs to recover, their entire conversation history is gone. For a product that promises "your data stays on your device," users need the ability to actually take that data with them.
+**Status**: Deferred to MVP 3 as Soul Vault integration (2026-02-17)
 
-**Code refs**:
-
-- `apps/web/lib/storage/` — all Dexie tables (transcripts, summaries, profiles, vault metadata)
-- `apps/web/lib/crypto.ts` — encryption/decryption
-
-**Approach**:
-
-- **Export**: Serialize the entire encrypted vault (all Dexie tables) into a single JSON file. Include vault metadata (salt, key check, encryption version) so the export is self-contained. The export file contains ciphertext only — it's useless without the passphrase
-- **Import**: Upload a vault export file, verify the passphrase can decrypt the key check, then hydrate all Dexie tables from the export
-- **UI**: Add "Export vault" and "Import vault" options in the sidebar menu under a "Your Data" section
-- **File format**: `.lumen` extension (JSON internally) for clear identification
-
-**Security note**: The export is encrypted at rest — same PBKDF2 + AES-GCM protection as the live vault. No plaintext ever leaves the browser.
+Rethought as a Soul Vault integration story rather than a standalone vault dump. See `docs/architecture/soul-vault-integration.md` for the full plan. Import becomes "seed Arc from Soul Vault query", export becomes "session notebooks to Soul Vault inbox."
 
 ---
 
@@ -779,8 +767,9 @@ These are explicitly out of scope for this sprint. They're captured in the backl
 - **Context compaction / summary compaction** — Less urgent with notebook/arc system
 - **Session insights / analytics endpoint** — Can ask testers directly
 - **Passphrase recovery mechanism** — Deferred from MVP 2 to backlog; pull forward before broader beta or once testers accumulate multi-week history
+- **Export/import** — Rethought as Soul Vault integration; MVP 3 (see `docs/architecture/soul-vault-integration.md`)
 - **Zero-knowledge encrypted sync** — MVP 3
-- **Desktop wrapper (Tauri)** — MVP 3
+- **Swift native desktop/mobile app** — MVP 3
 - **Voice input** — MVP 3
 - **Provider auth + billing** — MVP 3
 - **Individual mentor mode** — Architecture + prompt design for per-mentor voices; MVP 3
@@ -793,15 +782,19 @@ These are explicitly out of scope for this sprint. They're captured in the backl
 
 > **"Make this a real product people pay for."**
 
+Full plan: `docs/implementation/mvp3.md`
+
 Anchors:
 
-- **Tauri desktop wrapper** — Local filesystem vault, OS keychain, CLI/tool-calling extensibility
-- **Zero-knowledge encrypted sync** — Multi-device with ciphertext-only server storage
+- **Soul Vault integration** — Import seed Arc from Soul Vault query, export session notebooks to Soul Vault inbox. Solves the "every AI app starts from zero" acquisition problem. See `docs/architecture/soul-vault-integration.md`
+- **SQLite migration** — Replace IndexedDB/Dexie with encrypted SQLite (wa-sqlite + OPFS on web, native SQLite on desktop/mobile). Foundation for portable vault, sync, and desktop
+- **Swift native app (macOS + iOS)** — Single Xcode project, two targets. WKWebView + Swift native layer (Anthropic API, Keychain, SQLite). No cross-platform requirement
+- **Folder-based encrypted sync** — User picks sync destination (iCloud Drive folder, Dropbox, NAS, USB, self-hosted). Encrypted SQLite file, no vendor lock-in
 - **Voice input (speech-to-text)** — Native mic in chat UI; web Speech API and native STT
 - **Provider auth + billing** — Monetizable token broker + BYOK fallback
 - **System prompt protection** — IP security for mentoring philosophy
-- **Individual mentor mode** — Per-mentor voices (one perspective each) alongside unified Lumen; mentor selection UI, session tagging by mentor type. Architecture design in former `2.9`. Source prompts at `~/Documents/conversations/mentoring-prompts/`
-- **OpenClaw plugin** — Distribution wedge for AI tinkerer audience
+- **Individual mentor mode** — Per-mentor voices alongside unified Lumen
+- **Managed encrypted sync (server)** — Optional hosted sync for users who don't self-manage. Monetizable tier boundary
 
 ---
 

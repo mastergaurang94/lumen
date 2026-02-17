@@ -54,12 +54,12 @@ Longer-term features that expand Lumen's capabilities.
 
 ### Sync & Export
 
-- [ ] `[L]` **Zero-knowledge encrypted sync**: Ciphertext-only server storage enabling multi-device access. `MVP 3`
-  - Client sync queue for encrypted blobs (push/pull).
-  - Server endpoints: upload/download ciphertext + metadata.
-  - Server stores only ciphertext and headers (no plaintext).
-  - Conflict strategy: last-write-wins (v1.1).
-  - _Includes multi-device edit resolution — merge strategy (LWW vs CRDT vs user prompts on conflict)._
+- [ ] `[L]` **Managed encrypted sync (server option)**: Hosted encrypted-blob storage on Lumen's Go API for users who don't want to configure their own sync. `MVP 3`
+  - Server stores only ciphertext + metadata headers — zero plaintext, zero decryption keys.
+  - Client sync queue: push/pull encrypted SQLite blobs.
+  - Conflict strategy: last-write-wins (v1).
+  - _Complements folder-based sync (see Desktop & Mobile section) — user chooses: self-managed folder or Lumen-hosted. Same encryption either way._
+  - _Monetizable_: natural tier boundary (free = folder sync, paid = managed sync).
 - [ ] `[M]` **Passphrase recovery mechanism**: Deferred from MVP 2 (`3.3`). Pull this forward when opening to broader beta or once testers accumulate meaningful multi-week history.
   - _Problem_: If a tester forgets their passphrase, their entire conversation history is permanently inaccessible. The unlock page already warns about this ("It can't be recovered yet"), and the setup page has a prominent warning.
   - _Prior art_: LastPass and Obsidian both generate a recovery key at setup time that the user stores offline.
@@ -109,11 +109,21 @@ Longer-term features that expand Lumen's capabilities.
 
 - [ ] `[M]` **Voice input (speech-to-text)**: Native microphone input in chat UI. Browser Web Speech API for web; native STT for desktop wrapper. Reduces friction for users who prefer talking over typing. `MVP 3`
 
-### Desktop & Sync
+### Desktop & Mobile
 
-- [ ] `[L]` **Tauri desktop wrapper**: Native app shell enabling local filesystem vault, CLI/tool-calling extensibility, and foundation for zero-knowledge sync. `MVP 3`
-  - _Enables: zero-knowledge sync, local file storage, voice integration._
-  - [ ] `[M]` OS keychain / WebAuthn vault unlock (complements idle timeout from MVP 2).
+- [ ] `[L]` **Swift native app (macOS + iOS)**: Single Xcode project, two targets. WKWebView loads static-exported React app; Swift handles native layer. `MVP 3`
+  - _Rationale_: Mac + iOS only — no cross-platform requirement eliminates Tauri/Electron overhead. Swift gives best debugging (Xcode), smallest bundle, and direct access to all Apple APIs.
+  - _Native layer_: Anthropic API calls (URLSession + SSE streaming), Keychain for API key storage, native menus/window chrome.
+  - _Enables_: local file storage, zero-knowledge sync, voice integration, Keychain vault unlock.
+  - [ ] `[M]` OS Keychain / biometric (Touch ID / Face ID) vault unlock.
+- [ ] `[L]` **Migrate storage from IndexedDB to SQLite**: Encrypted SQLite file replaces Dexie/IndexedDB as primary vault storage.
+  - _Web_: wa-sqlite (WASM) + OPFS. Dexie stays as fallback during migration.
+  - _Native (Swift)_: Native SQLite (built into macOS/iOS, zero dependencies).
+  - _Abstraction_: `VaultStore` interface with platform-specific implementations.
+  - _Unlocks_: portable encrypted file (export/import/backup = copy a file), folder-based sync, no IndexedDB eviction risk on iOS.
+- [ ] `[L]` **Folder-based encrypted sync**: User picks a sync destination (iCloud Drive folder, Dropbox, NAS, USB, or self-hosted). App writes encrypted SQLite file to the chosen folder. No vendor lock-in, no CloudKit API dependency, no server sees plaintext.
+  - _Replaces prior "zero-knowledge encrypted sync" item — simpler architecture, same privacy guarantees._
+  - _Optional_: Go API on Fly.io as a dumb encrypted-blob bucket for users who don't want to configure their own sync.
 
 ### CLI
 
