@@ -11,7 +11,8 @@ Status: Ready for execution
 
 ## Running Updates
 
-- 2026-02-18: Finalized for execution. Added: evaluation harness + prompt versioning (1.5), legacy schema cleanup (1.6), passphrase recovery (2.6), design + atmospheric polish (2.7). Reconciled with backlog — all MVP 3 items removed from `backlog.md`.
+- 2026-02-18: Restructured tiers. Split old Tier 1 into Tier 1 (context import) + Tier 2 (prompt quality + tooling). Removed iOS (deferred to Later). Replaced biometric unlock with Keychain-only unlock. Now 5 tiers, 18 items.
+- 2026-02-18: Finalized for execution. Added: evaluation harness + prompt versioning, legacy schema cleanup, passphrase recovery, design + atmospheric polish. Reconciled with backlog — all MVP 3 items removed from `backlog.md`.
 - 2026-02-17: Initial plan created. Scope defined from MVP 2 deferrals + backlog items + architectural decisions from desktop/mobile/storage conversations.
 
 ---
@@ -31,16 +32,16 @@ The signal: users trust Lumen enough to make it a habit, bring it to a new devic
 | #   | Target                      | How We Hit It                                    |
 | --- | --------------------------- | ------------------------------------------------ |
 | 1   | _"It already knew me"_      | Soul Vault import seeds the Arc before session 1 |
-| 2   | _"It lives on my machine"_  | Swift native app — real app, not a browser tab   |
-| 3   | _"My data goes where I go"_ | Encrypted SQLite file + folder-based sync        |
-| 4   | _"I can talk to it"_        | Voice input — speak instead of type              |
+| 2   | _"It keeps getting better"_ | Prompt quality iteration + evaluation tooling    |
+| 3   | _"It lives on my machine"_  | Swift native Mac app — real app, not a tab       |
+| 4   | _"My data goes where I go"_ | Encrypted SQLite file + folder-based sync        |
 | 5   | _"I'd pay for this"_        | Provider billing + managed sync tier             |
 
 ---
 
 ## Tier 1 — "Know me from day one"
 
-**Goal**: New users don't start from zero. Soul Vault seeds Lumen's understanding.
+**Goal**: New users don't start from zero. Context import seeds Lumen's understanding.
 
 ### 1.1 "Bring context" import — web `[M]`
 
@@ -64,7 +65,7 @@ The signal: users trust Lumen enough to make it a habit, bring it to a new devic
 
 **Integration doc**: `docs/architecture/soul-vault-integration.md`
 
-**Note**: This is the web-only version. Desktop gets direct filesystem access for Soul Vault (see 3.1).
+**Note**: This is the web-only version. Desktop gets direct filesystem access for Soul Vault (see 4.1).
 
 ---
 
@@ -78,7 +79,7 @@ The signal: users trust Lumen enough to make it a habit, bring it to a new devic
 - User drops the file into `~/soul-vault/.inbox/lumen/`
 - `soul watch` ingests it automatically
 
-**Note**: On desktop, this becomes automatic (no download step). See 3.2.
+**Note**: On desktop, this becomes automatic (no download step). See 4.2.
 
 ---
 
@@ -102,7 +103,11 @@ The signal: users trust Lumen enough to make it a habit, bring it to a new devic
 
 ---
 
-### 1.4 Prompt quality iteration — session feedback `[M]`
+## Tier 2 — "Sharpen the craft"
+
+**Goal**: Make every conversation measurably better. Build the tooling to iterate with confidence, then iterate.
+
+### 2.1 Prompt quality iteration — session feedback `[M]`
 
 **Problem**: After 10+ sessions, several patterns have emerged where Lumen's conversational behavior doesn't match the intended companion experience. These are prompt-level issues — not bugs, but places where the system prompt needs refinement based on real usage.
 
@@ -151,9 +156,9 @@ The system should preserve the primacy of core sessions in how it frames continu
 
 ---
 
-### 1.5 Evaluation harness + prompt versioning `[M]`
+### 2.2 Evaluation harness + prompt versioning `[M]`
 
-**Problem**: Prompt quality iteration (1.4) needs tooling to validate improvements. Currently, testing prompt changes means running sessions manually and comparing subjectively. Without reproducible evaluation, prompt regression is invisible.
+**Problem**: Prompt quality iteration (2.1) needs tooling to validate improvements. Currently, testing prompt changes means running sessions manually and comparing subjectively. Without reproducible evaluation, prompt regression is invisible.
 
 **Approach**:
 
@@ -173,9 +178,9 @@ The system should preserve the primacy of core sessions in how it frames continu
 
 ---
 
-### 1.6 Remove legacy sessionSummaries schema `[S]`
+### 2.3 Remove legacy sessionSummaries schema `[S]`
 
-**Problem**: The Dexie v1 `sessionSummaries` table and related code (`parseSummaryResponse`, `SessionSummary` type, `getSummary`/`saveSummary`/`listSummaries`) are dead weight since the notebook/arc system replaced them. Should be cleaned up before the SQLite migration (2.1) to avoid migrating dead schema.
+**Problem**: The Dexie v1 `sessionSummaries` table and related code (`parseSummaryResponse`, `SessionSummary` type, `getSummary`/`saveSummary`/`listSummaries`) are dead weight since the notebook/arc system replaced them. Should be cleaned up before the SQLite migration (3.1) to avoid migrating dead schema.
 
 **Approach**:
 
@@ -188,13 +193,13 @@ The system should preserve the primacy of core sessions in how it frames continu
 
 ---
 
-## Tier 2 — "It lives on my machine"
+## Tier 3 — "It lives on my machine"
 
-**Goal**: Lumen moves from a browser tab to a native app. Storage moves from IndexedDB to SQLite.
+**Goal**: Lumen moves from a browser tab to a native Mac app. Storage moves from IndexedDB to SQLite.
 
-### 2.1 Migrate storage: IndexedDB → SQLite `[L]`
+### 3.1 Migrate storage: IndexedDB → SQLite `[L]`
 
-**Problem**: IndexedDB is browser-controlled, non-portable, and has eviction risks on iOS. A SQLite file is portable, powerful, and works everywhere.
+**Problem**: IndexedDB is browser-controlled, non-portable, and has eviction risks. A SQLite file is portable, powerful, and works everywhere.
 
 **Approach**:
 
@@ -225,7 +230,7 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 
 ---
 
-### 2.2 Static export for Next.js `[M]`
+### 3.2 Static export for Next.js `[M]`
 
 **Problem**: The Swift desktop app loads the React app from local files. Next.js needs to produce a static build.
 
@@ -236,21 +241,21 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 - Verify all pages work without a Node.js server (they should — all are `'use client'`)
 - Handle the Go backend rewrite (`/v1/:path*`) — on desktop, the Swift layer handles auth directly or the user authenticates via web
 
-**Key consideration**: The web version keeps the current Next.js server setup. Static export is only for the desktop/mobile build target.
+**Key consideration**: The web version keeps the current Next.js server setup. Static export is only for the desktop build target.
 
 ---
 
-### 2.3 Swift native app — macOS `[L]`
+### 3.3 Swift native app — macOS `[L]`
 
 **Problem**: A browser tab isn't a product. A native Mac app is.
 
 **Approach**:
 
-- Single Xcode project with macOS target (iOS target added later)
+- Single Xcode project with macOS target
 - `WKWebView` loads the static-exported React app from app bundle
 - Swift native layer handles:
   - **Anthropic API calls**: `URLSession` with SSE streaming. API key stored in macOS Keychain
-  - **SQLite**: Native SQLite (built into macOS). Same schema as wa-sqlite web version
+  - **SQLite**: Native SQLite (built into macOS, zero dependencies). Same schema as wa-sqlite web version
   - **JS ↔ Swift bridge**: `WKScriptMessageHandler` (JS → Swift) and `evaluateJavaScript` (Swift → JS)
   - **Window chrome**: Native menu bar, window management, about dialog
   - **Soul Vault integration**: Direct filesystem read from `~/soul-vault/.exports/`, subprocess calls to `soul query`
@@ -261,45 +266,31 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 - New: `apps/apple/` — Xcode project with `Shared/`, `macOS/` directories
 - `Shared/VaultStore.swift` — SQLite + encryption
 - `Shared/AnthropicClient.swift` — streaming API calls
-- `Shared/KeychainHelper.swift` — API key storage
+- `Shared/KeychainHelper.swift` — API key + vault key storage
 - `Shared/WebBridge.swift` — JS ↔ Swift messaging
 
 **Monorepo integration**: `apps/apple/` sits alongside `apps/web/` and `apps/api/`. Build script copies static web export into the Xcode project's resources.
 
 ---
 
-### 2.4 Swift native app — iOS `[M]`
+### 3.4 Keychain vault unlock `[S]`
 
-**Problem**: Users want Lumen on their phone.
-
-**Approach**:
-
-- Add iOS target to the existing Xcode project
-- Shares ~80% of Swift code from `Shared/` (VaultStore, AnthropicClient, Keychain, WebBridge)
-- iOS-specific: mobile viewport handling, keyboard avoidance (handled by the React app), Face ID / Touch ID for vault unlock
-- Native SQLite — same file format as macOS. If user syncs via folder, same encrypted file works on both
-
-**Depends on**: 2.2 (static export), 2.3 (macOS app — shared code established)
-
----
-
-### 2.5 Keychain / biometric vault unlock `[M]`
-
-**Problem**: Typing a passphrase on mobile is friction. Touch ID / Face ID should unlock the vault.
+**Problem**: Typing a passphrase every time the app launches is friction. On macOS, the system Keychain is already unlocked when the user logs in — the derived key should live there.
 
 **Approach**:
 
-- After first passphrase entry, offer to store the derived key in Keychain (protected by biometrics)
-- On subsequent launches: biometric prompt → Keychain retrieves key → vault unlocked
-- Fallback: passphrase entry always available
-- macOS: Touch ID on supported Macs, passphrase on others
-- iOS: Face ID / Touch ID
+- After first passphrase entry, offer to store the derived encryption key in macOS Keychain
+- On subsequent launches: app retrieves key from Keychain automatically — vault unlocks with zero user interaction
+- Fallback: passphrase entry always available (Keychain item missing, user opts out, or Keychain locked)
+- Keychain item scoped to the app's bundle ID
 
-**Depends on**: 2.3/2.4 (Swift app with Keychain access)
+**Depends on**: 3.3 (macOS app with Keychain access)
+
+**Note**: No biometric (Touch ID / Face ID) requirement. Standard Keychain access is sufficient — the user's macOS login password already protects the Keychain.
 
 ---
 
-### 2.6 Passphrase recovery mechanism `[M]`
+### 3.5 Passphrase recovery mechanism `[M]`
 
 **Problem**: If a user forgets their passphrase, their entire conversation history is permanently inaccessible. By MVP 3, testers will have months of meaningful conversation history — losing it would be devastating and trust-destroying.
 
@@ -324,7 +315,7 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 
 ---
 
-### 2.7 Design + atmospheric polish `[M]`
+### 3.6 Design + atmospheric polish `[M]`
 
 **Problem**: The current design is functional but not yet distinctive. For a product people would pay for, the visual experience needs to feel intentional and immersive — closer to OmmWriter's atmospheric quality than a standard chat interface.
 
@@ -344,11 +335,11 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 
 ---
 
-## Tier 3 — "My data goes where I go"
+## Tier 4 — "My data goes where I go"
 
 **Goal**: Users can sync across devices and their data is portable.
 
-### 3.1 Soul Vault import — desktop (direct filesystem) `[S]`
+### 4.1 Soul Vault import — desktop (direct filesystem) `[S]`
 
 **Problem**: On the desktop app, Soul Vault import should be seamless — no file upload needed.
 
@@ -359,11 +350,11 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 - Or calls `soul query --profile lumen` as subprocess if export doesn't exist yet
 - One-click import, no file picker
 
-**Depends on**: 2.3 (macOS app)
+**Depends on**: 3.3 (macOS app)
 
 ---
 
-### 3.2 Lumen → Soul Vault export — desktop (automatic) `[S]`
+### 4.2 Lumen → Soul Vault export — desktop (automatic) `[S]`
 
 **Problem**: On desktop, session notebook export to Soul Vault should be automatic.
 
@@ -373,11 +364,11 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 - No user action required — `soul watch` picks it up
 - Optional: show a subtle "Saved to Soul Vault" toast
 
-**Depends on**: 2.3 (macOS app)
+**Depends on**: 3.3 (macOS app)
 
 ---
 
-### 3.3 Folder-based encrypted sync `[L]`
+### 4.3 Folder-based encrypted sync `[L]`
 
 **Problem**: Users with multiple devices need their conversation history to follow them.
 
@@ -389,30 +380,30 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 - Conflict resolution: last-write-wins (v1). Both devices show a timestamp, user picks which to keep if there's a conflict
 - No vendor lock-in — it's just a file in a folder
 
-**Depends on**: 2.1 (SQLite migration)
+**Depends on**: 3.1 (SQLite migration)
 
 **Security**: The synced file is encrypted. The folder provider (iCloud, Dropbox, etc.) only sees ciphertext. Passphrase never leaves the device.
 
 ---
 
-## Tier 4 — "I'd pay for this"
+## Tier 5 — "I'd pay for this"
 
 **Goal**: Revenue path and advanced features.
 
-### 4.1 Voice input (speech-to-text) `[M]`
+### 5.1 Voice input (speech-to-text) `[M]`
 
 **Problem**: For a companion app, speaking is more natural than typing — especially for reflective conversations.
 
 **Approach**:
 
 - Web: Browser Web Speech API (Chrome/Edge have good support; Safari is improving)
-- Desktop/mobile (Swift): Native Speech framework — better accuracy, offline support
+- Desktop (Swift): Native Speech framework — better accuracy, offline support
 - UI: Microphone button next to Send. Tap to start, tap to stop. Transcribed text appears in input area for review before sending
 - No voice storage — transcribe in real-time, discard audio
 
 ---
 
-### 4.2 Provider auth + billing `[L]`
+### 5.2 Provider auth + billing `[L]`
 
 **Problem**: Testers use server-managed API tokens. Paying users need their own accounts.
 
@@ -425,7 +416,7 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 
 ---
 
-### 4.3 Managed encrypted sync (server option) `[L]`
+### 5.3 Managed encrypted sync (server option) `[L]`
 
 **Problem**: Not all users want to configure their own sync folder. Some will pay for convenience.
 
@@ -437,11 +428,11 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 - Natural paid tier: free = folder sync (self-managed), paid = managed sync (we host it)
 - Same encryption either way — the server is a dumb bucket
 
-**Depends on**: 2.1 (SQLite migration), 3.3 (sync infrastructure)
+**Depends on**: 3.1 (SQLite migration), 4.3 (sync infrastructure)
 
 ---
 
-### 4.4 System prompt protection `[M]`
+### 5.4 System prompt protection `[M]`
 
 **Problem**: The mentoring philosophy and prompt architecture is core IP. Currently in the public GitHub repo.
 
@@ -458,8 +449,10 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 
 These remain in the backlog for future consideration. See `backlog.md` for full detail on each item.
 
-- **Android** — Mac + iOS only for now. Revisit if demand emerges
+- **Swift native app — iOS** — macOS first. Add iOS target to existing Xcode project once desktop experience is proven. ~80% shared Swift code from `Shared/`
+- **Android** — Mac only for now. Revisit if demand emerges
 - **Windows / Linux** — Same. Swift is the right tool for the Apple ecosystem
+- **Biometric vault unlock (Touch ID / Face ID)** — Keychain is sufficient for macOS. Add biometric gate when iOS target lands
 - **Full CRDT sync** — Last-write-wins is sufficient for v1. CRDT adds complexity without clear user benefit yet
 - **Embedding/RAG** — Context window is large enough for 50+ sessions. Not needed yet
 - **Individual mentor mode** — Unified voice quality first. Defer until the companion experience is proven
