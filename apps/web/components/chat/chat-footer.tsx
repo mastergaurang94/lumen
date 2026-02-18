@@ -38,15 +38,23 @@ export function ChatFooter({
             : 'relative bg-background/80 backdrop-blur-md'
         }
       >
+        {/* Shared floating placement for both desktop and mobile. */}
+        <div
+          className={
+            compact
+              ? 'pointer-events-none absolute inset-x-0 -top-9 z-10 flex justify-center'
+              : 'pointer-events-none absolute inset-x-0 -top-5 z-10 flex justify-center'
+          }
+        >
+          <div className="pointer-events-auto">
+            <ScrollToBottom scrollAreaRef={scrollAreaRef} />
+          </div>
+        </div>
         <div
           className={
             compact ? 'max-w-3xl mx-auto px-3 pt-1 pb-2' : 'max-w-3xl mx-auto px-6 pt-4 pb-6'
           }
         >
-          {/* Scroll-to-bottom — floats above the input when user has scrolled up */}
-          <div className={compact ? 'flex justify-center mb-1' : 'flex justify-center mb-2'}>
-            <ScrollToBottom scrollAreaRef={scrollAreaRef} />
-          </div>
           <ChatInput
             onSend={onSend}
             onStop={onStop}
