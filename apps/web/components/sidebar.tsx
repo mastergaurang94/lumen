@@ -188,7 +188,11 @@ export function Sidebar() {
           <Menu className="h-7 w-7" strokeWidth={1.75} />
           <span className="sr-only">Open menu</span>
         </button>
-        {authStatus === 'authed' && <SignedInIndicator email={authEmail} />}
+        {authStatus === 'authed' && (
+          <span className="hidden md:inline-flex">
+            <SignedInIndicator email={authEmail} />
+          </span>
+        )}
       </div>
 
       {/* Overlay for click-to-close */}
@@ -214,12 +218,12 @@ export function Sidebar() {
         variants={sidebarVariants}
         style={{ zIndex: Z_INDEX.sidebar }}
         className={cn(
-          'fixed inset-y-0 left-0 w-80 bg-background border-r border-border/20',
+          'fixed inset-y-0 left-0 w-80 h-[100dvh] max-h-[100dvh] bg-background border-r border-border/20',
           'shadow-[4px_0_24px_-2px_rgba(0,0,0,0.1),8px_0_16px_-4px_rgba(0,0,0,0.06)]',
           'dark:shadow-[4px_0_24px_-2px_rgba(0,0,0,0.3),8px_0_16px_-4px_rgba(0,0,0,0.2)]',
         )}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex h-full min-h-0 flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-6 pb-4">
             <Link
@@ -237,7 +241,7 @@ export function Sidebar() {
           </div>
 
           {/* Content */}
-          <div className="flex-1 px-6 py-4 space-y-8">
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-8">
             <SettingsSection title="Appearance">
               <AppearanceOptions />
               <PaletteOptions />
@@ -266,7 +270,7 @@ export function Sidebar() {
           </div>
 
           {/* Footer */}
-          <div className="p-6 pt-4 space-y-5">
+          <div className="shrink-0 border-t border-border/30 bg-background p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] space-y-4">
             <SettingsSection title="Account">
               <div className="space-y-2">
                 {authStatus === 'checking' ? (

@@ -1,143 +1,70 @@
 # Lumen Backlog
 
-Last Updated: 2026-02-16
+Last Updated: 2026-02-18
 
-Items are organized by time horizon (Now → Soon → Later) and category. Effort markers: `[S]`mall, `[M]`edium, `[L]`arge. Items tagged `MVP 3` are candidates for the next milestone. Items in the current sprint are tracked in `mvp2.md`.
+Items NOT tracked in any active sprint plan. For MVP 3 items, see `mvp3.md`. Effort markers: `[S]`mall, `[M]`edium, `[L]`arge.
 
 ---
 
 ## Now
 
-_Empty — all current work tracked in `mvp2.md`._
+_Empty_
 
 ---
 
 ## Soon
 
-Near-term improvements.
-
-### Storage
-
-- [ ] `[S]` **Remove legacy sessionSummaries schema**: Drop Dexie v1 `sessionSummaries` table and related code (`parseSummaryResponse`, `SessionSummary` type, `getSummary`/`saveSummary`/`listSummaries` storage methods). Replaced by `sessionNotebooks` + `userArcs` in v2. Wait until no users have legacy-only data (or provide a one-time migration).
-
-### Harness
-
-- [ ] `[S]` **Prompt versioning**: Track prompt changes for reproducibility. Correlate prompt versions with quality shifts.
-- [ ] `[M]` **Evaluation harness**: Minimal tooling to assess summary and closure quality. Define rubric or golden outputs for comparison.
-- [ ] `[M]` **Harness tests**: Deterministic context assembly verification and summary format validation.
-
-### Observability
-
-- [ ] `[M]` **Privacy-preserving session insights endpoint**: `POST /v1/session-insights` for aggregate learning without PII.
-  - _Collect: session duration bucket, days since last session, turn count, closure type, optional user rating, action step count._
-  - _No plaintext content; purely metadata for product analytics._
-- [ ] `[S]` **Wire client analytics events to session insights endpoint**: send share/copy events with safe scalar properties.
-
-### Design
-
-- [ ] `[M]` **Theme iteration**: Current dawn/dusk/afternoon palettes need refinement. Incorporate more atmospheric elements like OmmWriter — richer backgrounds, subtle textures, more immersive feel.
-- [ ] `[S]` **Base text + icon scale pass**: Increase body text and icon sizing across chat/auth/sidebar surfaces as part of the same atmospheric polish pass, keeping touch targets comfortable and proportions consistent.
+_Empty_
 
 ---
 
 ## Later
 
-Longer-term features that expand Lumen's capabilities.
+Longer-term features beyond MVP 3.
 
 ### LLM Integration
 
 - [ ] `[L]` **Client-side model orchestration**: Policy enforcement entirely on client; no server-side plaintext handling.
-- [ ] `[L]` **Provider auth + billing options**: `MVP 3`
-  - _Monetizable path_: Hosted token broker that swaps user auth for scoped API tokens (server-held provider keys; billing/quotas enforced server-side). Includes ephemeral, short-lived, scope-limited tokens for LLM auth.
-  - _Power-user path_: Continue supporting BYOK API keys as alternative.
 - [ ] `[M]` **Fallback provider abstraction**: Graceful failover between LLM providers on outage.
-
-### Sync & Export
-
-- [ ] `[L]` **Managed encrypted sync (server option)**: Hosted encrypted-blob storage on Lumen's Go API for users who don't want to configure their own sync. `MVP 3`
-  - Server stores only ciphertext + metadata headers — zero plaintext, zero decryption keys.
-  - Client sync queue: push/pull encrypted SQLite blobs.
-  - Conflict strategy: last-write-wins (v1).
-  - _Complements folder-based sync (see Desktop & Mobile section) — user chooses: self-managed folder or Lumen-hosted. Same encryption either way._
-  - _Monetizable_: natural tier boundary (free = folder sync, paid = managed sync).
-- [ ] `[M]` **Passphrase recovery mechanism**: Deferred from MVP 2 (`3.3`). Pull this forward when opening to broader beta or once testers accumulate meaningful multi-week history.
-  - _Problem_: If a tester forgets their passphrase, their entire conversation history is permanently inaccessible. The unlock page already warns about this ("It can't be recovered yet"), and the setup page has a prominent warning.
-  - _Prior art_: LastPass and Obsidian both generate a recovery key at setup time that the user stores offline.
-  - _Code refs_: `apps/web/app/setup/page.tsx` (vault initialization, passphrase setup), `apps/web/lib/crypto.ts` (key derivation), `apps/web/app/unlock/page.tsx` (unlock flow).
-  - _Approach_:
-    - At setup: After deriving the encryption key from the passphrase, generate a random recovery key (e.g., 24-word mnemonic or base64 string). Encrypt the derived key with the recovery key and store the encrypted blob alongside the vault metadata.
-    - Show once: Display the recovery key to the user with clear instructions: "Save this somewhere safe. It's the only way to recover your vault if you forget your passphrase." Require acknowledgment (checkbox: "I've saved my recovery key") before proceeding.
-    - On recovery: Add a "Forgot passphrase?" link on the unlock page. User enters recovery key -> decrypts the stored key blob -> vault unlocks -> user sets a new passphrase.
-    - No server involvement: Recovery key is generated and used entirely client-side.
-  - _UX note_: The recovery key display should feel important but not scary. Frame it as empowerment: "This is your backup key. Keep it somewhere safe - a password manager, a note in your desk, wherever you won't lose it."
 
 ### Mentoring
 
-- [ ] `[L]` **Individual mentor mode**: `MVP 3` — Per-mentor voices (one perspective each) alongside unified Lumen. Each mentor gets their own voice/style wrapper around a single perspective domain. Includes: `buildSystemPrompt()` mode parameter (unified vs. individual), mentor selection UI, session tagging by mentor type for context assembly, domain-specific tracking instructions, depth escalation across sessions. Source prompts at `~/Documents/conversations/mentoring-prompts/`. Deferred from MVP 2 (`2.9`) — unified voice quality comes first.
+- [ ] `[L]` **Individual mentor mode**: Per-mentor voices (one perspective each) alongside unified Lumen. Each mentor gets their own voice/style wrapper around a single perspective domain. Includes: `buildSystemPrompt()` mode parameter (unified vs. individual), mentor selection UI, session tagging by mentor type for context assembly, domain-specific tracking instructions, depth escalation across sessions. Source prompts at `~/Documents/conversations/mentoring-prompts/`. Unified voice quality comes first.
 
 ### Memory
 
-- [ ] `[L]` **Pattern index**: Track loops and dynamics across sessions for lumen awareness.
-- [ ] `[M]` **Commitments tracker**: Log commitments with outcomes; surface in context when relevant.
-- [ ] `[S]` **Recognition moment index**: Quick recall of past recognition moments for reinforcement.
-- [ ] `[L]` **Retrieval layer (embeddings)**: Long-horizon context via semantic search over session history.
+- [ ] `[L]` **Retrieval layer (embeddings)**: Long-horizon context via semantic search over session history. Not needed until context window is consistently full (100+ sessions with large transcripts).
 
 ### Harness
 
-- [ ] `[M]` **Context compaction**: Compress older notebooks and transcripts to fit more history in token budget. Less urgent with notebook/arc system (200K window handles 50+ sessions comfortably) — relevant once users accumulate 100+ sessions.
-- [ ] `[L]` **Topic-based retrieval or thread pinning**: Long-horizon continuity for specific themes.
+- [ ] `[M]` **Context compaction**: Compress older notebooks and transcripts to fit more history in token budget. Relevant once users accumulate 100+ sessions.
 - [ ] `[M]` **Priority weighting**: Boost commitments, recurring themes, recognition moments in context assembly.
-- [ ] `[S]` **Session boundary validation**: Avoid accidental context carryover between sessions.
 - [ ] `[M]` **Hallucination guards for memory**: Cite source session when recalling facts; flag uncertain memories.
-
-### Harness Evaluation
-
-- [ ] `[M]` **Define evaluation flow and rubric**: Summary quality, closure quality, context assembly correctness.
-- [ ] `[S]` **Decide eval infrastructure**: Local vs CI; how results are stored and compared.
-- [ ] `[M]` **Deterministic replay fixtures**: Golden outputs for regression testing harness changes.
 
 ### Trust & Safety
 
-- [ ] `[M]` **Define boundaries and governance**: Clear non-therapeutic positioning in product and prompts. Includes guardrails for sensitive topics.
-- [ ] `[L]` **Crisis UX**: Immediate resources and escalation guidance when distress detected.
+- [ ] `[M]` **Define boundaries and governance**: Clear non-therapeutic positioning in product and prompts. Includes guardrails for sensitive topics. Reference resources and escalation guidance when distress detected. (Basic safety already in system prompt v2 §2.8.)
 
-### Prompt Security
+### Observability
 
-- [ ] `[M]` **System prompt protection**: Prevent system prompt leakage in production. Remove from public GitHub (move to env/secrets), strip from client-visible payloads, and add prompt-level instruction for Lumen to not reveal system prompt contents. The mentoring philosophy and prompt architecture is core IP.
-
-### Voice
-
-- [ ] `[M]` **Voice input (speech-to-text)**: Native microphone input in chat UI. Browser Web Speech API for web; native STT for desktop wrapper. Reduces friction for users who prefer talking over typing. `MVP 3`
-
-### Desktop & Mobile
-
-- [ ] `[L]` **Swift native app (macOS + iOS)**: Single Xcode project, two targets. WKWebView loads static-exported React app; Swift handles native layer. `MVP 3`
-  - _Rationale_: Mac + iOS only — no cross-platform requirement eliminates Tauri/Electron overhead. Swift gives best debugging (Xcode), smallest bundle, and direct access to all Apple APIs.
-  - _Native layer_: Anthropic API calls (URLSession + SSE streaming), Keychain for API key storage, native menus/window chrome.
-  - _Enables_: local file storage, zero-knowledge sync, voice integration, Keychain vault unlock.
-  - [ ] `[M]` OS Keychain / biometric (Touch ID / Face ID) vault unlock.
-- [ ] `[L]` **Migrate storage from IndexedDB to SQLite**: Encrypted SQLite file replaces Dexie/IndexedDB as primary vault storage.
-  - _Web_: wa-sqlite (WASM) + OPFS. Dexie stays as fallback during migration.
-  - _Native (Swift)_: Native SQLite (built into macOS/iOS, zero dependencies).
-  - _Abstraction_: `VaultStore` interface with platform-specific implementations.
-  - _Unlocks_: portable encrypted file (export/import/backup = copy a file), folder-based sync, no IndexedDB eviction risk on iOS.
-- [ ] `[L]` **Folder-based encrypted sync**: User picks a sync destination (iCloud Drive folder, Dropbox, NAS, USB, or self-hosted). App writes encrypted SQLite file to the chosen folder. No vendor lock-in, no CloudKit API dependency, no server sees plaintext.
-  - _Replaces prior "zero-knowledge encrypted sync" item — simpler architecture, same privacy guarantees._
-  - _Optional_: Go API on Fly.io as a dumb encrypted-blob bucket for users who don't want to configure their own sync.
+- [ ] `[L]` **Iterative self-improvement feedback**: In-conversation feedback mechanism (e.g., 0-3 rating at random points) so users can signal how Lumen is doing. Challenge: conversations are encrypted client-side, so server-side analysis isn't possible. Needs a privacy-preserving approach — possibly aggregate scalar signals only.
+- [ ] `[M]` **Privacy-preserving session insights endpoint**: `POST /v1/session-insights` for aggregate learning without PII.
+  - _Collect: session duration bucket, days since last session, turn count, closure type, optional user rating, action step count._
+  - _No plaintext content; purely metadata for product analytics._
+- [ ] `[S]` **Wire client analytics events to session insights endpoint**: Send share/copy events with safe scalar properties.
 
 ### CLI
 
-- [ ] `[M]` **CLI entry point**: Terminal-based interface for Lumen conversations. Enables power users and developers to interact with Lumen from the command line. Natural fit with Tauri desktop wrapper and OpenClaw plugin distribution.
+- [ ] `[M]` **CLI entry point**: Terminal-based interface for Lumen conversations. Enables power users and developers to interact with Lumen from the command line.
 
 ---
 
 ## Notes
 
 - **Dependencies** are noted inline with _Depends on:_ markers.
-- **Backend tasks** are marked; coordinate with active sprint plan.
 - Items may move between tiers as priorities shift.
 - **Completion tracking**:
   - Items done directly from backlog → Log in `done/backlog.md`, remove from this file.
   - Items that grow into full sprints → Create a new `mvp*.md` plan, archive in `done/` when complete.
-  - Items moved into MVP plans → Track in the respective `mvp*.md` doc.
+  - Items moved into MVP plans → Remove from this file (MVP plan is the source of truth).
 - **Phase plan templates**: See `done/frontend-plan-template.md` and `done/backend-plan-template.md` for the phase-based pattern used during MVP 1.

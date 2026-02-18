@@ -2,17 +2,14 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Shield } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Sidebar } from '@/components/sidebar';
+import { AnimatePresence } from 'framer-motion';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { LumenUnavailable } from '@/components/lumen-unavailable';
 import { SessionClosure, EndSessionDialog } from '@/components/chat';
-import { ChatHeader } from '@/components/chat/chat-header';
+import { ChatTopBar } from '@/components/chat/chat-top-bar';
 import { ChatBody, type SpacerControl } from '@/components/chat/chat-body';
 import { ChatFooter } from '@/components/chat/chat-footer';
-import { Z_INDEX } from '@/lib/z-index';
+import { ChatErrorState, ChatLoadingState } from '@/components/chat/chat-page-states';
 import { arrayBufferToHex } from '@/lib/crypto';
 import { registerLockHandler } from '@/lib/crypto/key-context';
 import { useActiveTimer } from '@/lib/hooks/use-active-timer';
@@ -60,6 +57,7 @@ function ChatPageInner() {
   const [summaryError, setSummaryError] = React.useState<string | null>(null);
   const [isRetryingSummary, setIsRetryingSummary] = React.useState(false);
   const [closureStep, setClosureStep] = React.useState<ClosureStep>('wrapping-up');
+  const headerRef = React.useRef<HTMLElement>(null);
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const spacerControlRef = React.useRef<SpacerControl | null>(null);
   const previousMessageCountRef = React.useRef(0);
@@ -169,6 +167,15 @@ function ChatPageInner() {
   }, []);
 
   React.useEffect(() => {
+    document.documentElement.classList.add('chat-shell-active');
+    document.body.classList.add('chat-shell-active');
+    return () => {
+      document.documentElement.classList.remove('chat-shell-active');
+      document.body.classList.remove('chat-shell-active');
+    };
+  }, []);
+
+  React.useEffect(() => {
     if (!vaultReady) return;
 
     // In server mode the LLM key lives on the server — skip IndexedDB.
@@ -229,7 +236,10 @@ function ChatPageInner() {
         if (el) {
           const containerTop = scrollArea.getBoundingClientRect().top;
           const elTop = el.getBoundingClientRect().top;
-          const target = scrollArea.scrollTop + (elTop - containerTop);
+          // Offset by the fixed header height (+ small gap) so the message
+          // pins just below the header, not behind it.
+          const headerOffset = (headerRef.current?.offsetHeight ?? 0) + 8;
+          const target = Math.max(0, scrollArea.scrollTop + (elTop - containerTop) - headerOffset);
 
           // Inflate the spacer with the scroll target so recovering mode
           // knows the ceiling — prevents ResizeObserver from shrinking the
@@ -517,22 +527,7 @@ function ChatPageInner() {
 
   // Loading state
   if (!vaultReady || sessionState === 'loading') {
-    return (
-      <div className="atmosphere min-h-screen flex flex-col items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="text-center space-y-6"
-        >
-          <div className="w-12 h-12 rounded-full border-2 border-accent/30 border-t-accent animate-spin mx-auto" />
-          <div className="space-y-2">
-            <p className="text-foreground font-medium">Connecting to Lumen</p>
-            <p className="text-sm text-muted-foreground">Just a moment...</p>
-          </div>
-        </motion.div>
-      </div>
-    );
+    return <ChatLoadingState />;
   }
 
   // Lumen unavailable state
@@ -542,29 +537,7 @@ function ChatPageInner() {
 
   // Error state (connection or other errors)
   if (sessionState === 'error') {
-    return (
-      <div className="atmosphere min-h-screen flex flex-col items-center justify-center px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="text-center space-y-6 max-w-md"
-        >
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
-            <Shield className="h-7 w-7 text-muted-foreground" />
-          </div>
-          <div className="space-y-3">
-            <h1 className="font-display text-2xl text-foreground">Connection interrupted</h1>
-            <p className="text-muted-foreground">
-              We couldn&apos;t establish a secure connection. Your data is safe.
-            </p>
-          </div>
-          <Button onClick={handleRetry} disabled={isRetrying} className="h-12 px-8">
-            {isRetrying ? 'Reconnecting...' : 'Try again'}
-          </Button>
-        </motion.div>
-      </div>
-    );
+    return <ChatErrorState onRetry={handleRetry} isRetrying={isRetrying} />;
   }
 
   // Show session closure when complete
@@ -590,35 +563,15 @@ function ChatPageInner() {
   const sessionNumber = transcriptRef.current?.session_number ?? 1;
 
   return (
-    <div className="atmosphere h-screen flex flex-col overflow-hidden">
-      {/* Hamburger menu - top left */}
-      <div className="fixed top-4 left-4" style={{ zIndex: Z_INDEX.navigation }}>
-        <Sidebar />
-      </div>
-
-      {/* Wrap up button - top right */}
-      {!showProviderGate && !showEndSessionDialog && (
-        <div className="fixed top-4 right-4" style={{ zIndex: Z_INDEX.navigation }}>
-          <Button
-            variant="outline"
-            onClick={handleEndSession}
-            className={
-              compactLandscapeLayout
-                ? 'h-9 px-3 text-sm text-foreground'
-                : 'text-base text-foreground'
-            }
-          >
-            Wrap up
-          </Button>
-        </div>
-      )}
-
-      {/* Title - centered */}
-      <ChatHeader
+    <div className="atmosphere h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden overscroll-none">
+      <ChatTopBar
+        ref={headerRef}
+        compactLandscapeLayout={compactLandscapeLayout}
+        sessionNumber={sessionNumber}
         sessionDate={sessionDateRef.current}
         elapsedTime={elapsedTime}
-        sessionNumber={sessionNumber}
-        compact={compactLandscapeLayout}
+        showWrapUp={!showProviderGate && !showEndSessionDialog}
+        onWrapUp={handleEndSession}
       />
 
       {/* Messages area */}

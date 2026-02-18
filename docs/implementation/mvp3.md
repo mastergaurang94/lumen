@@ -1,7 +1,7 @@
 # MVP 3 Implementation
 
-Last Updated: 2026-02-17
-Status: Planning
+Last Updated: 2026-02-18
+Status: Ready for execution
 
 > **Session protocol**: At the end of each working session, append a dated entry to
 > "Running Updates" summarizing what was completed, what's in progress, and any decisions
@@ -11,6 +11,7 @@ Status: Planning
 
 ## Running Updates
 
+- 2026-02-18: Finalized for execution. Added: evaluation harness + prompt versioning (1.5), legacy schema cleanup (1.6), passphrase recovery (2.6), design + atmospheric polish (2.7). Reconciled with backlog — all MVP 3 items removed from `backlog.md`.
 - 2026-02-17: Initial plan created. Scope defined from MVP 2 deferrals + backlog items + architectural decisions from desktop/mobile/storage conversations.
 
 ---
@@ -98,6 +99,91 @@ The signal: users trust Lumen enough to make it a habit, bring it to a new devic
 - No UI — run once from terminal, done
 
 **Result**: Lumen sees all imported sessions in history, notebooks feed context assembly, Arc reflects the full journey. Indistinguishable from sessions that happened natively in Lumen.
+
+---
+
+### 1.4 Prompt quality iteration — session feedback `[M]`
+
+**Problem**: After 10+ sessions, several patterns have emerged where Lumen's conversational behavior doesn't match the intended companion experience. These are prompt-level issues — not bugs, but places where the system prompt needs refinement based on real usage.
+
+**Observations from recent sessions**:
+
+#### 1. Rote openings — "sitting with something"
+
+Lumen tends to open with variations of "I've been sitting with something from last time..." or similar formulaic phrasing. It feels repeated and predictable across sessions. The Vitality session opening was particularly off. Openings should feel genuinely varied and responsive to context, not templated.
+
+#### 2. Iterate on session transcripts for insights
+
+Have Lumen iterate on session transcripts to find prompt improvement opportunities. Explore a lightweight "mini evaluation" approach — not a formal harness, but a way to use real transcripts to identify where the prompt falls short and test improvements. A scratchpad or reflection process during sessions could help Lumen self-correct in real time.
+
+#### 3. Story consistency — Lumen's self-referential narratives
+
+In session 10, Lumen mentioned consulting in his late 30s. There's no mechanism to prevent contradicting this in future sessions. **Resolution**: Lumen's stories and anecdotes should NOT be about himself. They should reference other people he's known — patients, friends, colleagues, mentees. This sidesteps the consistency problem entirely and is more aligned with a mentor who draws from a lifetime of witnessing others' journeys.
+
+#### 4. Response verbosity and conversational pacing
+
+Several related issues:
+
+- **Wall of text**: When the user shares a lot, Lumen mirrors that volume back. The assistant should NOT match the user's verbosity — it should distill and respond with intentionality.
+- **Too many questions at once**: Lumen sometimes fires multiple questions in a single response, which breaks the natural conversation feel. One thread at a time.
+- **Thinking out loud**: Lumen often narrates its own reflections ("I notice that...", "What strikes me is...") instead of keeping those observations internal and communicating directly. Lumen should share what's most meaningful, not everything it's processing.
+- **Incentivize natural pacing**: Just because Lumen can process everything at once doesn't mean the human can respond that way. Lumen should model the conversational rhythm it wants — short, direct, one thing at a time. It can hold threads and return to them later.
+
+See the beginning of session 10 for examples of all of the above.
+
+#### 5. Core sessions vs. tactical midweek check-ins
+
+Lumen currently treats every session with equal weight, emphasizing "last session" regardless of its nature. There should be a distinction:
+
+- **Core sessions** (weekly): The main event. "Here's what we're exploring this week." These are the relationship-building conversations.
+- **Tactical/midweek sessions**: Quick check-ins, specific questions, lighter touch. These should NOT count as "the last session" in terms of continuity framing.
+
+The system should preserve the primacy of core sessions in how it frames continuity and returning-user openings. A midweek tactical check-in shouldn't reset the "last time we talked about..." anchor.
+
+**Approach**: Iterate on the system prompt (`docs/mentoring/system-prompts-v2.md` and `apps/web/lib/llm/prompts.ts`) to address each observation. Use real session transcripts as test cases — review before/after prompt changes against actual conversation flow. Consider whether session type metadata (core vs. tactical) needs to be stored or if it can be inferred from session length/depth.
+
+**Code refs**:
+
+- `apps/web/lib/llm/prompts.ts` — `buildSystemPrompt()`, all prompt sections
+- `docs/mentoring/system-prompts-v2.md` — active prompt reference
+- `apps/web/lib/session/arc.ts` — Arc update prompts (relevant to story consistency)
+- `apps/web/lib/context/assembly.ts` — context assembly, session ordering
+
+---
+
+### 1.5 Evaluation harness + prompt versioning `[M]`
+
+**Problem**: Prompt quality iteration (1.4) needs tooling to validate improvements. Currently, testing prompt changes means running sessions manually and comparing subjectively. Without reproducible evaluation, prompt regression is invisible.
+
+**Approach**:
+
+- **Prompt versioning**: Tag each prompt version (system prompt, notebook prompt, Arc prompt) with a version identifier. Store version metadata alongside session notebooks so quality shifts correlate to prompt changes.
+- **Minimal evaluation harness**: Replay golden transcripts → generate notebook + Arc → score against rubric (specificity, verbatim quotes, natural flow, pattern depth). Local CLI script, results in markdown.
+- **Golden fixtures**: 3-5 real session transcripts (anonymized if needed) with hand-scored expected outputs for regression testing.
+
+**Code refs**:
+
+- `apps/web/lib/llm/prompts.ts` — prompt constants (add version metadata)
+- `apps/web/lib/session/summary.ts` — notebook generation
+- `apps/web/lib/session/arc.ts` — Arc generation
+- New: `scripts/eval/` — evaluation runner + fixtures
+
+**Scope note**: Developer tool, not user-facing. A CLI script that runs locally and produces a markdown report. No CI integration needed initially.
+
+---
+
+### 1.6 Remove legacy sessionSummaries schema `[S]`
+
+**Problem**: The Dexie v1 `sessionSummaries` table and related code (`parseSummaryResponse`, `SessionSummary` type, `getSummary`/`saveSummary`/`listSummaries`) are dead weight since the notebook/arc system replaced them. Should be cleaned up before the SQLite migration (2.1) to avoid migrating dead schema.
+
+**Approach**:
+
+- Drop `sessionSummaries` table from Dexie schema
+- Remove `SessionSummary` type, parsing, and storage methods
+- Verify no users have legacy-only data (or provide a one-time notebook backfill from raw transcripts)
+- Keep history UI backward-compatible (already prefers notebooks over summaries)
+
+**Depends on**: No active users with legacy-only data. If testers upgraded during MVP 2, their data is already in notebook format.
 
 ---
 
@@ -212,6 +298,49 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 
 ---
 
+### 2.6 Passphrase recovery mechanism `[M]`
+
+**Problem**: If a user forgets their passphrase, their entire conversation history is permanently inaccessible. By MVP 3, testers will have months of meaningful conversation history — losing it would be devastating and trust-destroying.
+
+**Approach**:
+
+- **At setup**: After deriving the encryption key from the passphrase, generate a random recovery key (24-word mnemonic or base64 string). Encrypt the derived key with the recovery key and store the encrypted blob alongside vault metadata.
+- **Show once**: Display the recovery key with clear instructions: "Save this somewhere safe. It's the only way to recover your vault if you forget your passphrase." Require acknowledgment (checkbox: "I've saved my recovery key") before proceeding.
+- **On recovery**: Add a "Forgot passphrase?" link on the unlock page. User enters recovery key → decrypts the stored key blob → vault unlocks → user sets a new passphrase.
+- **No server involvement**: Recovery key generated and used entirely client-side.
+
+**Code refs**:
+
+- `apps/web/app/setup/page.tsx` — vault initialization, passphrase setup
+- `apps/web/lib/crypto.ts` — key derivation
+- `apps/web/app/unlock/page.tsx` — unlock flow, add recovery path
+
+**UX note**: Frame as empowerment, not fear: "This is your backup key. Keep it somewhere safe — a password manager, a note in your desk, wherever you won't lose it."
+
+**Depends on**: Nothing. Can be implemented on the current web stack before SQLite migration.
+
+---
+
+### 2.7 Design + atmospheric polish `[M]`
+
+**Problem**: The current design is functional but not yet distinctive. For a product people would pay for, the visual experience needs to feel intentional and immersive — closer to OmmWriter's atmospheric quality than a standard chat interface.
+
+**Approach**:
+
+- **Theme iteration**: Evolve the dawn/afternoon/evening palettes with richer backgrounds, subtle textures, and more atmospheric depth. The palettes work structurally but need warmth and immersion.
+- **Base text + icon sizing**: Increase body text and icon scale across chat, auth, and sidebar surfaces. Touch targets should feel comfortable; typography should feel generous and readable.
+- **Atmospheric elements**: Subtle background textures or gradients that shift with the time-of-day palette. Breathing animations on idle states. The UI should feel alive, not static.
+- **Display typography**: The Fraunces display font is available but underused. Apply it to key moments — session number header, parting words in closure, pre-session screen.
+
+**Design refs**:
+
+- `docs/design/system.md` — current palette and component guidelines
+- OmmWriter — distraction-free, atmospheric reference
+
+**Scope note**: Polish pass, not redesign. Layout and component architecture stay the same. The goal is to make the existing structure feel warm, intentional, and worth paying for.
+
+---
+
 ## Tier 3 — "My data goes where I go"
 
 **Goal**: Users can sync across devices and their data is portable.
@@ -299,8 +428,9 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 
 **Approach**:
 
-- Lumen's Go API stores encrypted SQLite blobs — zero plaintext, zero decryption keys
-- Push/pull encrypted file on session start/end
+- Lumen's Go API stores encrypted SQLite blobs — zero plaintext, zero decryption keys. Server stores ciphertext + metadata headers only
+- Client sync queue: push/pull encrypted SQLite blobs with offline resilience (queue operations when offline, flush on reconnect)
+- Conflict strategy: last-write-wins (v1). Both devices show a timestamp; user picks which to keep if there's a conflict
 - Natural paid tier: free = folder sync (self-managed), paid = managed sync (we host it)
 - Same encryption either way — the server is a dumb bucket
 
@@ -323,24 +453,20 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 
 ## Later (Not in MVP 3)
 
-These remain in the backlog for future consideration:
-
-- **Individual mentor mode** — per-mentor voices alongside unified Lumen
-- **Pattern index / commitments tracker / recognition moments** — memory enhancements
-- **Context compaction** — relevant at 100+ sessions
-- **Retrieval layer (embeddings)** — long-horizon semantic search
-- **Crisis UX** — professional escalation guidance
-- **CLI entry point** — terminal-based Lumen conversations
-
----
-
-## What We're NOT Doing (MVP 3 Scope Boundaries)
+These remain in the backlog for future consideration. See `backlog.md` for full detail on each item.
 
 - **Android** — Mac + iOS only for now. Revisit if demand emerges
 - **Windows / Linux** — Same. Swift is the right tool for the Apple ecosystem
 - **Full CRDT sync** — Last-write-wins is sufficient for v1. CRDT adds complexity without clear user benefit yet
 - **Embedding/RAG** — Context window is large enough for 50+ sessions. Not needed yet
 - **Individual mentor mode** — Unified voice quality first. Defer until the companion experience is proven
+- **Client-side model orchestration** — Policy enforcement on client; no server-side plaintext
+- **Fallback provider abstraction** — Graceful failover between LLM providers
+- **CLI entry point** — Terminal interface for power users
+- **Trust & safety governance** — Formal boundary definition beyond current prompt-level safety
+- **Observability** — Privacy-preserving session insights endpoint + client analytics events
+- **Context compaction** — Compress older context; relevant at 100+ sessions
+- **Hallucination guards for memory** — Cite source sessions when recalling facts
 
 ---
 

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "record:video": "node ../../.codex/skills/video-capture/scripts/record-video.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

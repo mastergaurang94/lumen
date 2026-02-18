@@ -169,7 +169,7 @@ export function ChatBody({
         {liveAnnouncement}
       </p>
       <div>
-        <div ref={contentRef} className="max-w-3xl mx-auto px-6 pt-8">
+        <div ref={contentRef} className="max-w-3xl mx-auto px-6 pt-20 md:pt-24">
           {/* Empty state before first message */}
           {messages.length === 0 && !isTyping && streamingContent === null && (
             <motion.div
@@ -186,7 +186,7 @@ export function ChatBody({
           )}
 
           {/* Message list */}
-          <div className="space-y-6">
+          <div className="space-y-0.5">
             {messages.map((message, index) =>
               message.role === 'lumen' ? (
                 <div key={message.id} className="group">
@@ -241,7 +241,7 @@ export function ChatBody({
                     ensures zero content-height delta at commit time. */}
                 {streamingContent !== null && (
                   <div className="flex items-center pt-1.5 invisible" aria-hidden="true">
-                    <div className="h-8 w-8" />
+                    <div className="h-9 w-9" />
                   </div>
                 )}
               </div>
@@ -250,7 +250,7 @@ export function ChatBody({
 
           {/* Height reservation matching the indicator — present when not
               streaming to keep content height stable at commit time. */}
-          {!isStreamingActive && <div className="h-8" aria-hidden="true" />}
+          {!isStreamingActive && <div className="h-9" aria-hidden="true" />}
         </div>
 
         {/* Scroll spacer — dynamically sized via ResizeObserver above.

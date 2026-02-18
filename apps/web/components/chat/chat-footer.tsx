@@ -13,6 +13,8 @@ type ChatFooterProps = {
 };
 
 // Input footer with sticky positioning, scroll-to-bottom button, and session hints.
+// Mobile: minimal — just the input pill with safe-area bottom padding.
+// Desktop: gradient fade, backdrop blur, keyboard hints, generous padding.
 export function ChatFooter({
   onSend,
   onStop,
@@ -23,9 +25,10 @@ export function ChatFooter({
 }: ChatFooterProps) {
   return (
     <footer className="sticky bottom-0" style={{ zIndex: Z_INDEX.sticky }}>
+      {/* Gradient fade — desktop only */}
       {!compact && (
         <div
-          className="absolute inset-x-0 -top-16 h-16 pointer-events-none"
+          className="absolute inset-x-0 -top-16 h-16 pointer-events-none hidden md:block"
           style={{
             background: 'linear-gradient(to top, hsl(var(--background)) 0%, transparent 100%)',
           }}
@@ -35,15 +38,14 @@ export function ChatFooter({
         className={
           compact
             ? 'relative bg-background border-t border-border/40'
-            : 'relative bg-background/80 backdrop-blur-md'
+            : 'relative bg-background md:bg-background/80 md:backdrop-blur-md'
         }
       >
-        {/* Shared floating placement for both desktop and mobile. */}
         <div
           className={
             compact
-              ? 'pointer-events-none absolute inset-x-0 -top-9 z-10 flex justify-center'
-              : 'pointer-events-none absolute inset-x-0 -top-5 z-10 flex justify-center'
+              ? 'pointer-events-none absolute inset-x-0 -top-11 z-10 flex justify-center'
+              : 'pointer-events-none absolute inset-x-0 -top-12 z-10 flex justify-center md:-top-14'
           }
         >
           <div className="pointer-events-auto">
@@ -52,7 +54,9 @@ export function ChatFooter({
         </div>
         <div
           className={
-            compact ? 'max-w-3xl mx-auto px-3 pt-1 pb-2' : 'max-w-3xl mx-auto px-6 pt-4 pb-6'
+            compact
+              ? 'max-w-3xl mx-auto px-3 pt-1 pb-2'
+              : 'max-w-3xl mx-auto px-4 pt-1.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:px-6 md:pt-4 md:pb-6'
           }
         >
           <ChatInput
@@ -63,12 +67,10 @@ export function ChatFooter({
             placeholder="Reply..."
             compact={compact}
           />
+          {/* Desktop-only: keyboard hints + AI disclaimer */}
           {!compact && (
-            <p className="mt-3 text-xs text-muted-foreground text-center">
-              <span className="md:hidden">Lumen is AI-powered and can make mistakes</span>
-              <span className="hidden md:inline">
-                Enter to send · Shift+Enter for new line · Lumen is AI-powered and can make mistakes
-              </span>
+            <p className="mt-3 text-xs text-muted-foreground text-center hidden md:block">
+              Enter to send · Shift+Enter for new line · Lumen is AI-powered and can make mistakes
             </p>
           )}
         </div>

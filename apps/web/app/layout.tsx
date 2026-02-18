@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Lato, Fraunces } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { VaultProvider } from '@/components/vault-provider';
@@ -21,6 +21,13 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: 'Lumen',
   description: 'A companion for the journey — weekly conversations that restore self-trust',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  interactiveWidget: 'resizes-content',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -63,7 +63,7 @@ export function ScrollToBottom({ scrollAreaRef, className }: ScrollToBottomProps
       tabIndex={show ? 0 : -1}
       aria-hidden={!show}
       className={cn(
-        'h-8 w-8 rounded-full',
+        'h-11 w-11 rounded-full',
         'flex items-center justify-center',
         'bg-muted/80 text-muted-foreground backdrop-blur-sm',
         'hover:bg-muted hover:text-foreground',
@@ -75,7 +75,7 @@ export function ScrollToBottom({ scrollAreaRef, className }: ScrollToBottomProps
       )}
       aria-label="Scroll to bottom"
     >
-      <ArrowDown className="h-4 w-4" />
+      <ArrowDown className="h-5 w-5" />
     </motion.button>
   );
 }

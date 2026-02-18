@@ -113,7 +113,7 @@ function ClosureProgress({ closureStep }: { closureStep: ClosureStep }) {
             >
               <StepIcon status={status} />
               <span
-                className={`text-sm transition-colors duration-300 ${
+                className={`text-base transition-colors duration-300 ${
                   status === 'pending'
                     ? 'text-muted-foreground/40'
                     : status === 'active'
@@ -191,10 +191,12 @@ function ClosureFinal({
         transition={{ delay: 0.3, duration: 0.5 }}
         className="space-y-2"
       >
-        <h1 className="font-display text-3xl font-light tracking-tight text-foreground">
-          Until next time
+        <h1 className="font-display text-3xl md:text-4xl font-light tracking-tight text-foreground">
+          Conversation closed
         </h1>
-        <p className="text-muted-foreground">{formatSessionDate(sessionDate)}</p>
+        <p className="text-base md:text-lg text-muted-foreground">
+          {formatSessionDate(sessionDate)}
+        </p>
       </motion.div>
 
       {/* Parting words */}
@@ -209,7 +211,7 @@ function ClosureFinal({
             <div className="absolute left-1/2 -translate-x-1/2 top-0 w-16 h-px bg-border" />
             <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-16 h-px bg-border" />
             <blockquote className="py-6 px-4">
-              <p className="font-display text-xl leading-relaxed text-foreground italic">
+              <p className="font-display text-xl md:text-2xl leading-relaxed text-foreground italic">
                 &ldquo;{partingWords}&rdquo;
               </p>
             </blockquote>
@@ -246,9 +248,9 @@ function ClosureFinal({
         transition={{ delay: 0.7, duration: 0.5 }}
         className="flex items-center justify-center gap-2 text-muted-foreground"
       >
-        <Calendar className="h-4 w-4" />
-        <p className="text-sm">
-          See you around{' '}
+        <Calendar className="h-5 w-5" />
+        <p className="text-base md:text-lg">
+          See you on{' '}
           <span className="text-foreground">{formatSessionDate(suggestedNextSession)}</span>
         </p>
       </motion.div>
@@ -262,7 +264,7 @@ function ClosureFinal({
         >
           <button
             onClick={() => setShowActionSteps(!showActionSteps)}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+            className="inline-flex items-center gap-1.5 text-base text-muted-foreground hover:text-foreground transition-colors group"
           >
             <span>
               {showActionSteps ? 'Hide' : 'View'} what came up
@@ -296,7 +298,7 @@ function ClosureFinal({
                       <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center text-xs text-accent font-medium">
                         {index + 1}
                       </span>
-                      <span className="text-sm text-foreground leading-relaxed">{step}</span>
+                      <span className="text-base text-foreground leading-relaxed">{step}</span>
                     </motion.li>
                   ))}
                 </ul>

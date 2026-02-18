@@ -6,6 +6,7 @@
     "lint": "eslint .",
     "format": "prettier -w .",
     "format:check": "prettier -c .",
+    "record:video": "pnpm --filter web record:video",
     "prepare": "husky"
   },
   "lint-staged": {

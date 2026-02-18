@@ -6,7 +6,6 @@ export { MessageActions } from './message-actions';
 export { ScrollToBottom } from './scroll-to-bottom';
 export { SessionClosure } from './session-closure';
 export { EndSessionDialog } from './end-session-dialog';
-export { ChatHeader } from './chat-header';
 export { ProviderGate } from './provider-gate';
 export { ChatBody } from './chat-body';
 export { ChatFooter } from './chat-footer';

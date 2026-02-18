@@ -20,10 +20,18 @@ export class ApiError extends Error {
   }
 }
 
-const DEFAULT_DEV_API_BASE_URL = 'http://localhost:8080';
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  (process.env.NODE_ENV === 'development' ? DEFAULT_DEV_API_BASE_URL : '');
+const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+// Dev fallback: when NEXT_PUBLIC_API_BASE_URL is unset and no Next rewrite is configured,
+// target the local Go API directly on :8080 using the current hostname.
+const devApiBaseUrl =
+  process.env.NODE_ENV === 'development'
+    ? typeof window !== 'undefined'
+      ? `http://${window.location.hostname}:8080`
+      : 'http://localhost:8080'
+    : '';
+
+const API_BASE_URL = configuredApiBaseUrl ?? devApiBaseUrl;
 
 /**
  * apiFetch wraps fetch with JSON parsing, error envelopes, and cookie credentials.

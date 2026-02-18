@@ -379,8 +379,10 @@ textarea:focus-visible {
    ============================================ */
 
 .chat-scroll-area {
+  height: 100%;
   overflow-y: scroll !important;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   /* Disable browser scroll anchoring — all scroll control is manual.
      Prevents the browser from auto-adjusting scroll position as
      streaming content grows. */
@@ -406,6 +408,15 @@ textarea:focus-visible {
 
 .chat-scroll-area::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.7);
+}
+
+@media (max-width: 767px) {
+  html.chat-shell-active,
+  body.chat-shell-active {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

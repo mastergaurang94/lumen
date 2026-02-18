@@ -149,6 +149,8 @@ export default function UnlockPage() {
                   error && 'border-destructive focus-visible:ring-destructive',
                 )}
                 autoComplete="current-password"
+                spellCheck={false}
+                autoCorrect="off"
               />
               <button
                 type="button"

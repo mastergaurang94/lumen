@@ -7,21 +7,20 @@ pnpm-debug.log*
 .pnpm-store/
 .playwright-mcp/
 .claude/
+.codex/
 
 dist/
 build/
+output/
 .next/
 .turbo/
 
 coverage/
 tsconfig.tsbuildinfo
 apps/web/test-results/
-
+test-results/
+apps/web/playwright-report/
 
 dev-artifacts/
-
-# Mentoring folder — prompts, discovery transcripts, product thinking (kept local only)
 docs/mentoring/
-
-# User feedback — raw transcripts and session notes (kept local only)
 docs/feedback/

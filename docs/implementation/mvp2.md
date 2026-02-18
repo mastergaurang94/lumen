@@ -18,10 +18,12 @@ Status: In Progress
 
 ## Running Updates
 
+- 2026-02-18: **Known bug** — Reflection LLM request aborts during closure (likely timeout on long sessions). Retry UI exists (1.7) but root cause needs investigation post-MVP 2.
+- 2026-02-18: Mobile shell hardening pass for native-app behavior. Enforced single-scroll-surface chat shell on mobile (`chat-shell-active` class on `html/body`, `h-[100dvh]` shell, `overscroll` containment, chat-scroll-area containment), added persistent top-layer visual separation for chat controls/content (`backdrop-blur` + border scrim in `app/chat/page.tsx`), enlarged mobile scroll-to-bottom control to touch-friendly size (`44px` target), and hardened sidebar viewport behavior so footer actions (including `Lock vault`) remain accessible while sidebar content scrolls (`h-[100dvh]`, content `overflow-y-auto`, footer `shrink-0` with safe-area padding).
+- 2026-02-18: Generalized video capture workflow into a reusable repo skill and cleaned artifact clutter. Added `.codex/skills/video-capture/SKILL.md` + `.codex/skills/video-capture/scripts/record-video.mjs` with neutral CLI options (device/orientation/duration/format/scenario-file) and optional Lumen prep mode. Replaced package command with `record:video` (root + web), removed mobile-pass-specific recorder scripts from `apps/web/scripts/`, and cleared transient screenshot/video artifacts under `output/playwright/mobile-pass/`.
+- 2026-02-17: Third mobile pass complete. Applied quick UX fix: hide desktop shortcut helper text on mobile chat footer (`apps/web/components/chat/chat-footer.tsx`). Completed required motion evidence capture with reusable local recorder tooling and produced stable clips: `mp2-001-no-stop-during-stream-v2.webm`, `mp2-002-landscape-cramped-chat-v2.webm`, `mp2-003-long-token-overflow-v3.webm`, `mp2-004-scroll-control-tiny-target.webm` under `output/playwright/mobile-pass/videos/`. Hardened recorder for future use (deterministic auth bootstrap via `/v1/auth/request-link` + `/v1/auth/verify`, scenario automation, verbose debug mode, robust output finalization).
 - 2026-02-17: `3.3 ✅ Complete` — completed universal accessibility pass (desktop + mobile behavior) without touching chat composer/footer layout sections in `app/chat/page.tsx`. Added ARIA/keyboard improvements for icon actions (`Send`, `Stop`, `Copy`, `Show more/less`), reduced-motion support for chat animations and scroll behavior (`prefers-reduced-motion` + component-level motion guards), screen reader live announcement for stream completion (`"Response complete"`), and contrast fixes for low-emphasis body text to meet baseline readability targets. Validation: `pnpm --filter web test -- --run` (53/53) and `pnpm --filter web lint` (clean).
-- 2026-02-17: Set up local mobile video capture for future QA passes. Added `apps/web/scripts/record-mobile-session.mjs`, package script `pnpm --filter web record:mobile:video`, and usage doc `docs/implementation/mobile-video-capture.md`. Verified sample output at `output/playwright/mobile-pass/videos/smoke-mobile-video.webm`.
-- 2026-02-17: Added consolidated mobile QA record for both exploratory passes: `docs/implementation/mobile-pass-report-2026-02-17.md` (summary) + `docs/implementation/mobile-pass-agent-log.md` (detailed running log and evidence index). Pass 2 focused specifically on deep chat mobile UX stress scenarios (streaming/scroll/overflow/landscape/touch targets), with findings captured for later fix pass.
-- 2026-02-17: Mobile Step 0 exploratory pass completed on localhost (iPhone 13 + Pixel 7 emulation) with evidence captured in `output/playwright/mobile-pass/` and continuity notes in `docs/implementation/mobile-pass-agent-log.md`. Applied fixes from reviewer-confirmed findings: `MP-003` (dev API base now defaults same-origin to avoid `localhost`/`127.0.0.1` CORS mismatch) and `MP-004` (hide top-right `Wrap up` button when end-session dialog is open to remove dual-action ambiguity). `MP-001` dropped (false positive), `MP-002` deprioritized (not mobile-specific), `MP-005` revalidated with proper evidence and deferred.
+- 2026-02-17: Set up local mobile video capture for future QA passes (later generalized on 2026-02-18 into `.codex/skills/video-capture/` with `pnpm record:video`). Verified sample output at `output/playwright/mobile-pass/videos/smoke-mobile-video.webm`.
 - 2026-02-15: **Session Notebook + Arc system** — Replaced JSON `SessionSummary` with
   markdown Session Notebooks and a living Arc document. Two LLM calls at session end
   (notebook → arc update). Context assembly rewritten: Arc → all notebooks → last 3
@@ -713,52 +715,11 @@ Rethought as a Soul Vault integration story rather than a standalone vault dump.
 
 ---
 
-### 3.4 Prompt quality iteration — session feedback `[M]`
+### ~~3.4 Prompt quality iteration — session feedback~~ → Moved to MVP 3
 
-**Problem**: After 10+ sessions, several patterns have emerged where Lumen's conversational behavior doesn't match the intended companion experience. These are prompt-level issues — not bugs, but places where the system prompt needs refinement based on real usage.
+**Status**: Deferred to MVP 3 Tier 1 (2026-02-17)
 
-**Observations from recent sessions**:
-
-#### 1. Rote openings — "sitting with something"
-
-Lumen tends to open with variations of "I've been sitting with something from last time..." or similar formulaic phrasing. It feels repeated and predictable across sessions. The Vitality session opening was particularly off. Openings should feel genuinely varied and responsive to context, not templated.
-
-#### 2. Iterate on session transcripts for insights
-
-Have Lumen iterate on session transcripts to find prompt improvement opportunities. Explore a lightweight "mini evaluation" approach — not a formal harness, but a way to use real transcripts to identify where the prompt falls short and test improvements. A scratchpad or reflection process during sessions could help Lumen self-correct in real time.
-
-#### 3. Story consistency — Lumen's self-referential narratives
-
-In session 10, Lumen mentioned consulting in his late 30s. There's no mechanism to prevent contradicting this in future sessions. **Resolution**: Lumen's stories and anecdotes should NOT be about himself. They should reference other people he's known — patients, friends, colleagues, mentees. This sidesteps the consistency problem entirely and is more aligned with a mentor who draws from a lifetime of witnessing others' journeys.
-
-#### 4. Response verbosity and conversational pacing
-
-Several related issues:
-
-- **Wall of text**: When the user shares a lot, Lumen mirrors that volume back. The assistant should NOT match the user's verbosity — it should distill and respond with intentionality.
-- **Too many questions at once**: Lumen sometimes fires multiple questions in a single response, which breaks the natural conversation feel. One thread at a time.
-- **Thinking out loud**: Lumen often narrates its own reflections ("I notice that...", "What strikes me is...") instead of keeping those observations internal and communicating directly. Lumen should share what's most meaningful, not everything it's processing.
-- **Incentivize natural pacing**: Just because Lumen can process everything at once doesn't mean the human can respond that way. Lumen should model the conversational rhythm it wants — short, direct, one thing at a time. It can hold threads and return to them later.
-
-See the beginning of session 10 for examples of all of the above.
-
-#### 5. Core sessions vs. tactical midweek check-ins
-
-Lumen currently treats every session with equal weight, emphasizing "last session" regardless of its nature. There should be a distinction:
-
-- **Core sessions** (weekly): The main event. "Here's what we're exploring this week." These are the relationship-building conversations.
-- **Tactical/midweek sessions**: Quick check-ins, specific questions, lighter touch. These should NOT count as "the last session" in terms of continuity framing.
-
-The system should preserve the primacy of core sessions in how it frames continuity and returning-user openings. A midweek tactical check-in shouldn't reset the "last time we talked about..." anchor.
-
-**Approach**: Iterate on the system prompt (`docs/mentoring/system-prompts-v2.md` and `apps/web/lib/llm/prompts.ts`) to address each observation. Use real session transcripts as test cases — review before/after prompt changes against actual conversation flow. Consider whether session type metadata (core vs. tactical) needs to be stored or if it can be inferred from session length/depth.
-
-**Code refs**:
-
-- `apps/web/lib/llm/prompts.ts` — `buildSystemPrompt()`, all prompt sections
-- `docs/mentoring/system-prompts-v2.md` — active prompt reference
-- `apps/web/lib/session/arc.ts` — Arc update prompts (relevant to story consistency)
-- `apps/web/lib/context/assembly.ts` — context assembly, session ordering
+Prompt quality iteration based on real session feedback. See `docs/implementation/mvp3.md` § 1.4.
 
 ---
 
@@ -771,6 +732,7 @@ These are explicitly out of scope for this sprint. They're captured in the backl
 - **Context compaction / summary compaction** — Less urgent with notebook/arc system
 - **Session insights / analytics endpoint** — Can ask testers directly
 - **Passphrase recovery mechanism** — Deferred from MVP 2 to backlog; pull forward before broader beta or once testers accumulate multi-week history
+- **Prompt quality iteration** — Deferred to MVP 3 Tier 1; ongoing refinement based on real session feedback
 - **Export/import** — Rethought as Soul Vault integration; MVP 3 (see `docs/architecture/soul-vault-integration.md`)
 - **Zero-knowledge encrypted sync** — MVP 3
 - **Swift native desktop/mobile app** — MVP 3

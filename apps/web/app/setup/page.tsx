@@ -199,6 +199,8 @@ export default function SetupPage() {
                 disabled={isSubmitting}
                 className="pr-10"
                 autoComplete="new-password"
+                spellCheck={false}
+                autoCorrect="off"
                 aria-describedby={hasPassphrase ? 'passphrase-strength' : undefined}
               />
               <button
@@ -263,6 +265,8 @@ export default function SetupPage() {
                   showMismatchError && 'border-destructive focus:ring-destructive',
                 )}
                 autoComplete="new-password"
+                spellCheck={false}
+                autoCorrect="off"
                 aria-invalid={showMismatchError}
                 aria-describedby={showMismatchError ? 'confirm-error' : undefined}
               />
