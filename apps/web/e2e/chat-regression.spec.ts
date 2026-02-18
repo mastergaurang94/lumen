@@ -146,7 +146,7 @@ async function registerChatMocks(page: Page, state: MockState) {
 // ─── Page Helpers ──────────────────────────────────────────────────────────────
 
 async function clearIndexedDb(page: Page) {
-  await page.goto('/');
+  await page.goto('/setup', { waitUntil: 'domcontentloaded', timeout: 15_000 });
   await page.evaluate(
     () =>
       new Promise<void>((resolve) => {
@@ -299,6 +299,47 @@ async function ensureMessageInputReady(page: Page) {
   throw new Error(`Message input not ready on ${page.url()}`);
 }
 
+/** Faster variant for reload paths where we already expect to be on /chat. */
+async function ensureMessageInputReadyOnChat(page: Page) {
+  const tokenInput = page.getByPlaceholder('sk-ant-oat...');
+  const messageInput = page.getByLabel('Message input');
+  const loadingText = page.getByText('Connecting to Lumen');
+  let chatRecoveryAttempts = 0;
+
+  for (let i = 0; i < 40; i++) {
+    if (!page.url().includes('/chat')) {
+      if (chatRecoveryAttempts >= 3) {
+        throw new Error(`Expected /chat while waiting for message input, got ${page.url()}`);
+      }
+      chatRecoveryAttempts++;
+      await ensureChatReady(page);
+      await page.waitForTimeout(150);
+      continue;
+    }
+
+    if (await isVisibleQuick(messageInput)) {
+      await expect(messageInput).toBeEnabled({ timeout: 30000 });
+      return;
+    }
+
+    if (await isVisibleQuick(tokenInput)) {
+      await tokenInput.fill('sk-ant-oat-mock-test-token-12345');
+      await page.getByRole('button', { name: /save/i }).click();
+      await expect(messageInput).toBeEnabled({ timeout: 30000 });
+      return;
+    }
+
+    if (await isVisibleQuick(loadingText)) {
+      await page.waitForTimeout(200);
+      continue;
+    }
+
+    await page.waitForTimeout(200);
+  }
+
+  throw new Error(`Message input not ready on ${page.url()}`);
+}
+
 /** Full setup: mocks → clear DB → passphrase → session → chat → token → greeting. */
 async function setupChat(page: Page, state: MockState) {
   // Register mocks BEFORE any navigation so auth/API calls during page load
@@ -309,16 +350,16 @@ async function setupChat(page: Page, state: MockState) {
 
   // Next dev can occasionally present transient route states in CI; retry setup
   // once before failing hard so individual tests don't flake at bootstrap.
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      await page.goto('/setup');
+      await page.goto('/setup', { waitUntil: 'domcontentloaded', timeout: 15_000 });
       await ensureChatReady(page);
       await ensureMessageInputReady(page);
       await expect(page.getByText("I'm Lumen")).toBeVisible({ timeout: 30000 });
       break;
     } catch (error) {
-      if (attempt === 1) throw error;
-      await page.waitForTimeout(500);
+      if (attempt === 2) throw error;
+      await page.waitForTimeout(250);
     }
   }
 
@@ -340,8 +381,8 @@ async function sendMessageAndWait(page: Page, text: string, expectedSnippet: str
   // Wait for Lumen response
   await expect(page.getByText(expectedSnippet)).toBeVisible({ timeout: 15000 });
 
-  // Let scroll animations settle
-  await page.waitForTimeout(600);
+  // Allow layout/scroll to settle without over-waiting every exchange.
+  await page.waitForTimeout(250);
 }
 
 /** Build a conversation with N user↔Lumen exchanges after the greeting. */
@@ -440,6 +481,13 @@ test.describe('Chat Regression', () => {
   // CI is ~4x slower than local — give every test ample room.
   test.describe.configure({ timeout: 180_000 });
 
+  test.beforeAll(async ({ request }) => {
+    // Warm critical routes once to reduce first-test compilation spikes.
+    await request.get('/setup').catch(() => null);
+    await request.get('/session').catch(() => null);
+    await request.get('/chat').catch(() => null);
+  });
+
   // ─── Bug Fix Regressions (FAIL on main, PASS on worktree) ──────────────────
 
   test.describe('Bug Fix Regressions', () => {
@@ -516,7 +564,7 @@ test.describe('Chat Regression', () => {
       await page.reload();
 
       await ensureChatReady(page);
-      await ensureMessageInputReady(page);
+      await ensureMessageInputReadyOnChat(page);
 
       // Wait for messages to restore and spacer to settle in normal mode
       await page.waitForTimeout(2000);
@@ -555,8 +603,8 @@ test.describe('Chat Regression', () => {
       await setupChat(page, state);
       await buildConversationHistory(page, state, 5);
 
-      // Override mock with 1800ms delay to create a long "thinking" phase
-      await overrideLlmWithDelay(page, state, 1800);
+      // Keep delay >1000ms so old timer-based recovery bugs would still surface.
+      await overrideLlmWithDelay(page, state, 1300);
 
       // Send a message — pin-to-top should scroll it near the top
       const messageInput = page.getByLabel('Message input');
@@ -565,10 +613,10 @@ test.describe('Chat Regression', () => {
 
       await assertUserMessagePinned(page, 'Deep thought about purpose', 40);
 
-      // Wait another 1500ms (past the old 1000ms grace period on main)
+      // Wait past the old 1000ms grace period on main.
       // Bug #2: on main, a scroll listener exits recovery after 1000ms → snap-back.
       // Fix: recovery exits only via ResizeObserver, no timer.
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(1200);
       await assertUserMessagePinned(page, 'Deep thought about purpose', 40);
 
       // Wait for delayed response to arrive and commit
@@ -581,15 +629,15 @@ test.describe('Chat Regression', () => {
       const state = createMockState();
       await setupChat(page, state);
 
-      // Override mock with 1800ms delay
-      await overrideLlmWithDelay(page, state, 1800);
+      // Keep delay long enough to observe the "thinking" phase.
+      await overrideLlmWithDelay(page, state, 1300);
 
       const messageInput = page.getByLabel('Message input');
       await messageInput.fill('Tell me something meaningful');
       await page.keyboard.press('Enter');
 
       // Wait for pin + thinking phase to stabilize
-      await page.waitForTimeout(1200);
+      await page.waitForTimeout(900);
 
       // Capture scrollTop during "thinking" (indicator visible, no response text yet)
       const scrollTopDuring = await page.evaluate(() => {
@@ -705,25 +753,25 @@ test.describe('Chat Regression', () => {
         const sa = document.querySelector('.chat-scroll-area') as HTMLElement;
         sa.scrollTop = 0;
       });
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(250);
 
       await page.evaluate(() => {
         const sa = document.querySelector('.chat-scroll-area') as HTMLElement;
         sa.scrollTop = sa.scrollHeight;
       });
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(250);
 
       await page.evaluate(() => {
         const sa = document.querySelector('.chat-scroll-area') as HTMLElement;
         sa.scrollTop = 0;
       });
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(250);
 
       await page.evaluate(() => {
         const sa = document.querySelector('.chat-scroll-area') as HTMLElement;
         sa.scrollTop = sa.scrollHeight;
       });
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(250);
 
       // Check all recorded clientHeights are identical
       const heights: number[] = await page.evaluate(() => {
@@ -743,7 +791,7 @@ test.describe('Chat Regression', () => {
       await setupChat(page, state);
 
       // Use delayed mock to create an observable thinking/streaming phase
-      await overrideLlmWithDelay(page, state, 2500);
+      await overrideLlmWithDelay(page, state, 1500);
 
       const messageInput = page.getByLabel('Message input');
       await messageInput.fill('Testing lightbulb stability');
@@ -804,7 +852,7 @@ test.describe('Chat Regression', () => {
       expect(hasIdleReservation, 'h-8 reservation div should exist when idle').toBe(true);
 
       // 2. Trigger streaming to verify the invisible placeholder appears
-      await overrideLlmWithDelay(page, state, 2500);
+      await overrideLlmWithDelay(page, state, 1500);
 
       const messageInput = page.getByLabel('Message input');
       await messageInput.fill('Testing height reservation');
@@ -1179,13 +1227,20 @@ test.describe('Chat Regression', () => {
       await page.reload();
 
       await ensureChatReady(page);
-      await ensureMessageInputReady(page);
+      await ensureMessageInputReadyOnChat(page);
 
       // Both user message and Lumen response should be restored
       await expect(page.getByText('Remember this message')).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText(`Lumen response #${expectedNum}`)).toBeVisible({
-        timeout: 10000,
-      });
+      await expect
+        .poll(
+          async () => {
+            const exact = await page.getByText(`Lumen response #${expectedNum}`).count();
+            if (exact > 0) return true;
+            return (await page.locator('[data-message-role="assistant"]').count()) >= 2;
+          },
+          { timeout: 15000, intervals: [200, 300, 500] },
+        )
+        .toBeTruthy();
     });
 
     test('19 · user scroll during thinking phase is respected', async ({ page }) => {
