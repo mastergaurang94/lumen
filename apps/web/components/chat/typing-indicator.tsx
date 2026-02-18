@@ -7,11 +7,27 @@ import { cn } from '@/lib/utils';
 
 interface TypingIndicatorProps {
   className?: string;
+  /** When false, renders a static (non-pulsing) lightbulb. Defaults to true. */
+  pulsing?: boolean;
 }
 
-// Pulsing lightbulb — Lumen's "thinking" indicator.
-export function TypingIndicator({ className }: TypingIndicatorProps) {
+const bulbClasses =
+  'h-6 w-6 fill-amber-400/30 stroke-amber-500 dark:fill-amber-300/30 dark:stroke-amber-400';
+const shadowClass = 'drop-shadow-[0_0_6px_rgba(210,170,60,0.5)]';
+
+// Lightbulb indicator — pulses during streaming, stays static afterward.
+export function TypingIndicator({ className, pulsing = true }: TypingIndicatorProps) {
   const shouldReduceMotion = useReducedMotion();
+
+  if (!pulsing) {
+    return (
+      <div className={cn('flex items-center', className)}>
+        <div className={shadowClass}>
+          <Lightbulb className={bulbClasses} strokeWidth={2.5} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -35,12 +51,9 @@ export function TypingIndicator({ className }: TypingIndicatorProps) {
             ? { duration: 0 }
             : { duration: 2, repeat: Infinity, ease: 'easeInOut' }
         }
-        className="drop-shadow-[0_0_6px_rgba(210,170,60,0.5)]"
+        className={shadowClass}
       >
-        <Lightbulb
-          className="h-6 w-6 fill-amber-400/30 stroke-amber-500 dark:fill-amber-300/30 dark:stroke-amber-400"
-          strokeWidth={2.5}
-        />
+        <Lightbulb className={bulbClasses} strokeWidth={2.5} />
       </motion.div>
     </motion.div>
   );

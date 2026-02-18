@@ -248,9 +248,12 @@ export function ChatBody({
             )}
           </div>
 
-          {/* Height reservation matching the indicator — present when not
-              streaming to keep content height stable at commit time. */}
-          {!isStreamingActive && <div className="h-9" aria-hidden="true" />}
+          {/* Static lightbulb — stays at the bottom of the last response.
+              Replaces the old h-9 height reservation while providing visual
+              continuity with the pulsing indicator during streaming. */}
+          {!isStreamingActive && lastLumenIndex >= 0 && (
+            <TypingIndicator pulsing={false} className="mt-2" />
+          )}
         </div>
 
         {/* Scroll spacer — dynamically sized via ResizeObserver above.

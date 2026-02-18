@@ -594,7 +594,7 @@ test.describe('Chat Regression', () => {
       });
 
       // On main: gap ≈ 1152px (80vh at 1440 viewport)
-      // On worktree: gap ≈ 64px spacer + h-8 reservation + some padding ≈ 130px
+      // On worktree: gap ≈ 64px spacer + static lightbulb + some padding ≈ 130px
       expect(gap, `whitespace below last message=${gap}px should be < 300`).toBeLessThan(300);
     });
 
@@ -646,18 +646,9 @@ test.describe('Chat Regression', () => {
 
       // Wait for the delayed response to arrive and commit.
       // Bug #3: AnimatePresence removes TypingIndicator → 48px content drop → scrollTop clamp.
-      // Fix: h-8 reservation div maintains content height across transition.
-      await expect
-        .poll(
-          async () => {
-            const hasResponse = await page.getByText('Lumen delayed').isVisible();
-            // Check indicator is gone — lightbulb SVG is the indicator
-            const hasIndicator = await page.locator('.lucide-lightbulb').isVisible();
-            return hasResponse && !hasIndicator;
-          },
-          { timeout: 10000, intervals: [100] },
-        )
-        .toBeTruthy();
+      // Fix: static lightbulb + invisible placeholder maintain content height across transition.
+      // Note: lightbulb now persists (static) after streaming, so we just check for the response.
+      await expect(page.getByText('Lumen delayed')).toBeVisible({ timeout: 10000 });
 
       // Small settle after commit
       await page.waitForTimeout(300);
@@ -831,25 +822,26 @@ test.describe('Chat Regression', () => {
       const state = createMockState();
       await setupChat(page, state);
 
-      // Bug #3 mechanism: The worktree maintains content height stability across
-      // the streaming→committed transition using two structural elements:
+      // Content height stability across the streaming→committed transition uses:
       //
-      // 1. h-8 reservation div (when idle) — sits below .space-y-6, maintains
-      //    the same height as the TypingIndicator that appears during streaming.
+      // 1. Static lightbulb (when idle) — sits below the message list, provides
+      //    the same height as the pulsing TypingIndicator during streaming.
       // 2. Invisible MessageActions placeholder (during streaming) — matches the
       //    height of the real MessageActions that appear on committed messages.
       //
       // This means: idle height ≈ streaming height ≈ committed height, so
       // scrollTop is never clamped at transitions.
-      //
-      // On main, neither element exists → 48px jump when AnimatePresence
-      // removes the indicator.
 
-      // 1. h-8 reservation div should exist when idle
-      const hasIdleReservation = await page.evaluate(() => {
-        return !!document.querySelector('.max-w-3xl > .h-8[aria-hidden="true"]');
+      // 1. Static lightbulb should exist when idle (after greeting committed)
+      const hasIdleBulb = await page.evaluate(() => {
+        const bulb = document.querySelector('.max-w-3xl .lucide-lightbulb');
+        if (!bulb) return false;
+        // Static bulb uses plain divs (no motion.div), so its grandparent
+        // should NOT have a style attribute with transform (pulsing does).
+        const wrapper = bulb.parentElement?.parentElement;
+        return !!wrapper && !wrapper.getAttribute('style')?.includes('transform');
       });
-      expect(hasIdleReservation, 'h-8 reservation div should exist when idle').toBe(true);
+      expect(hasIdleBulb, 'static lightbulb should exist when idle').toBe(true);
 
       // 2. Trigger streaming to verify the invisible placeholder appears
       await overrideLlmWithDelay(page, state, 1500);
@@ -870,15 +862,6 @@ test.describe('Chat Regression', () => {
           { timeout: 10000, intervals: [100] },
         )
         .toBeTruthy();
-
-      // h-8 reservation should NOT be present during streaming
-      // (it's conditionally rendered only when !isTyping && streamingContent === null)
-      const reservationDuringStream = await page.evaluate(() => {
-        return !!document.querySelector('.max-w-3xl > .h-8[aria-hidden="true"]');
-      });
-      expect(reservationDuringStream, 'h-8 reservation should be gone during streaming').toBe(
-        false,
-      );
 
       await expect(page.getByText('Lumen delayed')).toBeVisible({ timeout: 5000 });
       await restoreLlmMock(page, state);
