@@ -102,7 +102,8 @@ ALWAYS read ALL docs to get started with a thread.
 - `docs/architecture/overview.md` - System architecture and data flow
 - `docs/architecture/harness-flow.md` - Context assembly and session closure flow
 - `docs/mentoring/` - System prompts, perspectives, notebook/arc prompt design
-- `docs/implementation/mvp2.md` - Active sprint plan (check Running Updates first)
+- `docs/implementation/mvp3.md` - Active sprint plan (check Running Updates first)
+- `docs/implementation/done/mvp2.md` - Completed MVP 2 (archived)
 - `docs/implementation/backlog.md` - Prioritized work queue
 - `docs/implementation/done/` - Archived phases and completed work
 - `docs/deploy/runbook.md` - Deployment workflow and rollback guidance

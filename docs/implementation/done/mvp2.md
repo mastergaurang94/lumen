@@ -1,7 +1,7 @@
 # MVP 2 Implementation
 
-Last Updated: 2026-02-13
-Status: In Progress
+Last Updated: 2026-02-18
+Status: Complete
 
 > **Session protocol**: At the end of each working session, append a dated entry to
 > "Running Updates" summarizing what was completed, what's in progress, and any decisions
@@ -18,6 +18,7 @@ Status: In Progress
 
 ## Running Updates
 
+- 2026-02-18: **MVP 2 Complete.** Final polish: persistent static lightbulb after streaming (pulses only during active stream, stays at bottom of last response afterward), fixed 4 stale E2E selectors drifted from mobile hardening commits (`.space-y-6` → `data-testid="message-list"`, smoke test closure text, pin tolerance). All 23 E2E tests, 53 unit tests, lint, and build green.
 - 2026-02-18: ✅ Fixed closure reflection abort bug. Root cause was the default 30s timeout on non-stream LLM calls in session closure; Arc generation often crossed ~30s and threw `LlmAbortError`. Added per-call timeout support in `llm/client` and set closure notebook/arc calls to 120s in `app/chat/page.tsx`. Verified with real wrap-up flow: notebook + arc both complete and closure reaches done state.
 - 2026-02-18: Mobile shell hardening pass for native-app behavior. Enforced single-scroll-surface chat shell on mobile (`chat-shell-active` class on `html/body`, `h-[100dvh]` shell, `overscroll` containment, chat-scroll-area containment), added persistent top-layer visual separation for chat controls/content (`backdrop-blur` + border scrim in `app/chat/page.tsx`), enlarged mobile scroll-to-bottom control to touch-friendly size (`44px` target), and hardened sidebar viewport behavior so footer actions (including `Lock vault`) remain accessible while sidebar content scrolls (`h-[100dvh]`, content `overflow-y-auto`, footer `shrink-0` with safe-area padding).
 - 2026-02-18: Generalized video capture workflow into a reusable repo skill and cleaned artifact clutter. Added `.codex/skills/video-capture/SKILL.md` + `.codex/skills/video-capture/scripts/record-video.mjs` with neutral CLI options (device/orientation/duration/format/scenario-file) and optional Lumen prep mode. Replaced package command with `record:video` (root + web), removed mobile-pass-specific recorder scripts from `apps/web/scripts/`, and cleared transient screenshot/video artifacts under `output/playwright/mobile-pass/`.
@@ -684,6 +685,8 @@ Rethought as a Soul Vault integration story rather than a standalone vault dump.
 ---
 
 ### 3.3 Mobile testing pass + accessibility `[M]`
+
+**Status**: ✅ Complete (2026-02-18)
 
 **Problem**: Testers will try Lumen on their phones. The chat input, sidebar overlay, passphrase entry, and closure flow all need to work comfortably on mobile viewports. Additionally, basic accessibility standards should be met.
 
