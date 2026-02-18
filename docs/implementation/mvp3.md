@@ -160,6 +160,7 @@ The system should preserve the primacy of core sessions in how it frames continu
 - **Prompt versioning**: Tag each prompt version (system prompt, notebook prompt, Arc prompt) with a version identifier. Store version metadata alongside session notebooks so quality shifts correlate to prompt changes.
 - **Minimal evaluation harness**: Replay golden transcripts → generate notebook + Arc → score against rubric (specificity, verbatim quotes, natural flow, pattern depth). Local CLI script, results in markdown.
 - **Golden fixtures**: 3-5 real session transcripts (anonymized if needed) with hand-scored expected outputs for regression testing.
+- **Context assembly verification**: Deterministic tests that `assembly.ts` produces correct context given fixed inputs (Arc + notebooks + transcripts). Separate concern from prompt quality — this validates the code, not the LLM output.
 
 **Code refs**:
 
@@ -301,6 +302,8 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 ### 2.6 Passphrase recovery mechanism `[M]`
 
 **Problem**: If a user forgets their passphrase, their entire conversation history is permanently inaccessible. By MVP 3, testers will have months of meaningful conversation history — losing it would be devastating and trust-destroying.
+
+**Prior art**: LastPass and Obsidian both generate a recovery key at setup time that the user stores offline. Same pattern here.
 
 **Approach**:
 
