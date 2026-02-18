@@ -14,6 +14,7 @@ export type LlmCallParams = {
   messages: LlmMessage[];
   temperature?: number;
   maxTokens?: number;
+  timeoutMs?: number;
   signal?: AbortSignal;
 };
 
@@ -126,6 +127,12 @@ function isAbortError(error: unknown): boolean {
   return (error as { name?: string }).name === 'AbortError';
 }
 
+function inferAbortSource(signal?: AbortSignal, error?: unknown) {
+  if (signal?.aborted) return 'external_signal';
+  if (isAbortError(error)) return 'timeout_or_internal_abort';
+  return 'unknown_abort';
+}
+
 type SseEvent = {
   event: string;
   data: string;
@@ -213,11 +220,18 @@ async function callAnthropic(params: LlmCallParams): Promise<CallAnthropicResult
         ...payload,
       }),
       signal: params.signal,
+      timeoutMs: params.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     });
   } catch (error) {
     const durationMs = Math.round(performance.now() - startTime);
     if (params.signal?.aborted || isAbortError(error)) {
-      llmLogger.info({ event: 'llm_request_abort', model: resolvedModelId, durationMs });
+      llmLogger.info({
+        event: 'llm_request_abort',
+        model: resolvedModelId,
+        durationMs,
+        abortSource: inferAbortSource(params.signal, error),
+        signalAborted: Boolean(params.signal?.aborted),
+      });
       throw new LlmAbortError('LLM request aborted.');
     }
     llmLogger.error({
@@ -326,7 +340,13 @@ async function* callAnthropicStream(params: LlmCallParams): AsyncGenerator<strin
   } catch (error) {
     const durationMs = Math.round(performance.now() - startTime);
     if (params.signal?.aborted || isAbortError(error)) {
-      llmLogger.info({ event: 'llm_request_abort', model: resolvedModelId, durationMs });
+      llmLogger.info({
+        event: 'llm_request_abort',
+        model: resolvedModelId,
+        durationMs,
+        abortSource: inferAbortSource(params.signal, error),
+        signalAborted: Boolean(params.signal?.aborted),
+      });
       throw new LlmAbortError('LLM request aborted.');
     }
     llmLogger.error({
@@ -481,11 +501,21 @@ async function* callAnthropicStream(params: LlmCallParams): AsyncGenerator<strin
     }
   } catch (error) {
     if (error instanceof LlmAbortError) {
-      llmLogger.info({ event: 'llm_request_abort', model: resolvedModelId });
+      llmLogger.info({
+        event: 'llm_request_abort',
+        model: resolvedModelId,
+        abortSource: 'llm_abort_error',
+        signalAborted: Boolean(params.signal?.aborted),
+      });
       throw error;
     }
     if (params.signal?.aborted || isAbortError(error)) {
-      llmLogger.info({ event: 'llm_request_abort', model: resolvedModelId });
+      llmLogger.info({
+        event: 'llm_request_abort',
+        model: resolvedModelId,
+        abortSource: inferAbortSource(params.signal, error),
+        signalAborted: Boolean(params.signal?.aborted),
+      });
       throw new LlmAbortError('LLM request aborted.');
     }
     if (error instanceof LlmResponseError) {

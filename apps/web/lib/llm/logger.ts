@@ -33,6 +33,13 @@ export type LlmLogContext = {
   // Request metadata
   messageCount?: number;
   systemPromptLength?: number;
+  // Abort diagnostics
+  abortSource?:
+    | 'external_signal'
+    | 'timeout_or_internal_abort'
+    | 'llm_abort_error'
+    | 'unknown_abort';
+  signalAborted?: boolean;
 };
 
 type StructuredLog = {

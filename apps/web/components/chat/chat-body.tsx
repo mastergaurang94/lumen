@@ -169,7 +169,7 @@ export function ChatBody({
         {liveAnnouncement}
       </p>
       <div>
-        <div ref={contentRef} className="max-w-3xl mx-auto px-6 pt-20 md:pt-24">
+        <div ref={contentRef} className="max-w-3xl mx-auto px-6 pt-20 md:pt-20">
           {/* Empty state before first message */}
           {messages.length === 0 && !isTyping && streamingContent === null && (
             <motion.div

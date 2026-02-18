@@ -70,7 +70,13 @@ function StepIcon({ status }: { status: 'complete' | 'active' | 'pending' }) {
 }
 
 // Phase A: Step progression during closure
-function ClosureProgress({ closureStep }: { closureStep: ClosureStep }) {
+function ClosureProgress({
+  closureStep,
+  reflectingDetail,
+}: {
+  closureStep: ClosureStep;
+  reflectingDetail?: string | null;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -121,7 +127,9 @@ function ClosureProgress({ closureStep }: { closureStep: ClosureStep }) {
                       : 'text-muted-foreground'
                 }`}
               >
-                {step.label}
+                {step.key === 'reflecting' && status === 'active' && reflectingDetail
+                  ? reflectingDetail
+                  : step.label}
                 {status === 'active' && '...'}
               </span>
             </motion.div>
@@ -350,6 +358,7 @@ interface SessionClosureProps {
   partingWords?: string | null;
   actionSteps?: string[];
   closureStep?: ClosureStep;
+  reflectingDetail?: string | null;
   summaryError?: string | null;
   isRetryingSummary?: boolean;
   onRetrySummary?: () => void;
@@ -360,6 +369,7 @@ export function SessionClosure({
   partingWords,
   actionSteps = [],
   closureStep = 'done',
+  reflectingDetail = null,
   summaryError = null,
   isRetryingSummary = false,
   onRetrySummary = () => {},
@@ -451,7 +461,11 @@ export function SessionClosure({
       <main className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
         <AnimatePresence mode="wait">
           {!isDone ? (
-            <ClosureProgress key="progress" closureStep={closureStep} />
+            <ClosureProgress
+              key="progress"
+              closureStep={closureStep}
+              reflectingDetail={reflectingDetail}
+            />
           ) : (
             <ClosureFinal
               key="final"

@@ -39,6 +39,16 @@ import type { ClosureStep, Message, SessionState } from '@/types/session';
 
 // When true, the server injects the LLM token — skip client-side key management.
 const LLM_SERVER_MODE = process.env.NEXT_PUBLIC_LLM_SERVER_MODE === 'true';
+const CLOSURE_LLM_TIMEOUT_MS = 120_000;
+const REFLECTING_INTRO_MIN_MS = 1800;
+const REFLECTING_NOTEBOOK_MIN_MS = 2500;
+const REFLECTING_ALMOST_DONE_MIN_MS = 700;
+
+type ReflectingStage = 'intro' | 'notebook' | 'arc' | 'almost-done';
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 // Inner chat component (wrapped by error boundary)
 function ChatPageInner() {
@@ -57,6 +67,11 @@ function ChatPageInner() {
   const [summaryError, setSummaryError] = React.useState<string | null>(null);
   const [isRetryingSummary, setIsRetryingSummary] = React.useState(false);
   const [closureStep, setClosureStep] = React.useState<ClosureStep>('wrapping-up');
+  const [reflectingDetail, setReflectingDetail] = React.useState<string | null>(null);
+  const reflectingStageRef = React.useRef<{ stage: ReflectingStage; startedAt: number }>({
+    stage: 'intro',
+    startedAt: 0,
+  });
   const headerRef = React.useRef<HTMLElement>(null);
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const spacerControlRef = React.useRef<SpacerControl | null>(null);
@@ -311,6 +326,22 @@ function ChatPageInner() {
     setShowEndSessionDialog(true);
   }, []);
 
+  const markReflectingStage = React.useCallback((stage: ReflectingStage, detail: string | null) => {
+    reflectingStageRef.current = { stage, startedAt: Date.now() };
+    setReflectingDetail(detail);
+  }, []);
+
+  const ensureReflectingStageVisible = React.useCallback(
+    async (stage: ReflectingStage, minVisibleMs: number) => {
+      if (reflectingStageRef.current.stage !== stage) return;
+      const elapsed = Date.now() - reflectingStageRef.current.startedAt;
+      if (elapsed < minVisibleMs) {
+        await sleep(minVisibleMs - elapsed);
+      }
+    },
+    [],
+  );
+
   const generateNotebookAndArc = React.useCallback(
     async ({
       userId,
@@ -331,8 +362,13 @@ function ChatPageInner() {
         sessionNumber,
         sessionContext: sessionContextRef.current ?? '',
       });
+      const transcriptText = messagesSnapshot
+        .map((m) => `**${m.role}:** ${m.content}`)
+        .join('\n\n');
 
       // Step 1: Generate the Session Notebook (markdown)
+      await ensureReflectingStageVisible('intro', REFLECTING_INTRO_MIN_MS);
+      markReflectingStage('notebook', 'Writing session notebook');
       const notebookMarkdown = await callLlmWithRetry({
         apiKey: llmKey,
         modelId: DEFAULT_MODEL_ID,
@@ -342,6 +378,7 @@ function ChatPageInner() {
           { role: 'user', content: NOTEBOOK_PROMPT },
         ],
         maxTokens: 4096,
+        timeoutMs: CLOSURE_LLM_TIMEOUT_MS,
       });
 
       const notebook: SessionNotebook = {
@@ -354,14 +391,11 @@ function ChatPageInner() {
       };
       await storageRef.current.saveNotebook(notebook);
 
-      // Step 2: Build raw transcript text for the Arc call
-      const transcriptText = messagesSnapshot
-        .map((m) => `**${m.role}:** ${m.content}`)
-        .join('\n\n');
-
       // Step 3: Generate/update the Arc
       try {
         const existingArc = await storageRef.current.getArc(userId);
+        await ensureReflectingStageVisible('notebook', REFLECTING_NOTEBOOK_MIN_MS);
+        markReflectingStage('arc', existingArc ? 'Updating your Arc' : 'Creating your Arc');
 
         let arcMarkdown: string;
         if (!existingArc) {
@@ -372,6 +406,7 @@ function ChatPageInner() {
             systemPrompt: ARC_CREATION_PROMPT,
             messages: buildArcCreationMessages(transcriptText, notebookMarkdown),
             maxTokens: 4096,
+            timeoutMs: CLOSURE_LLM_TIMEOUT_MS,
           });
         } else {
           // Update the Arc with new understanding
@@ -386,6 +421,7 @@ function ChatPageInner() {
               sessionNumber,
             ),
             maxTokens: 4096,
+            timeoutMs: CLOSURE_LLM_TIMEOUT_MS,
           });
         }
 
@@ -402,9 +438,12 @@ function ChatPageInner() {
         console.error('Failed to generate/update Arc (notebook saved successfully)', arcError);
       }
 
+      markReflectingStage('almost-done', 'Almost done');
+      await ensureReflectingStageVisible('almost-done', REFLECTING_ALMOST_DONE_MIN_MS);
+
       return notebook;
     },
-    [llmKey, sessionContextRef, transcriptRef],
+    [ensureReflectingStageVisible, llmKey, markReflectingStage, sessionContextRef, transcriptRef],
   );
 
   const confirmEndSession = React.useCallback(async () => {
@@ -414,6 +453,7 @@ function ChatPageInner() {
     abortConversation();
     setShowEndSessionDialog(false);
     setClosureStep('wrapping-up');
+    setReflectingDetail(null);
     setSummaryError(null);
     setIsRetryingSummary(false);
     setSessionState('complete');
@@ -467,6 +507,7 @@ function ChatPageInner() {
     // Step 3: Reflecting — notebook + arc generation (the slow step)
     if (userId && sid && llmKey) {
       setClosureStep('reflecting');
+      markReflectingStage('intro', null);
       try {
         const notebook = await generateNotebookAndArc({
           userId,
@@ -486,12 +527,15 @@ function ChatPageInner() {
 
     // Step 4: Done — always reached
     setClosureStep('done');
+    reflectingStageRef.current = { stage: 'intro', startedAt: 0 };
+    setReflectingDetail(null);
   }, [
     abortConversation,
     clearActiveTimer,
     flushPendingMessages,
     generateNotebookAndArc,
     llmKey,
+    markReflectingStage,
     messages,
     stopActiveSegment,
   ]);
@@ -505,6 +549,7 @@ function ChatPageInner() {
     setIsRetryingSummary(true);
     setSummaryError(null);
     setClosureStep('reflecting');
+    markReflectingStage('intro', null);
     try {
       const nowIso = new Date().toISOString();
       const notebook = await generateNotebookAndArc({
@@ -522,8 +567,10 @@ function ChatPageInner() {
     } finally {
       setIsRetryingSummary(false);
       setClosureStep('done');
+      reflectingStageRef.current = { stage: 'intro', startedAt: 0 };
+      setReflectingDetail(null);
     }
-  }, [generateNotebookAndArc, llmKey, messages, userIdRef, sessionIdRef]);
+  }, [generateNotebookAndArc, llmKey, markReflectingStage, messages, userIdRef, sessionIdRef]);
 
   // Loading state
   if (!vaultReady || sessionState === 'loading') {
@@ -552,6 +599,7 @@ function ChatPageInner() {
           sessionNotebook ? extractClosureFields(sessionNotebook.markdown).actionSteps : []
         }
         closureStep={closureStep}
+        reflectingDetail={reflectingDetail}
         summaryError={summaryError}
         isRetryingSummary={isRetryingSummary}
         onRetrySummary={retryNotebookGeneration}

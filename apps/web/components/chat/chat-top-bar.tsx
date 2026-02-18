@@ -22,7 +22,7 @@ export const ChatTopBar = React.forwardRef<HTMLElement, ChatTopBarProps>(functio
     <header
       ref={ref}
       className={cn(
-        'fixed inset-x-0 top-0 flex items-center bg-background/30 backdrop-blur-[2px]',
+        'fixed inset-x-0 top-0 flex items-center bg-background/30 backdrop-blur-[2px] md:bg-background md:backdrop-blur-none',
         compactLandscapeLayout ? 'h-11 px-3' : 'h-14 px-4 pt-1 md:h-16 md:px-6 md:pt-1',
       )}
       style={{ zIndex: Z_INDEX.navigation }}
@@ -37,11 +37,11 @@ export const ChatTopBar = React.forwardRef<HTMLElement, ChatTopBarProps>(functio
       <Sidebar />
 
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="text-center">
+        <div className="text-center pt-2 md:pt-3">
           <p
             className={cn(
               'font-semibold text-foreground leading-tight md:hidden',
-              compactLandscapeLayout ? 'text-xs' : 'text-base',
+              compactLandscapeLayout ? 'text-sm' : 'text-lg',
             )}
           >
             Conversation {sessionNumber}

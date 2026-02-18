@@ -37,6 +37,7 @@ Longer-term features beyond MVP 3.
 
 ### Harness
 
+- [ ] `[M]` **Async Arc update after closure**: Decouple Arc generation from blocking closure UI. End session after notebook save, then enqueue Arc create/update in background (retryable outbox/worker) with a lightweight "reflection still finalizing" state.
 - [ ] `[M]` **Context compaction**: Compress older notebooks and transcripts to fit more history in token budget. Relevant once users accumulate 100+ sessions.
 - [ ] `[M]` **Priority weighting**: Boost commitments, recurring themes, recognition moments in context assembly.
 - [ ] `[M]` **Hallucination guards for memory**: Cite source session when recalling facts; flag uncertain memories.
