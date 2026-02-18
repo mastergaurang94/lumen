@@ -186,7 +186,7 @@ export function ChatBody({
           )}
 
           {/* Message list */}
-          <div className="space-y-0.5">
+          <div className="space-y-0.5" data-testid="message-list">
             {messages.map((message, index) =>
               message.role === 'lumen' ? (
                 <div key={message.id} className="group">

@@ -251,7 +251,7 @@ test.describe('Smoke Test', () => {
       .click();
 
     // Step 13: Verify session closure UI appears
-    await expect(page.getByText(/until next time/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/conversation closed/i)).toBeVisible({ timeout: 15000 });
 
     // Step 14: Summary rendering can be asynchronous; closure UI is the stable signal here.
   });

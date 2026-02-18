@@ -585,7 +585,7 @@ test.describe('Chat Regression', () => {
         if (!sa) return 9999;
 
         // Find the last message group in the message list
-        const groups = sa.querySelectorAll('.space-y-6 > .group');
+        const groups = sa.querySelectorAll('[data-testid="message-list"] > .group');
         const lastGroup = groups[groups.length - 1] as HTMLElement;
         if (!lastGroup) return 9999;
 
@@ -611,13 +611,13 @@ test.describe('Chat Regression', () => {
       await messageInput.fill('Deep thought about purpose');
       await page.keyboard.press('Enter');
 
-      await assertUserMessagePinned(page, 'Deep thought about purpose', 40);
+      await assertUserMessagePinned(page, 'Deep thought about purpose');
 
       // Wait past the old 1000ms grace period on main.
       // Bug #2: on main, a scroll listener exits recovery after 1000ms → snap-back.
       // Fix: recovery exits only via ResizeObserver, no timer.
       await page.waitForTimeout(1200);
-      await assertUserMessagePinned(page, 'Deep thought about purpose', 40);
+      await assertUserMessagePinned(page, 'Deep thought about purpose');
 
       // Wait for delayed response to arrive and commit
       await expect(page.getByText('Lumen delayed')).toBeVisible({ timeout: 5000 });
@@ -792,25 +792,25 @@ test.describe('Chat Regression', () => {
       await expect(page.locator('.lucide-lightbulb')).toBeVisible({ timeout: 5000 });
       await page.waitForTimeout(300);
 
-      // Bug #4: On main, TypingIndicator is a direct child of .space-y-6 via
+      // Bug #4: On main, TypingIndicator is a direct child of the message list via
       // AnimatePresence (which renders no DOM element). When streaming text
-      // appears as a SEPARATE .space-y-6 child, the gap pushes the indicator
+      // appears as a SEPARATE message-list child, the gap pushes the indicator
       // down — the "lightbulb bounce".
       // Fix: Indicator and streaming text share a combined wrapper <div>, so
-      // they occupy a single .space-y-6 slot — no bounce.
-      const indicatorIsDirectSpaceY6Child = await page.evaluate(() => {
+      // they occupy a single message-list slot — no bounce.
+      const indicatorIsDirectListChild = await page.evaluate(() => {
         const lightbulb = document.querySelector('.lucide-lightbulb');
         if (!lightbulb) return null;
-        // Walk up: svg → motion.div → TypingIndicator root div
+        // Walk up: svg → wrapper div → TypingIndicator root div
         const indicatorRoot = lightbulb.parentElement?.parentElement;
         if (!indicatorRoot) return null;
-        return indicatorRoot.parentElement?.classList.contains('space-y-6') ?? false;
+        return indicatorRoot.parentElement?.hasAttribute('data-testid') ?? false;
       });
 
-      expect(indicatorIsDirectSpaceY6Child).not.toBeNull();
+      expect(indicatorIsDirectListChild).not.toBeNull();
       expect(
-        indicatorIsDirectSpaceY6Child,
-        'indicator should be inside a wrapper, not a direct .space-y-6 child',
+        indicatorIsDirectListChild,
+        'indicator should be inside a wrapper, not a direct message-list child',
       ).toBe(false);
 
       // Wait for response to complete before cleanup
@@ -1117,7 +1117,7 @@ test.describe('Chat Regression', () => {
       const overlap = await page.evaluate(() => {
         const footer = document.querySelector('footer') as HTMLElement;
         // Find the last committed message group
-        const groups = document.querySelectorAll('.space-y-6 > .group');
+        const groups = document.querySelectorAll('[data-testid="message-list"] > .group');
         const lastGroup = groups[groups.length - 1] as HTMLElement | null;
         if (!footer || !lastGroup) return null;
 
