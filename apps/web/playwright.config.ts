@@ -25,7 +25,7 @@ export default defineConfig({
   ...(shouldUseWebServer
     ? {
         webServer: {
-          command: 'rm -rf .next/cache && pnpm exec next dev --hostname 127.0.0.1',
+          command: 'pnpm exec next dev --hostname 127.0.0.1',
           url: 'http://127.0.0.1:3000/setup',
           reuseExistingServer: true,
           cwd: __dirname,

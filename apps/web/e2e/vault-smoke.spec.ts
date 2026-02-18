@@ -21,16 +21,6 @@ test.beforeEach(async ({ page }) => {
     (window as unknown as { __E2E_SKIP_LLM_VALIDATION__?: boolean }).__E2E_SKIP_LLM_VALIDATION__ =
       true;
   });
-  // Clear IndexedDB to ensure test isolation
-  await page.goto('/');
-  await page.evaluate(() => {
-    return new Promise<void>((resolve) => {
-      const req = indexedDB.deleteDatabase('lumen-db');
-      req.onsuccess = () => resolve();
-      req.onerror = () => resolve();
-      req.onblocked = () => resolve();
-    });
-  });
 
   // Mock auth session check - return authenticated
   await page.route('**/v1/auth/session', (route) => {
@@ -86,6 +76,18 @@ test.beforeEach(async ({ page }) => {
         stop_reason: 'end_turn',
         usage: { input_tokens: 10, output_tokens: 2 },
       }),
+    });
+  });
+
+  // Clear IndexedDB to ensure test isolation.
+  // Do this after route mocks are registered so initial auth checks stay mocked.
+  await page.goto('/');
+  await page.evaluate(() => {
+    return new Promise<void>((resolve) => {
+      const req = indexedDB.deleteDatabase('lumen-db');
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+      req.onblocked = () => resolve();
     });
   });
 });

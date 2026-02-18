@@ -6,8 +6,45 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      api: ${{ steps.filter.outputs.api }}
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            web:
+              - 'apps/web/**'
+              - 'packages/**'
+              - '.husky/**'
+              - '.gitignore'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'eslint.config.mjs'
+              - '.prettier*'
+              - '.github/workflows/**'
+            api:
+              - 'apps/api/**'
+              - '.github/workflows/**'
+            docs:
+              - 'docs/**'
+              - 'AGENTS.md'
+              - 'CLAUDE.md'
+
   lint:
+    needs: changes
+    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true' || needs.changes.outputs.docs == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,11 +53,25 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install --no-frozen-lockfile
-      - run: pnpm lint
-      - run: pnpm format:check
+      - name: Install dependencies
+        run: |
+          start=$(date +%s)
+          pnpm install --frozen-lockfile
+          echo "- install: $(( $(date +%s) - start ))s" >> "$GITHUB_STEP_SUMMARY"
+      - name: Lint
+        run: |
+          start=$(date +%s)
+          pnpm lint
+          echo "- lint: $(( $(date +%s) - start ))s" >> "$GITHUB_STEP_SUMMARY"
+      - name: Format check
+        run: |
+          start=$(date +%s)
+          pnpm format:check
+          echo "- format-check: $(( $(date +%s) - start ))s" >> "$GITHUB_STEP_SUMMARY"
 
   test:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,14 +80,34 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install --no-frozen-lockfile
+      - name: Install dependencies
+        run: |
+          start=$(date +%s)
+          pnpm install --frozen-lockfile
+          echo "- install: $(( $(date +%s) - start ))s" >> "$GITHUB_STEP_SUMMARY"
       - name: Type check
-        run: pnpm --filter web exec tsc --noEmit
+        run: |
+          start=$(date +%s)
+          pnpm --filter web exec tsc --noEmit
+          echo "- typecheck: $(( $(date +%s) - start ))s" >> "$GITHUB_STEP_SUMMARY"
       - name: Run unit tests
-        run: pnpm --filter web test -- --run
+        run: |
+          start=$(date +%s)
+          pnpm --filter web test -- --run
+          echo "- unit-tests: $(( $(date +%s) - start ))s" >> "$GITHUB_STEP_SUMMARY"
 
   e2e:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: 1/2
+            shard_name: 1-of-2
+          - shard: 2/2
+            shard_name: 2-of-2
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -44,20 +115,37 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install --no-frozen-lockfile
+      - name: Install dependencies
+        run: |
+          start=$(date +%s)
+          pnpm install --frozen-lockfile
+          echo "- install: $(( $(date +%s) - start ))s" >> "$GITHUB_STEP_SUMMARY"
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install Playwright browsers
-        run: pnpm --filter web exec playwright install --with-deps chromium
+        run: |
+          start=$(date +%s)
+          pnpm --filter web exec playwright install --with-deps chromium
+          echo "- playwright-install: $(( $(date +%s) - start ))s" >> "$GITHUB_STEP_SUMMARY"
       - name: Run E2E tests
-        run: pnpm --filter web test:e2e
+        run: |
+          start=$(date +%s)
+          pnpm --filter web exec playwright test --shard=${{ matrix.shard }}
+          echo "- e2e-shard-${{ matrix.shard_name }}: $(( $(date +%s) - start ))s" >> "$GITHUB_STEP_SUMMARY"
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-shard-${{ matrix.shard_name }}
           path: apps/web/playwright-report/
           retention-days: 7
 
   api:
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -72,4 +160,7 @@ jobs:
           working-directory: apps/api
       - name: Go test
         working-directory: apps/api
-        run: go test ./...
+        run: |
+          start=$(date +%s)
+          go test ./...
+          echo "- go-test: $(( $(date +%s) - start ))s" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,5 @@
+apps/web/playwright-report/
+apps/web/test-results/
+output/
+dev-artifacts/
+apps/web/scripts/tmp-*.mjs
