@@ -10,7 +10,7 @@ interface LumenMessageProps {
 }
 
 const proseClasses = cn(
-  'prose prose-lg max-w-none',
+  'prose prose-lg max-w-none break-words [overflow-wrap:anywhere]',
   'prose-p:text-foreground prose-p:leading-relaxed prose-p:my-3',
   'prose-headings:text-foreground prose-headings:font-display',
   'prose-strong:text-foreground prose-strong:font-semibold',
@@ -21,6 +21,10 @@ const proseClasses = cn(
   'prose-pre:bg-muted prose-pre:text-foreground',
   'prose-a:text-accent prose-a:no-underline hover:prose-a:underline',
   'prose-blockquote:border-accent/30 prose-blockquote:text-muted-foreground prose-blockquote:not-italic',
+  '[&_p]:break-words [&_p]:[overflow-wrap:anywhere]',
+  '[&_li]:break-words [&_li]:[overflow-wrap:anywhere]',
+  '[&_code]:break-words [&_code]:[overflow-wrap:anywhere]',
+  '[&_a]:break-words [&_a]:[overflow-wrap:anywhere]',
   '[&>p:first-child]:mt-0 [&>p:last-child]:mb-0',
 );
 

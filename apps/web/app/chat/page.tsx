@@ -64,6 +64,7 @@ function ChatPageInner() {
   const spacerControlRef = React.useRef<SpacerControl | null>(null);
   const previousMessageCountRef = React.useRef(0);
   const [activeSessionId, setActiveSessionId] = React.useState<string | null>(null);
+  const [compactLandscapeLayout, setCompactLandscapeLayout] = React.useState(false);
   const {
     elapsedTime,
     startActiveSegment,
@@ -156,6 +157,16 @@ function ChatPageInner() {
       setSessionState('error');
     },
   });
+
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia(
+      '(max-width: 950px) and (max-height: 500px) and (orientation: landscape)',
+    );
+    const update = () => setCompactLandscapeLayout(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener('change', update);
+    return () => mediaQuery.removeEventListener('change', update);
+  }, []);
 
   React.useEffect(() => {
     if (!vaultReady) return;
@@ -586,12 +597,16 @@ function ChatPageInner() {
       </div>
 
       {/* Wrap up button - top right */}
-      {!showProviderGate && (
+      {!showProviderGate && !showEndSessionDialog && (
         <div className="fixed top-4 right-4" style={{ zIndex: Z_INDEX.navigation }}>
           <Button
             variant="outline"
             onClick={handleEndSession}
-            className="text-base text-foreground"
+            className={
+              compactLandscapeLayout
+                ? 'h-9 px-3 text-sm text-foreground'
+                : 'text-base text-foreground'
+            }
           >
             Wrap up
           </Button>
@@ -603,6 +618,7 @@ function ChatPageInner() {
         sessionDate={sessionDateRef.current}
         elapsedTime={elapsedTime}
         sessionNumber={sessionNumber}
+        compact={compactLandscapeLayout}
       />
 
       {/* Messages area */}
@@ -639,6 +655,7 @@ function ChatPageInner() {
         isStreaming={isTyping || streamingContent !== null}
         disabled={!storageReady || !llmKeyReady || !llmKey}
         scrollAreaRef={scrollAreaRef}
+        compact={compactLandscapeLayout}
       />
 
       {/* End Session Dialog */}

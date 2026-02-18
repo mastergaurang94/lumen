@@ -56,11 +56,13 @@ export function UserMessage({ content, className }: UserMessageProps) {
               id={contentId}
               style={collapsed ? { maxHeight: `${COLLAPSE_THRESHOLD}px` } : undefined}
               className={cn(
-                'px-5 py-3.5 whitespace-pre-wrap break-words',
+                'px-5 py-3.5 whitespace-pre-wrap break-words [overflow-wrap:anywhere]',
                 collapsed && 'overflow-hidden',
               )}
             >
-              <div ref={contentRef}>{content}</div>
+              <div ref={contentRef} className="break-words [overflow-wrap:anywhere]">
+                {content}
+              </div>
             </div>
 
             {/* Thin gradient — fades the last line into the card background */}

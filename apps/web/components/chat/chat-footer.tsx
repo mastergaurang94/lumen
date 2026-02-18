@@ -9,6 +9,7 @@ type ChatFooterProps = {
   isStreaming?: boolean;
   disabled: boolean;
   scrollAreaRef: RefObject<HTMLDivElement | null>;
+  compact?: boolean;
 };
 
 // Input footer with sticky positioning, scroll-to-bottom button, and session hints.
@@ -18,20 +19,32 @@ export function ChatFooter({
   isStreaming,
   disabled,
   scrollAreaRef,
+  compact = false,
 }: ChatFooterProps) {
   return (
     <footer className="sticky bottom-0" style={{ zIndex: Z_INDEX.sticky }}>
-      {/* Gradient fade for smooth transition */}
+      {!compact && (
+        <div
+          className="absolute inset-x-0 -top-16 h-16 pointer-events-none"
+          style={{
+            background: 'linear-gradient(to top, hsl(var(--background)) 0%, transparent 100%)',
+          }}
+        />
+      )}
       <div
-        className="absolute inset-x-0 -top-16 h-16 pointer-events-none"
-        style={{
-          background: 'linear-gradient(to top, hsl(var(--background)) 0%, transparent 100%)',
-        }}
-      />
-      <div className="relative bg-background/80 backdrop-blur-md">
-        <div className="max-w-3xl mx-auto px-6 pt-4 pb-6">
+        className={
+          compact
+            ? 'relative bg-background border-t border-border/40'
+            : 'relative bg-background/80 backdrop-blur-md'
+        }
+      >
+        <div
+          className={
+            compact ? 'max-w-3xl mx-auto px-3 pt-1 pb-2' : 'max-w-3xl mx-auto px-6 pt-4 pb-6'
+          }
+        >
           {/* Scroll-to-bottom — floats above the input when user has scrolled up */}
-          <div className="flex justify-center mb-2">
+          <div className={compact ? 'flex justify-center mb-1' : 'flex justify-center mb-2'}>
             <ScrollToBottom scrollAreaRef={scrollAreaRef} />
           </div>
           <ChatInput
@@ -40,13 +53,16 @@ export function ChatFooter({
             isStreaming={isStreaming}
             disabled={disabled}
             placeholder="Reply..."
+            compact={compact}
           />
-          <p className="mt-3 text-xs text-muted-foreground text-center">
-            <span className="md:hidden">Lumen is AI-powered and can make mistakes</span>
-            <span className="hidden md:inline">
-              Enter to send · Shift+Enter for new line · Lumen is AI-powered and can make mistakes
-            </span>
-          </p>
+          {!compact && (
+            <p className="mt-3 text-xs text-muted-foreground text-center">
+              <span className="md:hidden">Lumen is AI-powered and can make mistakes</span>
+              <span className="hidden md:inline">
+                Enter to send · Shift+Enter for new line · Lumen is AI-powered and can make mistakes
+              </span>
+            </p>
+          )}
         </div>
       </div>
     </footer>

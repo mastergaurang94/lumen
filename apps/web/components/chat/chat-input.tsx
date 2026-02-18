@@ -12,6 +12,7 @@ interface ChatInputProps {
   disabled?: boolean;
   placeholder?: string;
   className?: string;
+  compact?: boolean;
 }
 
 export function ChatInput({
@@ -21,6 +22,7 @@ export function ChatInput({
   disabled = false,
   placeholder = 'Reply...',
   className,
+  compact = false,
 }: ChatInputProps) {
   const [value, setValue] = React.useState('');
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
@@ -31,9 +33,10 @@ export function ChatInput({
     if (!textarea) return;
 
     textarea.style.height = 'auto';
-    const newHeight = Math.min(textarea.scrollHeight, 200);
+    const maxHeight = compact ? 112 : 200;
+    const newHeight = Math.min(textarea.scrollHeight, maxHeight);
     textarea.style.height = `${newHeight}px`;
-  }, []);
+  }, [compact]);
 
   React.useEffect(() => {
     adjustHeight();
@@ -77,7 +80,8 @@ export function ChatInput({
     <div className={cn('relative', className)}>
       <div
         className={cn(
-          'flex items-end gap-2 p-2 rounded-2xl',
+          'flex items-end gap-2 rounded-2xl',
+          compact ? 'p-1.5 rounded-[0.9rem]' : 'p-2',
           'bg-muted/50 dark:bg-muted/30',
           'backdrop-blur-sm',
         )}
@@ -92,11 +96,11 @@ export function ChatInput({
           disabled={disabled}
           rows={1}
           className={cn(
-            'flex-1 min-h-[52px] max-h-[200px] py-3 px-4',
-            'bg-transparent resize-none',
-            'text-lg text-foreground placeholder:text-muted-foreground/70',
+            'flex-1 bg-transparent resize-none text-foreground placeholder:text-muted-foreground/70',
             'disabled:opacity-50 disabled:cursor-not-allowed',
-            'leading-relaxed',
+            compact
+              ? 'min-h-[36px] max-h-[112px] py-2 px-3 text-base leading-snug'
+              : 'min-h-[52px] max-h-[200px] py-3 px-4 text-lg leading-relaxed',
           )}
           aria-label="Message input"
         />
@@ -107,14 +111,14 @@ export function ChatInput({
             onClick={onStop}
             disabled={!onStop}
             className={cn(
-              'shrink-0 h-11 w-11 rounded-xl',
+              'shrink-0 transition-all duration-200',
+              compact ? 'h-9 w-9 rounded-lg' : 'h-11 w-11 rounded-xl',
               'bg-muted-foreground/20 text-foreground hover:bg-muted-foreground/30',
-              'transition-all duration-200',
             )}
             aria-label="Stop response"
             title="Stop response"
           >
-            <Square className="h-4 w-4 fill-current" />
+            <Square className={compact ? 'h-3.5 w-3.5 fill-current' : 'h-4 w-4 fill-current'} />
           </Button>
         ) : (
           <Button
@@ -123,8 +127,8 @@ export function ChatInput({
             onClick={handleSubmit}
             disabled={!canSend}
             className={cn(
-              'shrink-0 h-11 w-11 rounded-xl',
-              'transition-all duration-200',
+              'shrink-0 transition-all duration-200',
+              compact ? 'h-9 w-9 rounded-lg' : 'h-11 w-11 rounded-xl',
               canSend
                 ? 'bg-accent text-accent-foreground hover:bg-accent/90'
                 : 'bg-background text-muted-foreground',
@@ -133,7 +137,7 @@ export function ChatInput({
             aria-keyshortcuts="Enter"
             title="Send message"
           >
-            <Send className="h-5 w-5" />
+            <Send className={compact ? 'h-4 w-4' : 'h-5 w-5'} />
           </Button>
         )}
       </div>
