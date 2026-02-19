@@ -14,7 +14,17 @@ _Empty_
 
 ## Soon
 
-_Empty_
+### Auth
+
+- [ ] `[M]` **Investigate magic link cross-device issue**: Magic links sent via Resend don't work when opened on a different device/browser than the one that initiated the auth flow (link says "expired"). Discovered during Meg's in-person test — email arrived on phone, copied link to desktop, failed. Investigate whether the session token or cookie is device-bound. At minimum, provide clear UX guidance ("open on the same device"). Ideally, magic links should work cross-device. See `docs/feedback/2026-02-18-meg-in-person.md`.
+
+### Session Closure
+
+- [ ] `[M]` **Natural session wrap-up — surface closure at the right moment**: Users don't click the wrap-up button, which means they miss the best part of the experience (parting words, "what opened," the notebook). The closure content is a goldmine, but it's gated behind a manual action that feels like an interruption. Need a way to wrap up that feels natural and not premature. Options: (a) Lumen detects a natural ending in the conversation and suggests closing ("This feels like a good place to pause — want me to wrap up our session?"), (b) a gentle visual nudge surfaces at the bottom of the chat after conversational signals (farewell language, gratitude, energy dropping), (c) time-based hint after 15-20+ minutes of conversation, (d) Lumen's closing message itself triggers the closure flow automatically. The key constraint: it must feel _natural_, not robotic or early. Users should feel like the session concluded, not that it was cut off. See `docs/feedback/2026-02-18-meg-in-person.md`.
+
+### Onboarding
+
+- [ ] `[M]` **Improve onboarding for non-technical users**: Current flow assumes comfort with email auth + passphrase creation. A 55-year-old first-time AI user needed hand-holding through every step. Consider: simpler language, fewer steps before first chat, guided walkthrough, optional passphrase (defer to Keychain/device-level security on desktop), and gentle hints about how to talk to Lumen (e.g., "it's okay to say 'I don't know'"). See `docs/feedback/2026-02-18-meg-in-person.md`.
 
 ---
 
