@@ -149,7 +149,6 @@ function ClosureFinal({
   isRetryingSummary,
   onRetrySummary,
   suggestedNextSession,
-  canShare,
   onShare,
   shareStatus,
   shareMethod,
@@ -163,7 +162,6 @@ function ClosureFinal({
   isRetryingSummary: boolean;
   onRetrySummary: () => void;
   suggestedNextSession: Date;
-  canShare: boolean;
   onShare: () => void;
   shareStatus: 'idle' | 'success' | 'error';
   shareMethod: 'share' | 'copy' | null;
@@ -324,13 +322,8 @@ function ClosureFinal({
         className="pt-4 space-y-3"
       >
         <div className="space-y-2">
-          <Button
-            variant="default"
-            className="w-full h-12 text-base"
-            onClick={onShare}
-            disabled={!canShare}
-          >
-            Share reflection
+          <Button variant="default" className="w-full h-12 text-base" onClick={onShare}>
+            Share Lumen
           </Button>
           {shareStatus === 'success' && (
             <p className="text-xs text-muted-foreground">
@@ -384,46 +377,24 @@ export function SessionClosure({
     return date;
   }, [sessionDate]);
 
-  const canShare = Boolean(partingWords || actionSteps.length > 0);
-
   const buildShareText = React.useCallback(() => {
-    const lines: string[] = [];
-    if (partingWords) {
-      lines.push(`"${partingWords}"`);
-      lines.push('');
-    }
-    if (actionSteps.length > 0) {
-      lines.push('What came up:');
-      for (const step of actionSteps.slice(0, 5)) {
-        lines.push(`- ${step}`);
-      }
-      lines.push('');
-    }
-    lines.push('Shared from Lumen');
-    if (typeof window !== 'undefined') {
-      lines.push(window.location.origin);
-    }
-    return lines.join('\n');
-  }, [actionSteps, partingWords]);
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mylumen.ai';
+    return `Lumen — a companion for remembering who you truly are.\n${origin}`;
+  }, []);
 
   const handleShare = React.useCallback(async () => {
-    if (!canShare) return;
-
     setShareStatus('idle');
     setShareMethod(null);
     const shareText = buildShareText();
-    trackEvent('share_reflection_clicked', {
-      has_parting_words: Boolean(partingWords),
-      action_steps_count: actionSteps.length,
-    });
+    trackEvent('share_lumen_clicked');
 
     try {
       if (navigator.share) {
         await navigator.share({
-          title: 'Lumen reflection',
+          title: 'Lumen',
           text: shareText,
         });
-        trackEvent('share_reflection_completed', { method: 'web_share' });
+        trackEvent('share_lumen_completed', { method: 'web_share' });
         setShareStatus('success');
         setShareMethod('share');
         return;
@@ -431,7 +402,7 @@ export function SessionClosure({
 
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareText);
-        trackEvent('share_reflection_completed', { method: 'copy' });
+        trackEvent('share_lumen_completed', { method: 'copy' });
         setShareStatus('success');
         setShareMethod('copy');
         return;
@@ -444,7 +415,7 @@ export function SessionClosure({
         errorName === 'AbortError' ||
         (error instanceof Error && error.message.toLowerCase().includes('abort'));
       if (isCancelled) {
-        trackEvent('share_reflection_cancelled', { method: 'web_share' });
+        trackEvent('share_lumen_cancelled', { method: 'web_share' });
         setShareStatus('idle');
         setShareMethod(null);
         return;
@@ -452,7 +423,7 @@ export function SessionClosure({
       console.error('Share failed', error);
       setShareStatus('error');
     }
-  }, [actionSteps.length, buildShareText, canShare, partingWords]);
+  }, [buildShareText]);
 
   const isDone = closureStep === 'done';
 
@@ -476,7 +447,6 @@ export function SessionClosure({
               isRetryingSummary={isRetryingSummary}
               onRetrySummary={onRetrySummary}
               suggestedNextSession={suggestedNextSession}
-              canShare={canShare}
               onShare={handleShare}
               shareStatus={shareStatus}
               shareMethod={shareMethod}
