@@ -137,16 +137,26 @@ export async function buildSessionContext({
 
   const currentDate = formatLocalDate(now);
 
+  // Check for seed context: Arc exists but this is the first conversation.
+  const arc = await storage.getArc(userId);
+  const hasSeedContext = arc !== null && sessionNumber === 1;
+
   // YAML front matter — lightweight metadata for the system prompt.
-  const frontMatter = [
+  const frontMatterLines = [
     '---',
     'session_context:',
     `  session_number: ${sessionNumber}`,
     `  current_date: "${currentDate}"`,
     `  days_since_last_session: ${daysSinceLastSession === null ? 'null' : daysSinceLastSession}`,
-    '---',
-    '',
-  ].join('\n');
+  ];
+  if (hasSeedContext) {
+    frontMatterLines.push('  seed_context: true');
+    frontMatterLines.push(
+      '  seed_context_note: "This person shared context about themselves before your first meeting. You have some understanding of who they are, but this is your first direct conversation. Greet them warmly, acknowledge that you already know a bit about them, and let the conversation unfold naturally."',
+    );
+  }
+  frontMatterLines.push('---', '');
+  const frontMatter = frontMatterLines.join('\n');
 
   const parts: string[] = [];
   let charCount = 0;
@@ -155,7 +165,6 @@ export async function buildSessionContext({
   charCount += frontMatter.length;
 
   // 1. The Arc — mentor's living understanding. Always loaded if it exists.
-  const arc = await storage.getArc(userId);
   if (arc) {
     const arcSection = `## Your Understanding of This Person\n\n${arc.arc_markdown}`;
     if (withinBudget(maxChars, charCount, arcSection)) {

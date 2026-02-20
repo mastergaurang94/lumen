@@ -7,12 +7,14 @@ import { motion } from 'framer-motion';
 import { Clock, Sun, Sparkles, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthPageLayout } from '@/components/auth-page-layout';
+import { SeedArcImport } from '@/components/seed-arc-import';
 import { withDevAuth } from '@/lib/hooks/dev-auth';
 import { formatDaysAgo, getTimeGreeting } from '@/lib/format';
-import { isUnlocked } from '@/lib/crypto/key-context';
+import { getKey, isUnlocked } from '@/lib/crypto/key-context';
 import { useAuthSessionGuard } from '@/lib/hooks/use-auth-session-guard';
 import { createStorageService } from '@/lib/storage/dexie-storage';
 import { getLastSession, getDaysSinceLastSession } from '@/lib/storage/queries';
+import type { StorageService } from '@/lib/storage';
 import type { SessionSpacing } from '@/types/session';
 
 const SESSION_SPACING_DAYS = 7;
@@ -44,6 +46,12 @@ export default function SessionPage() {
       if (!isUnlocked()) {
         router.replace(withDevAuth('/unlock'));
         return;
+      }
+
+      // Hydrate storage with vault context so encrypted writes (e.g. seed arc) work.
+      const key = getKey();
+      if (key) {
+        storage.setVaultContext({ key, metadata });
       }
       setVaultReady(true);
 
@@ -106,13 +114,28 @@ export default function SessionPage() {
       }
     >
       <div className="relative z-10 w-full max-w-md">
-        <SessionContent spacing={spacing} chatHref={withDevAuth('/chat')} />
+        <SessionContent
+          spacing={spacing}
+          chatHref={withDevAuth('/chat')}
+          userId={session?.user_id ?? ''}
+          storage={storageRef.current}
+        />
       </div>
     </AuthPageLayout>
   );
 }
 
-function SessionContent({ spacing, chatHref }: { spacing: SessionSpacing; chatHref: string }) {
+function SessionContent({
+  spacing,
+  chatHref,
+  userId,
+  storage,
+}: {
+  spacing: SessionSpacing;
+  chatHref: string;
+  userId: string;
+  storage: StorageService;
+}) {
   const router = useRouter();
   const [greeting, setGreeting] = React.useState('');
 
@@ -194,6 +217,9 @@ function SessionContent({ spacing, chatHref }: { spacing: SessionSpacing; chatHr
           </div>
         </div>
       )}
+
+      {/* Seed Arc import — only for brand-new users before session 1 */}
+      {isFirstSession && !hasActiveSession && <SeedArcImport userId={userId} storage={storage} />}
 
       {/* Pre-session prompt card - only show for new sessions when ready */}
       {!hasActiveSession && state === 'ready' && !isFirstSession && (

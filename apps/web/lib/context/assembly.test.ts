@@ -186,6 +186,69 @@ describe('buildSessionContext', () => {
     expect(context).toContain('A searching soul.');
   });
 
+  it('adds seed_context hint when arc exists on session 1', async () => {
+    const storage = createStorageService();
+    const { key } = await setupVault(storage, 'passphrase');
+
+    // Save a seed arc with last_session_number: 0 (no completed sessions)
+    await storage.saveArc({
+      user_id: 'user-seed',
+      arc_markdown: 'A deep thinker who values relationships.',
+      last_session_number: 0,
+      version: 0,
+      created_at: '2026-01-05T09:00:00.000Z',
+      updated_at: '2026-01-05T09:00:00.000Z',
+    });
+
+    const context = await buildSessionContext({
+      storage,
+      userId: 'user-seed',
+      key,
+      now: new Date('2026-01-05T10:00:00.000Z'),
+      options: { maxTokens: 2000 },
+    });
+
+    expect(context).toContain('session_number: 1');
+    expect(context).toContain('seed_context: true');
+    expect(context).toContain('seed_context_note:');
+    expect(context).toContain('first direct conversation');
+    expect(context).toContain('A deep thinker who values relationships.');
+  });
+
+  it('does not add seed_context hint for returning users', async () => {
+    const storage = createStorageService();
+    const { key } = await setupVault(storage, 'passphrase');
+
+    await saveTranscriptWithMessages(storage, {
+      sessionId: 'session-1',
+      userId: 'user-return',
+      startedAt: '2026-01-05T10:00:00.000Z',
+      endedAt: '2026-01-05T11:00:00.000Z',
+      messages: [{ id: 'm1', role: 'user', content: 'Hello', timestamp: new Date() }],
+      key,
+    });
+
+    await storage.saveArc({
+      user_id: 'user-return',
+      arc_markdown: 'A returning user.',
+      last_session_number: 1,
+      version: 1,
+      created_at: '2026-01-05T11:05:00.000Z',
+      updated_at: '2026-01-05T11:05:00.000Z',
+    });
+
+    const context = await buildSessionContext({
+      storage,
+      userId: 'user-return',
+      key,
+      now: new Date('2026-01-10T00:00:00.000Z'),
+      options: { maxTokens: 2000 },
+    });
+
+    expect(context).toContain('session_number: 2');
+    expect(context).not.toContain('seed_context');
+  });
+
   it('respects budget limits for transcripts', async () => {
     const storage = createStorageService();
     const { key } = await setupVault(storage, 'passphrase');
