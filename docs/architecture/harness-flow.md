@@ -25,6 +25,7 @@ Assembly priority (loaded in this order, each within budget):
 
 ```
 1. YAML front matter              session_number, current_date, days_since_last_session
+                                  + seed_context hint (when Arc exists but session_number=1)
 2. The Arc                        ~3.5K tokens [always, if exists]
 3. All session notebooks          ~1.3K each   [always, newest first]
 4. Last 2-3 raw transcripts       ~12K each    [always if budget allows]

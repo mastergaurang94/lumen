@@ -46,36 +46,6 @@ The signal: users trust Lumen enough to make it a habit, bring it to a new devic
 
 **Goal**: New users don't start from zero. Context import seeds Lumen's understanding.
 
-### 1.1 "Bring context" import — web `[M]` ✅
-
-**Problem**: Every new Lumen user starts as a stranger. Users who've been talking to other AIs for months already have a rich self-model — they shouldn't have to rebuild it from scratch.
-
-**Design target**: Target #1 — _"It already knew me."_
-
-**Default**: Start fresh. No import needed. Lumen works great from session 1.
-
-**Shipped** (session page, first-time users only):
-
-- Collapsible card: "Already talked to another AI? Bring that context here"
-- Text area for pasting bio, notes, or AI-generated summary
-- Collapsible helper: copyable prompt users can run in Claude/ChatGPT to generate a self-summary
-- Auto-saves on unmount (user can click "Let's go" without explicit save)
-- Success state: "Saved — Lumen will know you from day one"
-- Context assembly adds `seed_context: true` + greeting hint to YAML front matter when Arc exists but session number is 1
-
-**Key design decision**: Reuses `UserArc` with `last_session_number: 0` instead of a new `SeedArc` type. No schema migration, no new Dexie table, no new types. Session 1 closure naturally uses the Arc UPDATE prompt (preserves seed + enriches with conversation).
-
-**Code refs**:
-
-- New: `apps/web/components/seed-arc-import.tsx`
-- Modified: `apps/web/app/session/page.tsx` (thread userId + storage, vault context hydration, render import card)
-- Modified: `apps/web/lib/context/assembly.ts` (seed_context hint in front matter)
-- Tests: 2 new cases in `apps/web/lib/context/assembly.test.ts`
-
-**Note**: Soul Vault file upload deferred — paste-only for now. Desktop gets direct filesystem access (see 4.1).
-
----
-
 ### 1.2 Lumen → Soul Vault export — web (download) `[S]`
 
 **Problem**: Lumen's session insights should flow back to the user's Soul Vault, enriching their unified self-knowledge.
@@ -238,7 +208,7 @@ The notebook prompt instructs Lumen to write as a mentor's private journal (thir
 CREATE TABLE transcripts (id TEXT PRIMARY KEY, session_id TEXT, data BLOB, created_at TEXT);
 CREATE TABLE session_notebooks (id TEXT PRIMARY KEY, session_id TEXT, data BLOB, created_at TEXT);
 CREATE TABLE user_arcs (id TEXT PRIMARY KEY, data BLOB, updated_at TEXT);
-CREATE TABLE seed_arcs (id TEXT PRIMARY KEY, source TEXT, data BLOB, imported_at TEXT);
+-- Note: seed arcs are stored as regular user_arcs with last_session_number=0 (no separate table needed)
 CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 ```
 

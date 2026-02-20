@@ -6,6 +6,11 @@ Completed backlog items done directly (not promoted to a full phase). Items that
 
 ## 2026-02
 
+### UX
+
+- **Voice dictation tip in chat footer** — Dismissible one-time tip encouraging voice dictation on desktop ("Try speaking — tap the mic on your keyboard"). Persisted to localStorage so it only shows once. Only renders on non-compact (desktop) viewports.
+  - _Files: `apps/web/components/chat/voice-dictation-tip.tsx` (new), `apps/web/components/chat/chat-footer.tsx`_
+
 ### Harness
 
 - **System prompt v1.1 — Simon the ragpicker infusion** — Deepened v1 prompt with explicit Simon Potter philosophy from "The Greatest Miracle in the World." Key changes: Added "You are Lumen" identity, Simon inspiration paragraph in Soul section, "greatest miracle in the world" framing, "help them remember (not learn)" presence, explicit anti-probing guidance ("don't ask what's that about"), no-disclaimers rule. Kept Simon reference to single mention at top to avoid repetition.
