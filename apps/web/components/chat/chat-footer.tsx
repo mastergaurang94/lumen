@@ -1,6 +1,7 @@
 import type { RefObject } from 'react';
 import { ChatInput } from '@/components/chat/chat-input';
 import { ScrollToBottom } from '@/components/chat/scroll-to-bottom';
+import { VoiceDictationTip } from '@/components/chat/voice-dictation-tip';
 import { Z_INDEX } from '@/lib/z-index';
 
 type ChatFooterProps = {
@@ -59,6 +60,7 @@ export function ChatFooter({
               : 'max-w-3xl mx-auto px-4 pt-1.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:px-6 md:pt-4 md:pb-6'
           }
         >
+          {!compact && <VoiceDictationTip />}
           <ChatInput
             onSend={onSend}
             onStop={onStop}
