@@ -25,6 +25,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prettier": "^3.3.3",
+    "sweetlink": "^0.2.0",
     "typescript": "^5.6.2",
     "typescript-eslint": "^8.0.0"
   }

@@ -1,0 +1,14 @@
+{
+  "appUrl": "http://localhost:3000",
+  "daemonUrl": "https://localhost:4455",
+  "smokeRoutes": {
+    "public": ["/", "/login"],
+    "auth": ["/login", "/setup", "/unlock"],
+    "core": ["/chat", "/session"],
+    "history": ["/history"],
+    "all": ["/", "/login", "/setup", "/unlock", "/chat", "/session", "/history"]
+  },
+  "healthChecks": {
+    "paths": ["/"]
+  }
+}

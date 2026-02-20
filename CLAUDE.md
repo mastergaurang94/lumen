@@ -93,6 +93,53 @@ Commits are blocked if any check fails. Keep `.husky/pre-commit` and `.github/wo
 Keep `.claude/napkin.md` updated with high-signal preferences, pitfalls, conventions, and
 decisions as they emerge. This is the persistent scratchpad across sessions.
 
+## Browser Verification (SweetLink)
+
+SweetLink connects agents to a real browser session for visual verification and debugging.
+It works in Gaurang's actual browser tab (with encryption keys already unlocked), so you can
+verify post-unlock UI that headless browsers can't reach.
+
+**Daemon must be running first** — if commands fail with connection errors, ask Gaurang to start it:
+
+```bash
+pnpm sweetlink daemon
+```
+
+**Common commands:**
+
+```bash
+# Open a page in the controlled browser
+pnpm sweetlink open --controlled --path /chat
+
+# Smoke test route groups (see sweetlink.json for route definitions)
+pnpm sweetlink smoke --routes public    # landing + login (no auth needed)
+pnpm sweetlink smoke --routes core      # chat + session (requires unlocked vault)
+pnpm sweetlink smoke --routes all       # everything
+
+# Screenshot a specific page
+pnpm sweetlink screenshot --path /chat
+
+# Check for console errors in active sessions
+pnpm sweetlink sessions
+
+# Target a different dev server port (for multi-agent work)
+pnpm sweetlink open --url http://localhost:3001/chat
+```
+
+**When to use:**
+
+- After UI changes — run `pnpm sweetlink smoke --routes core` to catch regressions
+- Debugging rendering issues — screenshot the page and inspect console errors
+- Verifying encrypted data renders correctly post-unlock
+
+**Route groups** (defined in `sweetlink.json`):
+
+- `public` — `/`, `/login` (no auth needed)
+- `auth` — `/login`, `/setup`, `/unlock` (auth flow pages)
+- `core` — `/chat`, `/session` (main app, requires unlocked vault)
+- `history` — `/history` (session history)
+- `all` — every route
+
 ## Key Documentation
 
 ALWAYS read ALL docs to get started with a thread.
