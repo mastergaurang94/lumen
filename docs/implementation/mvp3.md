@@ -1,7 +1,7 @@
 # MVP 3 Implementation
 
-Last Updated: 2026-02-18
-Status: Ready for execution
+Last Updated: 2026-02-20
+Status: In progress
 
 > **Session protocol**: At the end of each working session, append a dated entry to
 > "Running Updates" summarizing what was completed, what's in progress, and any decisions
@@ -11,6 +11,8 @@ Status: Ready for execution
 
 ## Running Updates
 
+- 2026-02-20: Completed 1.1 (seed arc import). Simpler approach than planned: reuses `UserArc` with `last_session_number: 0` instead of new `SeedArc` type — no schema migration, no new Dexie table. Collapsible card on session page for first-time users with copyable helper prompt. Auto-saves on unmount if user clicks "Let's go" without explicit save. Added `seed_context` hint to context assembly YAML front matter so Lumen greets warmly and acknowledges prior context. Also shipped voice dictation tip in chat footer.
+- 2026-02-20: Completed 2.3 (legacy sessionSummaries removal). Dropped Dexie table via v3 schema, removed types/methods/component/tests (~470 lines). Updated E2E mocks from legacy JSON to notebook markdown format. Also changed share button from "Share reflection" to "Share Lumen" (app link instead of private content).
 - 2026-02-18: Added system prompt leakage protection to 2.1 observations. Moved design polish from 3.6 → 2.4 (must land before Mac app). Added Open Questions section (free-to-paid transition).
 - 2026-02-18: Restructured tiers. Split old Tier 1 into Tier 1 (context import) + Tier 2 (prompt quality + tooling + design). Removed iOS (deferred to Later). Replaced biometric unlock with Keychain-only unlock. Now 5 tiers, 18 items.
 - 2026-02-18: Finalized for execution. Added: evaluation harness + prompt versioning, legacy schema cleanup, passphrase recovery, design + atmospheric polish. Reconciled with backlog — all MVP 3 items removed from `backlog.md`.
@@ -44,7 +46,7 @@ The signal: users trust Lumen enough to make it a habit, bring it to a new devic
 
 **Goal**: New users don't start from zero. Context import seeds Lumen's understanding.
 
-### 1.1 "Bring context" import — web `[M]`
+### 1.1 "Bring context" import — web `[M]` ✅
 
 **Problem**: Every new Lumen user starts as a stranger. Users who've been talking to other AIs for months already have a rich self-model — they shouldn't have to rebuild it from scratch.
 
@@ -52,21 +54,25 @@ The signal: users trust Lumen enough to make it a habit, bring it to a new devic
 
 **Default**: Start fresh. No import needed. Lumen works great from session 1.
 
-**Optional import** (settings or setup flow):
+**Shipped** (session page, first-time users only):
 
-- Text box: "Paste anything about yourself — a bio, notes, or output from another AI."
-- Collapsible helper: copyable prompt the user can run in Claude/ChatGPT/any AI to generate a summary of who they are
-- Soul Vault users: file upload option for `soul query --profile lumen` output
-- Result stored as a `SeedArc` — used to prime the first session, then absorbed into the living Arc
+- Collapsible card: "Already talked to another AI? Bring that context here"
+- Text area for pasting bio, notes, or AI-generated summary
+- Collapsible helper: copyable prompt users can run in Claude/ChatGPT to generate a self-summary
+- Auto-saves on unmount (user can click "Let's go" without explicit save)
+- Success state: "Saved — Lumen will know you from day one"
+- Context assembly adds `seed_context: true` + greeting hint to YAML front matter when Arc exists but session number is 1
+
+**Key design decision**: Reuses `UserArc` with `last_session_number: 0` instead of a new `SeedArc` type. No schema migration, no new Dexie table, no new types. Session 1 closure naturally uses the Arc UPDATE prompt (preserves seed + enriches with conversation).
 
 **Code refs**:
 
-- New: settings UI for import, `SeedArc` type in `types/storage.ts`
-- Modified: `assembly.ts` (include seed Arc in context), Dexie schema (or SQLite if migration lands first)
+- New: `apps/web/components/seed-arc-import.tsx`
+- Modified: `apps/web/app/session/page.tsx` (thread userId + storage, vault context hydration, render import card)
+- Modified: `apps/web/lib/context/assembly.ts` (seed_context hint in front matter)
+- Tests: 2 new cases in `apps/web/lib/context/assembly.test.ts`
 
-**Integration doc**: `docs/architecture/soul-vault-integration.md`
-
-**Note**: This is the web-only version. Desktop gets direct filesystem access for Soul Vault (see 4.1).
+**Note**: Soul Vault file upload deferred — paste-only for now. Desktop gets direct filesystem access (see 4.1).
 
 ---
 
@@ -189,22 +195,7 @@ The notebook prompt instructs Lumen to write as a mentor's private journal (thir
 
 ---
 
-### 2.3 Remove legacy sessionSummaries schema `[S]`
-
-**Problem**: The Dexie v1 `sessionSummaries` table and related code (`parseSummaryResponse`, `SessionSummary` type, `getSummary`/`saveSummary`/`listSummaries`) are dead weight since the notebook/arc system replaced them. Should be cleaned up before the SQLite migration (3.1) to avoid migrating dead schema.
-
-**Approach**:
-
-- Drop `sessionSummaries` table from Dexie schema
-- Remove `SessionSummary` type, parsing, and storage methods
-- Verify no users have legacy-only data (or provide a one-time notebook backfill from raw transcripts)
-- Keep history UI backward-compatible (already prefers notebooks over summaries)
-
-**Depends on**: No active users with legacy-only data. If testers upgraded during MVP 2, their data is already in notebook format.
-
----
-
-### 2.4 Design + atmospheric polish `[M]`
+### 2.3 Design + atmospheric polish `[M]`
 
 **Problem**: The current design is functional but not yet distinctive. For a product people would pay for, the visual experience needs to feel intentional and immersive — closer to OmmWriter's atmospheric quality than a standard chat interface. This must land before the native Mac app (3.3) — first impressions of a desktop app form in seconds.
 
