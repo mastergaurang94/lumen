@@ -65,43 +65,45 @@ function llmHandler(state: MockState) {
       return;
     }
 
-    // Non-streaming — summary, validation, or default
-    const isSummary = postData?.messages?.some(
+    // Non-streaming — notebook, arc, validation, or default
+    const isNotebook = postData?.messages?.some((m) =>
+      m.content?.includes('You are a mentor writing in your private notebook'),
+    );
+    const isArc = postData?.messages?.some(
       (m) =>
-        m.content?.includes('Output JSON only') ||
-        m.content?.includes('Generate a session summary'),
+        m.content?.includes('YOUR CURRENT UNDERSTANDING (THE ARC)') ||
+        m.content?.includes('YOUR NOTEBOOK (Session #'),
     );
     const isValidation = postData?.messages?.some((m) => m.content?.includes('Reply with OK'));
 
-    const body = isSummary
-      ? {
-          id: 'msg_s',
-          type: 'message',
-          role: 'assistant',
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify({
-                summary_text: 'Test summary',
-                parting_words: 'Take care',
-                action_steps: ['Reflect'],
-                open_threads: [],
-              }),
-            },
-          ],
-          model: 'claude-sonnet-4-20250514',
-          stop_reason: 'end_turn',
-          usage: { input_tokens: 100, output_tokens: 50 },
-        }
-      : {
-          id: isValidation ? 'msg_v' : 'msg_d',
-          type: 'message',
-          role: 'assistant',
-          content: [{ type: 'text', text: 'OK' }],
-          model: 'claude-sonnet-4-20250514',
-          stop_reason: 'end_turn',
-          usage: { input_tokens: 10, output_tokens: 2 },
-        };
+    let text = 'OK';
+    let id = 'msg_d';
+    if (isNotebook) {
+      id = 'msg_nb';
+      text = [
+        '## What Happened\nA brief, meaningful exchange.',
+        '## Their Words\n> "I want to reflect."\nShows openness.',
+        '## What Opened\n- Reflect on what matters',
+        '## What Moved\nFirst conversation.',
+        "## Mentor's Notebook\nGenuine curiosity present.",
+        '## Parting Words\nTake care of yourself — you already know more than you think.',
+      ].join('\n\n');
+    } else if (isArc) {
+      id = 'msg_arc';
+      text = '# The Arc\n\nA thoughtful person beginning their journey of self-discovery.';
+    } else if (isValidation) {
+      id = 'msg_v';
+    }
+
+    const body = {
+      id,
+      type: 'message',
+      role: 'assistant',
+      content: [{ type: 'text', text }],
+      model: 'claude-sonnet-4-20250514',
+      stop_reason: 'end_turn',
+      usage: { input_tokens: 100, output_tokens: 50 },
+    };
 
     await route.fulfill({
       status: 200,

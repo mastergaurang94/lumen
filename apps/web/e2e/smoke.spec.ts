@@ -44,20 +44,22 @@ const mockLlmResponse = {
   },
 };
 
-// Mock session summary response
-const mockSummaryResponse = {
-  id: 'msg_mock_summary',
+// Mock notebook response (markdown format matching NOTEBOOK_PROMPT sections)
+const mockNotebookResponse = {
+  id: 'msg_mock_notebook',
   type: 'message',
   role: 'assistant',
   content: [
     {
       type: 'text',
-      text: JSON.stringify({
-        summary_text: 'This was a brief test session exploring initial thoughts.',
-        parting_words: 'Taking time for self-reflection is valuable.',
-        action_steps: ['Continue practicing mindfulness'],
-        open_threads: [],
-      }),
+      text: [
+        '## What Happened\nA brief but meaningful first session. They came in curious and left with a sense of possibility.',
+        '## Their Words\n> "I want to practice mindfulness."\nA clear intention — not vague, not performative.',
+        '## What Opened\n- Continue practicing mindfulness',
+        '## What Moved\nFirst conversation.',
+        "## Mentor's Notebook\nGenuine openness. No defensiveness. Worth watching how this develops.",
+        '## Parting Words\nTaking time for self-reflection is valuable — and you already started by showing up today.',
+      ].join('\n\n'),
     },
   ],
   model: 'claude-sonnet-4-20250514',
@@ -65,6 +67,25 @@ const mockSummaryResponse = {
   usage: {
     input_tokens: 300,
     output_tokens: 100,
+  },
+};
+
+// Mock arc response
+const mockArcResponse = {
+  id: 'msg_mock_arc',
+  type: 'message',
+  role: 'assistant',
+  content: [
+    {
+      type: 'text',
+      text: '# The Arc\n\nA thoughtful person at the beginning of a mindfulness practice. Showed genuine curiosity and willingness to reflect.',
+    },
+  ],
+  model: 'claude-sonnet-4-20250514',
+  stop_reason: 'end_turn',
+  usage: {
+    input_tokens: 400,
+    output_tokens: 50,
   },
 };
 
@@ -148,11 +169,16 @@ test.describe('Smoke Test', () => {
         return;
       }
 
-      // Check if this is a summary request (contains JSON output instruction)
-      const isSummaryRequest = postData?.messages?.some(
+      // Check if this is a notebook request (contains notebook prompt)
+      const isNotebookRequest = postData?.messages?.some((msg: { content?: string }) =>
+        msg.content?.includes('You are a mentor writing in your private notebook'),
+      );
+
+      // Check if this is an arc request (contains arc context markers)
+      const isArcRequest = postData?.messages?.some(
         (msg: { content?: string }) =>
-          msg.content?.includes('Output JSON only') ||
-          msg.content?.includes('Generate a session summary'),
+          msg.content?.includes('YOUR CURRENT UNDERSTANDING (THE ARC)') ||
+          msg.content?.includes('YOUR NOTEBOOK (Session #'),
       );
 
       // Check if this is a token validation request (contains "Reply with OK")
@@ -161,8 +187,10 @@ test.describe('Smoke Test', () => {
       );
 
       let response;
-      if (isSummaryRequest) {
-        response = mockSummaryResponse;
+      if (isNotebookRequest) {
+        response = mockNotebookResponse;
+      } else if (isArcRequest) {
+        response = mockArcResponse;
       } else if (isValidationRequest) {
         // Simple OK response for validation
         response = {
