@@ -4,7 +4,6 @@ import * as React from 'react';
 import Link from 'next/link';
 import { LumenMessage } from '@/components/chat/lumen-message';
 import { UserMessage } from '@/components/chat/user-message';
-import { SessionSummary } from '@/components/history/session-summary';
 import { useTranscriptLoader } from '@/lib/hooks/use-transcript-loader';
 import { extractClosureFields } from '@/lib/session/summary';
 
@@ -14,25 +13,14 @@ type TranscriptViewerProps = {
 
 // Read-only transcript display using the same message components as the chat.
 export function TranscriptViewer({ sessionId }: TranscriptViewerProps) {
-  const { messages, summary, notebook, isLoading, error } = useTranscriptLoader(sessionId);
+  const { messages, notebook, isLoading, error } = useTranscriptLoader(sessionId);
 
-  // Prefer notebook (new format) over summary (legacy) for display.
-  const displaySummary = React.useMemo(() => {
-    if (notebook) {
-      const { partingWords, actionSteps } = extractClosureFields(notebook.markdown);
-      return {
-        parting_words: partingWords,
-        action_steps: actionSteps,
-      };
-    }
-    if (summary) {
-      return {
-        parting_words: summary.parting_words,
-        action_steps: summary.action_steps,
-      };
-    }
-    return null;
-  }, [notebook, summary]);
+  const closureFields = React.useMemo(() => {
+    if (!notebook) return null;
+    const { partingWords, actionSteps } = extractClosureFields(notebook.markdown);
+    if (!partingWords && actionSteps.length === 0) return null;
+    return { partingWords, actionSteps };
+  }, [notebook]);
 
   if (isLoading) {
     return (
@@ -70,22 +58,40 @@ export function TranscriptViewer({ sessionId }: TranscriptViewerProps) {
 
   return (
     <div className="px-6 py-8 max-w-2xl mx-auto">
-      {/* Session summary at top (from notebook or legacy summary) */}
-      {displaySummary && (
+      {/* Closure fields from notebook */}
+      {closureFields && (
         <>
-          <SessionSummary
-            summary={{
-              session_id: sessionId,
-              user_id: '',
-              summary_text: '',
-              parting_words: displaySummary.parting_words,
-              action_steps: displaySummary.action_steps,
-              open_threads: [],
-              notes: null,
-              created_at: '',
-              updated_at: '',
-            }}
-          />
+          <div className="space-y-6">
+            {closureFields.partingWords && (
+              <div className="relative py-4">
+                <div className="absolute left-1/2 -translate-x-1/2 top-0 w-16 h-px bg-border" />
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-16 h-px bg-border" />
+                <blockquote className="py-4 px-4 text-center">
+                  <p className="font-display text-xl leading-relaxed text-foreground italic">
+                    &ldquo;{closureFields.partingWords}&rdquo;
+                  </p>
+                </blockquote>
+              </div>
+            )}
+
+            {closureFields.actionSteps.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                  What came up
+                </h3>
+                <ul className="space-y-2">
+                  {closureFields.actionSteps.map((step, index) => (
+                    <li key={index} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center text-xs text-accent font-medium">
+                        {index + 1}
+                      </span>
+                      <span className="text-sm text-foreground leading-relaxed">{step}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
           <div className="my-8 flex justify-center">
             <div className="w-16 h-px bg-border" />
           </div>

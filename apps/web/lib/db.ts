@@ -3,7 +3,6 @@ import type {
   EncryptedUserProfile,
   SessionTranscript,
   SessionTranscriptChunk,
-  EncryptedSessionSummary,
   EncryptedSessionNotebook,
   EncryptedUserArc,
   EncryptedLlmProviderKey,
@@ -19,7 +18,6 @@ export class LumenDB extends Dexie {
   userProfiles!: Table<EncryptedUserProfile, string>;
   sessionTranscripts!: Table<SessionTranscript, string>;
   sessionTranscriptChunks!: Table<SessionTranscriptChunk, [string, number]>;
-  sessionSummaries!: Table<EncryptedSessionSummary, string>;
   sessionNotebooks!: Table<EncryptedSessionNotebook, string>;
   userArcs!: Table<EncryptedUserArc, string>;
   llmProviderKeys!: Table<EncryptedLlmProviderKey, string>;
@@ -44,6 +42,11 @@ export class LumenDB extends Dexie {
     this.version(2).stores({
       sessionNotebooks: '&session_id, user_id, created_at',
       userArcs: '&user_id',
+    });
+
+    // v3: Drop legacy sessionSummaries table (replaced by notebooks in v2).
+    this.version(3).stores({
+      sessionSummaries: null,
     });
   }
 }

@@ -17,11 +17,9 @@ import { createStorageService } from '@/lib/storage/dexie-storage';
 import { serializeMessages, deserializeMessages } from '@/lib/storage/transcript';
 import { buildVaultMetadata, createKeyCheck } from '@/lib/storage/metadata';
 import type {
-  EncryptedSessionSummary,
   EncryptedUserProfile,
   EncryptedLlmProviderKey,
   LlmProviderKey,
-  SessionSummary,
   SessionTranscript,
   SessionTranscriptChunk,
   UserProfile,
@@ -111,7 +109,7 @@ describe('storage integration', () => {
     expect(restored[1].content).toBe('Hi there');
   });
 
-  it('encrypts profiles and summaries at rest', async () => {
+  it('encrypts profiles at rest', async () => {
     const storage = createStorageService();
     const salt = generateSalt();
     const iterations = 10;
@@ -146,95 +144,12 @@ describe('storage integration', () => {
     const decryptedProfile = await storage.getProfile(profile.user_id);
     expect(decryptedProfile).toEqual(profile);
 
-    const summary: SessionSummary = {
-      session_id: 'session-1',
-      user_id: 'user-1',
-      summary_text: 'Summary',
-      parting_words: null,
-      action_steps: ['Do the thing'],
-      open_threads: [],
-      notes: null,
-      created_at: now,
-      updated_at: now,
-    };
-
-    await storage.saveSummary(summary);
-
-    const storedSummary = (await getActiveDb().sessionSummaries.get(
-      summary.session_id,
-    )) as EncryptedSessionSummary;
-    expect(storedSummary).toBeTruthy();
-    expect(new Uint8Array(storedSummary.encrypted_blob)).not.toEqual(
-      new Uint8Array(encodeJson(summary)),
-    );
-
-    const decryptedSummary = await storage.getSummary(summary.session_id);
-    expect(decryptedSummary).toEqual(summary);
-
     const roundTripProfile = await decrypt(
       storedProfile.encrypted_blob,
       key,
       storedProfile.encryption_header.iv,
     );
     expect(decodeJson<UserProfile>(roundTripProfile).user_id).toBe('user-1');
-  });
-
-  it('returns summaries newest-first', async () => {
-    const storage = createStorageService();
-    const salt = generateSalt();
-    const iterations = 10;
-    const key = await deriveKey('passphrase', salt, iterations);
-
-    const keyCheck = await createKeyCheck(key, salt, iterations, 'enc-v0.1');
-    const metadata = buildVaultMetadata({ salt, iterations, version: 'enc-v0.1', keyCheck });
-    await storage.saveVaultMetadata(metadata);
-    storage.setVaultContext({ key, metadata });
-    const userId = 'user-1';
-
-    const summaries: SessionSummary[] = [
-      {
-        session_id: 'session-1',
-        user_id: userId,
-        summary_text: 'Oldest',
-        parting_words: null,
-        action_steps: [],
-        open_threads: [],
-        notes: null,
-        created_at: '2026-01-01T00:00:00.000Z',
-        updated_at: '2026-01-01T00:00:00.000Z',
-      },
-      {
-        session_id: 'session-2',
-        user_id: userId,
-        summary_text: 'Middle',
-        parting_words: null,
-        action_steps: [],
-        open_threads: [],
-        notes: null,
-        created_at: '2026-01-03T00:00:00.000Z',
-        updated_at: '2026-01-03T00:00:00.000Z',
-      },
-      {
-        session_id: 'session-3',
-        user_id: userId,
-        summary_text: 'Newest',
-        parting_words: null,
-        action_steps: [],
-        open_threads: [],
-        notes: null,
-        created_at: '2026-01-05T00:00:00.000Z',
-        updated_at: '2026-01-05T00:00:00.000Z',
-      },
-    ];
-
-    for (const summary of summaries) {
-      await storage.saveSummary(summary);
-    }
-
-    const recent = await storage.listSummaries(userId, 2);
-    expect(recent).toHaveLength(2);
-    expect(recent[0].summary_text).toBe('Newest');
-    expect(recent[1].summary_text).toBe('Middle');
   });
 
   it('returns transcripts newest-first', async () => {

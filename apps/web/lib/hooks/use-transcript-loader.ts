@@ -6,22 +6,19 @@ import { getKey } from '@/lib/crypto/key-context';
 import { createStorageService } from '@/lib/storage/dexie-storage';
 import { deserializeMessages } from '@/lib/storage/transcript';
 import type { Message } from '@/types/session';
-import type { SessionNotebook, SessionSummary } from '@/types/storage';
+import type { SessionNotebook } from '@/types/storage';
 
 type TranscriptLoaderResult = {
   messages: Message[];
-  summary: SessionSummary | null;
   notebook: SessionNotebook | null;
   isLoading: boolean;
   error: string | null;
 };
 
-// Decrypts transcript chunks into Message[] and loads the session summary.
-// Mirrors the pattern from assembly.ts:loadTranscriptMessages.
+// Decrypts transcript chunks into Message[] and loads the session notebook.
 export function useTranscriptLoader(sessionId: string | null): TranscriptLoaderResult {
   const storageRef = React.useRef(createStorageService());
   const [messages, setMessages] = React.useState<Message[]>([]);
-  const [summary, setSummary] = React.useState<SessionSummary | null>(null);
   const [notebook, setNotebook] = React.useState<SessionNotebook | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -48,15 +45,14 @@ export function useTranscriptLoader(sessionId: string | null): TranscriptLoaderR
 
         const storage = storageRef.current;
 
-        // Ensure vault context is set for decryption (getSummary needs it).
+        // Ensure vault context is set for decryption.
         const metadata = await storage.getVaultMetadata();
         if (metadata) {
           storage.setVaultContext({ key, metadata });
         }
 
-        const [chunks, sessionSummary, sessionNotebook] = await Promise.all([
+        const [chunks, sessionNotebook] = await Promise.all([
           storage.listTranscriptChunks(sessionId),
-          storage.getSummary(sessionId),
           storage.getNotebook(sessionId),
         ]);
 
@@ -72,7 +68,6 @@ export function useTranscriptLoader(sessionId: string | null): TranscriptLoaderR
         if (cancelled) return;
 
         setMessages(allMessages);
-        setSummary(sessionSummary);
         setNotebook(sessionNotebook);
       } catch (err) {
         if (cancelled) return;
@@ -92,5 +87,5 @@ export function useTranscriptLoader(sessionId: string | null): TranscriptLoaderR
     };
   }, [sessionId]);
 
-  return { messages, summary, notebook, isLoading, error };
+  return { messages, notebook, isLoading, error };
 }

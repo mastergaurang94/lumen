@@ -61,18 +61,11 @@ export default function HistoryPage() {
       const transcripts = await storage.listTranscripts(userId);
       const completed = transcripts.filter((t) => t.ended_at !== null);
 
-      // Load notebooks (new format) and summaries (legacy) for parting words preview.
-      // Notebooks take priority; fall back to old summaries for pre-migration sessions.
+      // Load notebooks for parting words preview.
       const notebooks = await storage.listNotebooks(userId);
       const notebookPartingWords = new Map<string, string | null>();
       for (const nb of notebooks) {
         notebookPartingWords.set(nb.session_id, parseNotebookSection(nb.markdown, 'Parting Words'));
-      }
-
-      const summaries = await storage.listSummaries(userId);
-      const summaryPartingWords = new Map<string, string | null>();
-      for (const s of summaries) {
-        summaryPartingWords.set(s.session_id, s.parting_words);
       }
 
       // Assign session numbers: completed sessions in chronological order
@@ -81,10 +74,7 @@ export default function HistoryPage() {
       const historyEntries: HistoryEntry[] = chronological.map((transcript, index) => ({
         transcript,
         sessionNumber: index + 1,
-        partingWords:
-          notebookPartingWords.get(transcript.session_id) ??
-          summaryPartingWords.get(transcript.session_id) ??
-          null,
+        partingWords: notebookPartingWords.get(transcript.session_id) ?? null,
       }));
 
       // Return to newest-first for display

@@ -1,14 +1,5 @@
 import type { StorageService } from '@/lib/storage';
-import type { SessionSummary, SessionTranscript } from '@/types/storage';
-
-// Returns recent summaries for context assembly.
-export async function getRecentSummaries(
-  storage: StorageService,
-  userId: string,
-  limit = 3,
-): Promise<SessionSummary[]> {
-  return storage.listSummaries(userId, limit);
-}
+import type { SessionTranscript } from '@/types/storage';
 
 // Returns the most recent completed session, if any.
 export async function getLastSession(
@@ -41,15 +32,6 @@ export async function getDaysSinceLastSession(
   const diffMs = now.getTime() - endedAt.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   return Math.max(0, diffDays);
-}
-
-// Returns action steps from the most recent session summary, or empty array.
-export async function getLastSessionActionSteps(
-  storage: StorageService,
-  userId: string,
-): Promise<string[]> {
-  const summaries = await storage.listSummaries(userId, 1);
-  return summaries[0]?.action_steps ?? [];
 }
 
 // Returns the session number (count of completed sessions + 1 for the upcoming session).

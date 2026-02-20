@@ -14,7 +14,7 @@ import { createStorageService } from '@/lib/storage/dexie-storage';
 import { serializeMessages, deserializeMessages } from '@/lib/storage/transcript';
 import { buildVaultMetadata, createKeyCheck } from '@/lib/storage/metadata';
 import type { Message } from '@/types/session';
-import type { SessionSummary, SessionTranscript, SessionTranscriptChunk } from '@/types/storage';
+import type { SessionTranscript, SessionTranscriptChunk } from '@/types/storage';
 
 beforeAll(() => {
   if (!globalThis.crypto) {
@@ -154,41 +154,6 @@ describe('transcript loader decrypt pipeline', () => {
     expect(allMessages[3].content).toBe('Second reply');
   });
 
-  it('loads summary alongside chunks', async () => {
-    const { storage, key, salt, iterations } = await setupVault();
-    const sessionId = 'session-1';
-    await saveTranscript(storage, sessionId);
-
-    const messages: Message[] = [
-      { id: 'm1', role: 'user', content: 'Hello', timestamp: new Date() },
-    ];
-    await encryptAndSaveChunk(storage, key, sessionId, messages, 0, iterations, salt);
-
-    const summary: SessionSummary = {
-      session_id: sessionId,
-      user_id: 'user-1',
-      summary_text: 'A meaningful conversation.',
-      parting_words: 'You are enough.',
-      action_steps: ['Journal daily'],
-      open_threads: [],
-      notes: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    await storage.saveSummary(summary);
-
-    // Parallel load — mirrors the hook's Promise.all pattern.
-    const [chunks, loadedSummary] = await Promise.all([
-      storage.listTranscriptChunks(sessionId),
-      storage.getSummary(sessionId),
-    ]);
-
-    expect(chunks).toHaveLength(1);
-    expect(loadedSummary).toBeTruthy();
-    expect(loadedSummary!.parting_words).toBe('You are enough.');
-    expect(loadedSummary!.action_steps).toEqual(['Journal daily']);
-  });
-
   it('returns empty messages when no chunks exist', async () => {
     const { storage } = await setupVault();
     const sessionId = 'session-empty';
@@ -196,15 +161,6 @@ describe('transcript loader decrypt pipeline', () => {
 
     const chunks = await storage.listTranscriptChunks(sessionId);
     expect(chunks).toHaveLength(0);
-  });
-
-  it('returns null summary when none saved', async () => {
-    const { storage } = await setupVault();
-    const sessionId = 'session-no-summary';
-    await saveTranscript(storage, sessionId);
-
-    const summary = await storage.getSummary(sessionId);
-    expect(summary).toBeNull();
   });
 
   it('throws on wrong decryption key', async () => {

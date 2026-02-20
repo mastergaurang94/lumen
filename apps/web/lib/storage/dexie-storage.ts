@@ -4,7 +4,6 @@ import type { StorageService } from '@/lib/storage';
 import type {
   EncryptionHeader,
   EncryptedLlmProviderKey,
-  EncryptedSessionSummary,
   EncryptedSessionNotebook,
   EncryptedUserArc,
   EncryptedUserProfile,
@@ -12,7 +11,6 @@ import type {
   LlmProviderKey,
   SessionTranscript,
   SessionTranscriptChunk,
-  SessionSummary,
   SessionNotebook,
   UserArc,
   UserProfile,
@@ -93,35 +91,6 @@ export class DexieStorageService implements StorageService {
     );
     const plaintext = await decrypt(record.encrypted_blob, key, record.encryption_header.iv);
     return decodeJson<UserProfile>(plaintext);
-  }
-
-  private async encryptSummary(summary: SessionSummary): Promise<EncryptedSessionSummary> {
-    const { key, metadata } = this.getVaultContext();
-    const iv = generateIV();
-    const header = this.buildHeader(metadata, iv);
-    const ciphertext = await encrypt(encodeJson(summary), key, iv);
-    const transcript_hash = await hashTranscript(ciphertext, header);
-
-    return {
-      session_id: summary.session_id,
-      user_id: summary.user_id,
-      encrypted_blob: ciphertext,
-      encryption_header: header,
-      transcript_hash,
-      created_at: summary.created_at,
-      updated_at: summary.updated_at,
-    };
-  }
-
-  private async decryptSummary(record: EncryptedSessionSummary): Promise<SessionSummary> {
-    const { key } = this.getVaultContext();
-    await this.assertTranscriptHash(
-      record.encrypted_blob,
-      record.encryption_header,
-      record.transcript_hash,
-    );
-    const plaintext = await decrypt(record.encrypted_blob, key, record.encryption_header.iv);
-    return decodeJson<SessionSummary>(plaintext);
   }
 
   private async encryptNotebook(notebook: SessionNotebook): Promise<EncryptedSessionNotebook> {
@@ -254,29 +223,6 @@ export class DexieStorageService implements StorageService {
     const db = getActiveDb();
     // Ensure chunks are returned in write order.
     return db.sessionTranscriptChunks.where('session_id').equals(sessionId).sortBy('chunk_index');
-  }
-
-  async getSummary(sessionId: string): Promise<SessionSummary | null> {
-    const db = getActiveDb();
-    const record = await db.sessionSummaries.get(sessionId);
-    if (!record) return null;
-    return this.decryptSummary(record);
-  }
-
-  async saveSummary(summary: SessionSummary): Promise<void> {
-    const db = getActiveDb();
-    const encrypted = await this.encryptSummary(summary);
-    await db.sessionSummaries.put(encrypted);
-  }
-
-  async listSummaries(userId: string, limit = 10): Promise<SessionSummary[]> {
-    const db = getActiveDb();
-    const summaries = await db.sessionSummaries
-      .where('user_id')
-      .equals(userId)
-      .sortBy('created_at');
-    const newestFirst = summaries.reverse().slice(0, limit);
-    return Promise.all(newestFirst.map((record) => this.decryptSummary(record)));
   }
 
   async getNotebook(sessionId: string): Promise<SessionNotebook | null> {

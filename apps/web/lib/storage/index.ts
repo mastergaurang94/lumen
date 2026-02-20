@@ -2,7 +2,6 @@ import type {
   UserProfile,
   SessionTranscript,
   SessionTranscriptChunk,
-  SessionSummary,
   SessionNotebook,
   UserArc,
   LlmProvider,
@@ -23,10 +22,6 @@ export interface StorageService {
 
   saveTranscriptChunk(chunk: SessionTranscriptChunk): Promise<void>;
   listTranscriptChunks(sessionId: string): Promise<SessionTranscriptChunk[]>;
-
-  getSummary(sessionId: string): Promise<SessionSummary | null>;
-  saveSummary(summary: SessionSummary): Promise<void>;
-  listSummaries(userId: string, limit?: number): Promise<SessionSummary[]>;
 
   getNotebook(sessionId: string): Promise<SessionNotebook | null>;
   saveNotebook(notebook: SessionNotebook): Promise<void>;

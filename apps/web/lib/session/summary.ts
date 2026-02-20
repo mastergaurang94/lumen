@@ -1,13 +1,5 @@
-// Legacy types kept for backward compatibility with existing stored summaries.
-export type LlmSummaryResponse = {
-  summary_text: string;
-  parting_words: string | null;
-  action_steps: string[];
-  open_threads: string[];
-};
-
 /**
- * Prompt for generating session notebooks (replaces the old JSON summary).
+ * Prompt for generating session notebooks.
  * The mentor writes a private reflection in markdown with fixed section headers.
  * Keep in sync with docs/mentoring/notebook-and-arc-prompts.md.
  */
@@ -56,9 +48,6 @@ The last thing you said — or wish you had said — as they walked out the door
 The truest, most specific thing about who they are right now. The kind of thing a wise friend says at the door that stops you in your tracks. Something they'll still be thinking about in three days.
 
 2-3 sentences.`;
-
-// Keep the old SUMMARY_PROMPT available for migration (regenerating notebooks from transcripts).
-export const SUMMARY_PROMPT = NOTEBOOK_PROMPT;
 
 /**
  * Extract a specific markdown section by its ## header.
@@ -124,34 +113,4 @@ export function extractClosureFields(markdown: string): {
   const partingWords = parseNotebookSection(markdown, 'Parting Words');
   const actionSteps = parseNotebookList(markdown, 'What Opened');
   return { partingWords, actionSteps };
-}
-
-/**
- * Parse legacy JSON summary response, tolerating markdown code fences.
- * Used during migration from old SessionSummary format.
- */
-export function parseSummaryResponse(raw: string): LlmSummaryResponse {
-  const trimmed = raw.trim();
-  const withoutFence = trimmed.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
-  const parsed = JSON.parse(withoutFence) as Partial<LlmSummaryResponse>;
-  if (!parsed || typeof parsed.summary_text !== 'string') {
-    throw new Error('Summary response missing summary_text.');
-  }
-  const partingWords =
-    parsed.parting_words === null || typeof parsed.parting_words === 'string'
-      ? (parsed.parting_words ?? null)
-      : null;
-  const actionSteps = Array.isArray(parsed.action_steps)
-    ? parsed.action_steps.filter((step) => typeof step === 'string')
-    : [];
-  const openThreads = Array.isArray(parsed.open_threads)
-    ? parsed.open_threads.filter((thread) => typeof thread === 'string')
-    : [];
-
-  return {
-    summary_text: parsed.summary_text.trim(),
-    parting_words: partingWords?.trim() ?? null,
-    action_steps: actionSteps.map((step) => step.trim()).filter(Boolean),
-    open_threads: openThreads.map((thread) => thread.trim()).filter(Boolean),
-  };
 }
