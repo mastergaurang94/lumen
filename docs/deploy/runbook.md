@@ -9,7 +9,7 @@ This runbook covers production deploys for:
 
 ## Environments
 
-- Frontend URL: `https://lumen-web-topaz.vercel.app`
+- Frontend URL: `https://mylumen.ai`
 - Backend URL: `https://lumen-api.fly.dev`
 
 ## Ownership Model

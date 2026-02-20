@@ -82,7 +82,7 @@ Completed backlog items done directly (not promoted to a full phase). Items that
   - _Files: `apps/api/.env.example`, `apps/web/.env.example`_
 
 - **Deployment (2026-02-10)** — Deployed and verified end-to-end.
-  - _Frontend_: Vercel (`lumen-web-topaz.vercel.app`), root directory `apps/web`
+  - _Frontend_: Vercel (`mylumen.ai`), root directory `apps/web`
   - _Backend_: Fly.io (`lumen-api.fly.dev`), region `iad`, 1GB volume for SQLite
-  - _Email_: Resend via `gaurangpatel.xyz` domain
+  - _Email_: Resend via `mylumen.ai` domain
   - _LLM_: Server-managed Anthropic token (no BYOK required for testers)
