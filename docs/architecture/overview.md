@@ -7,13 +7,13 @@ Status: Draft (MVP)
 
 - Browser-first, local-first data storage (MVP) with a path to zero-knowledge encrypted sync.
 - Simple, production-ready separation of concerns.
-- Encourage 7-day session spacing (lumen-enforced, not system-blocked).
+- Sessions available anytime — no enforced cadence.
 - Maintain privacy (no training use).
 
 ## Components
 
 - **Web App (Next.js + React + TS)**
-  - Chat UI, session spacing advisory, summaries.
+  - Chat UI, summaries.
   - Pre-session UI prompt to set aside ~60 minutes.
   - Explicit session-closure UX (e.g., "Ready to wrap?" prompt + End Session action).
   - Local storage via IndexedDB + Dexie (encrypted with WebCrypto AES-GCM + PBKDF2).
@@ -64,7 +64,7 @@ Status: Draft (MVP)
   - client-side context assembly
   - LLM calls
   - session closure decisions
-  - session spacing context (days since last session)
+  - days since last session context
   - model unavailability events
   - evaluation harness runs (summary + closure checks)
 

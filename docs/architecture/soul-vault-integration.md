@@ -341,3 +341,9 @@ type SeedArc = {
 3. **Soul Vault processes, never exposes.** Apps send prompts, Soul Vault returns synthesized results. Raw vault data never leaves the vault.
 4. **One-time seed, not ongoing dependency.** Lumen uses Soul Vault to bootstrap, then owns its own relationship. No runtime dependency.
 5. **Data sovereignty.** The user controls what's in the vault, what flows out, and who asked for what. Redaction rules and audit logs enforce this.
+
+## Action Items (when/if implementing)
+
+- [ ] `[S]` **Lumen → Soul Vault export (web)**: After session closure, offer "Save to Soul Vault" download for the session notebook. User drops file into `~/soul-vault/.inbox/lumen/`.
+- [ ] `[S]` **Soul Vault import (desktop)**: Auto-detect `~/soul-vault/` in macOS app. Read `.exports/lumen-arc.md` directly or call `soul query --profile lumen`. One-click import. _Depends on: Swift Mac app._
+- [ ] `[S]` **Lumen → Soul Vault export (desktop)**: At session closure, Swift writes notebook markdown to `~/soul-vault/.inbox/lumen/` automatically. _Depends on: Swift Mac app._

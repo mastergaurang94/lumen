@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Clock, Sun, Sparkles, Calendar } from 'lucide-react';
+import { Sun, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthPageLayout } from '@/components/auth-page-layout';
 import { SeedArcImport } from '@/components/seed-arc-import';
@@ -16,11 +16,6 @@ import { createStorageService } from '@/lib/storage/dexie-storage';
 import { getLastSession, getDaysSinceLastSession } from '@/lib/storage/queries';
 import type { StorageService } from '@/lib/storage';
 import type { SessionSpacing } from '@/types/session';
-
-const SESSION_SPACING_DAYS = 7;
-
-// Mock toggle for testing early return state
-const MOCK_EARLY_RETURN = process.env.NEXT_PUBLIC_MOCK_EARLY_RETURN === 'true';
 
 export default function SessionPage() {
   const router = useRouter();
@@ -73,14 +68,9 @@ export default function SessionPage() {
       const lastSessionDate = lastSession?.ended_at ? new Date(lastSession.ended_at) : null;
       const isFirstSession = !lastSession && !hasActiveSession;
 
-      // Determine spacing state (mock override for testing)
-      const isEarlyReturn =
-        MOCK_EARLY_RETURN || (daysSince !== null && daysSince < SESSION_SPACING_DAYS);
-      const state: SessionSpacing['state'] = isEarlyReturn ? 'early_return' : 'ready';
-
       setSpacing({
-        state,
-        daysSinceLastSession: MOCK_EARLY_RETURN ? 3 : daysSince, // Mock 3 days for testing
+        state: 'ready',
+        daysSinceLastSession: daysSince,
         lastSessionDate,
         hasActiveSession,
         isFirstSession,
@@ -154,8 +144,7 @@ function SessionContent({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [chatHref, router]);
 
-  const { isFirstSession, hasActiveSession, state, daysSinceLastSession, lastSessionDate } =
-    spacing;
+  const { isFirstSession, hasActiveSession, lastSessionDate } = spacing;
 
   return (
     <motion.div
@@ -170,8 +159,6 @@ function SessionContent({
           <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center">
             {isFirstSession ? (
               <Sparkles className="h-9 w-9 text-accent" />
-            ) : state === 'early_return' ? (
-              <Calendar className="h-9 w-9 text-accent" />
             ) : (
               <Sun className="h-9 w-9 text-accent" />
             )}
@@ -195,34 +182,11 @@ function SessionContent({
         </p>
       </div>
 
-      {/* Early return advisory - soft nudge, not a block */}
-      {state === 'early_return' && !hasActiveSession && daysSinceLastSession !== null && (
-        <div className="bg-muted/50 border border-muted-foreground/10 rounded-xl p-5 space-y-3 text-left">
-          <div className="flex items-start gap-3">
-            <Clock className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-            <div className="space-y-2">
-              <p className="font-medium text-foreground">
-                It&apos;s been{' '}
-                {daysSinceLastSession === 0
-                  ? 'less than a day'
-                  : daysSinceLastSession === 1
-                    ? '1 day'
-                    : `${daysSinceLastSession} days`}{' '}
-                since we last talked.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                The time between is where things settle. No rush — but a week between often helps.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Seed Arc import — only for brand-new users before session 1 */}
       {isFirstSession && !hasActiveSession && <SeedArcImport userId={userId} storage={storage} />}
 
-      {/* Pre-session prompt card - only show for new sessions when ready */}
-      {!hasActiveSession && state === 'ready' && !isFirstSession && (
+      {/* Pre-session prompt card */}
+      {!hasActiveSession && !isFirstSession && (
         <div className="bg-accent/5 border border-accent/10 rounded-xl p-5 text-center">
           <p className="text-muted-foreground">Like catching up with an old friend.</p>
         </div>
@@ -236,7 +200,7 @@ function SessionContent({
       </Link>
 
       {/* Context text */}
-      {!hasActiveSession && !isFirstSession && lastSessionDate && state === 'ready' && (
+      {!hasActiveSession && !isFirstSession && lastSessionDate && (
         <p className="text-sm text-muted-foreground/70">
           We last talked {formatDaysAgo(lastSessionDate)}.
           <br />

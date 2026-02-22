@@ -74,7 +74,6 @@ Code refs:
 
 ## Safety & Governance
 
-- Session spacing enforced conversationally via system prompt (not server-blocked).
 - Do not use user data for training.
 - Store data locally (encrypted).
 - Maintain a clear user-facing privacy line in the UI.

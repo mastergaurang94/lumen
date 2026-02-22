@@ -5,7 +5,7 @@ Status: Locked for MVP build-out
 
 ## Vision
 
-A companion for the journey. Weekly conversations that walk you back to the world of living — restoring self-trust.
+A companion for the journey. Conversations that walk you back to the world of living — restoring self-trust.
 
 ## Inspirations
 
@@ -13,7 +13,7 @@ A companion for the journey. Weekly conversations that walk you back to the worl
 
 ## Core Principles
 
-- Autonomy by design: sessions are designed for a weekly rhythm, encouraged conversationally.
+- Autonomy by design: sessions happen whenever you want them, no enforced cadence.
 - Persistent memory: lumen knows the user's story across sessions.
 - Personalization: grounded in the user's influences and what resonates.
 - Privacy: no training usage of user data; local-first MVP with a path to zero-knowledge encrypted sync (v1.1).
@@ -41,13 +41,6 @@ A companion for the journey. Weekly conversations that walk you back to the worl
 - Subsequent sessions are dynamic and context-aware.
 - Lumen accounts for time and seasonal context (holidays, summer, etc.) if
   available.
-
-### Session Spacing
-
-- Strong encouragement: sessions are designed for a 7-day rhythm.
-- Enforced conversationally by lumen, not hard-blocked by the system.
-- Lumen acknowledges early returns, gently redirects, and models healthy boundaries.
-- If user insists on proceeding early, lumen may note the pattern but continues.
 
 ### Privacy and Data Ownership
 

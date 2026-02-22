@@ -21,7 +21,7 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   metadataBase: new URL('https://mylumen.ai'),
   title: 'Lumen',
-  description: 'A companion for the journey — weekly conversations that restore self-trust',
+  description: 'A companion for the journey — conversations that restore self-trust',
 };
 
 export const viewport: Viewport = {

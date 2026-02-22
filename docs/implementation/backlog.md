@@ -1,72 +1,65 @@
 # Lumen Backlog
 
-Last Updated: 2026-02-18
+Last Updated: 2026-02-22
 
-Items NOT tracked in any active sprint plan. For MVP 3 items, see `mvp3.md`. Effort markers: `[S]`mall, `[M]`edium, `[L]`arge.
+Items NOT tracked in any active sprint plan. For MVP items, see active `mvpX.md`.
 
 ---
 
 ## Now
 
-_Empty_
+_Tracked in `mvp3.md`._
 
 ---
 
 ## Soon
 
-### Auth
+### Domain Tracking
 
-- [ ] `[M]` **Investigate magic link cross-device issue**: Magic links sent via Resend don't work when opened on a different device/browser than the one that initiated the auth flow (link says "expired"). Discovered during Meg's in-person test — email arrived on phone, copied link to desktop, failed. Investigate whether the session token or cookie is device-bound. At minimum, provide clear UX guidance ("open on the same device"). Ideally, magic links should work cross-device. See `docs/feedback/2026-02-18-meg-in-person.md`.
+- [ ] `[M]` **Visible domain/progress tracking**: Surface the 5 lenses (Calling, Relationships, Vitality, Prosperity, Spirit) as visible UI elements so users can see what's been explored and what threads are active. Could be as simple as a sidebar or dashboard showing domains with recent themes, milestones, and "what opened" items from session closures. Helps with topic compartmentalization — users forget what they talked about last time. Multiple testers requested this (Iman: "mind map, table, staged progression chart"; Howie: domain focus). Also aids topic recall between sessions.
 
-### Session Closure
+### Tools Library
 
-- [ ] `[M]` **Natural session wrap-up — surface closure at the right moment**: Users don't click the wrap-up button, which means they miss the best part of the experience (parting words, "what opened," the notebook). The closure content is a goldmine, but it's gated behind a manual action that feels like an interruption. Need a way to wrap up that feels natural and not premature. Options: (a) Lumen detects a natural ending in the conversation and suggests closing ("This feels like a good place to pause — want me to wrap up our session?"), (b) a gentle visual nudge surfaces at the bottom of the chat after conversational signals (farewell language, gratitude, energy dropping), (c) time-based hint after 15-20+ minutes of conversation, (d) Lumen's closing message itself triggers the closure flow automatically. The key constraint: it must feel _natural_, not robotic or early. Users should feel like the session concluded, not that it was cut off. See `docs/feedback/2026-02-18-meg-in-person.md`.
+- [ ] `[M]` **Session return reminders (Lumen tools foundation)**: Send email/notification reminders when it's time to return for the next session. This is the beginning of a tools library — a mechanism for Lumen to take actions beyond conversation (send reminders, play music, create meditations, get the time, etc.). Start with return reminders as the first tool. Implementation could be a cron job, scheduled email via Resend, or calendar integration. The tools architecture should be extensible for future capabilities.
 
 ### Onboarding
 
-- [ ] `[M]` **Improve onboarding for non-technical users**: Current flow assumes comfort with email auth + passphrase creation. A 55-year-old first-time AI user needed hand-holding through every step. Consider: simpler language, fewer steps before first chat, guided walkthrough, optional passphrase (defer to Keychain/device-level security on desktop), and gentle hints about how to talk to Lumen (e.g., "it's okay to say 'I don't know'"). See `docs/feedback/2026-02-18-meg-in-person.md`.
+- [ ] `[M]` **Improve onboarding for non-technical users**: Current flow assumes comfort with email auth + passphrase creation. A 55-year-old first-time AI user needed hand-holding through every step. Consider: simpler language, fewer steps before first chat, guided walkthrough, optional passphrase (defer to Keychain/device-level security on desktop), and gentle hints about how to talk to Lumen (e.g., "it's okay to say 'I don't know'"). Also consider guided vs. open session start — offer choice between guided discovery (Tony Robbins-style intake questions) or bring-your-own-problem mode. See `docs/feedback/2026-02-18-meg-in-person.md`, `docs/feedback/2026-02-20-iman-imessage.md`.
+- [ ] `[M]` **Design + atmospheric polish**: Evolve palettes with richer backgrounds and textures, increase base text/icon sizing, add atmospheric elements (subtle gradients, breathing animations), apply Fraunces display typography to key moments. OmmWriter-level atmosphere. Polish pass, not redesign.
+
+### Harness
+
+- [ ] `[M]` **Evaluation harness + prompt versioning**: CLI tool to replay golden transcripts, generate notebook + Arc, and score against rubric (specificity, verbatim quotes, natural flow, pattern depth). Prompt version tags stored alongside session notebooks. 3-5 golden fixtures. Local script, markdown report output. New: `scripts/eval/`.
+
+### Landing Page
+
+- [ ] `[M]` **Product positioning on landing page**: Current landing page is just a sign-up form with no indication of what Lumen is. Repurpose into a product positioning page that explains the value before asking for commitment. Communicate: what Lumen is (companion, not therapist), what makes it different (privacy, continuity, individual mentors), and what to expect from a session. Privacy/encryption messaging belongs here too — explain what "stored locally" means in concrete terms. Feedback from Howie ("I'm not sure where this is going"), Iman ("no indication of what it is"), and others consistently flagged this gap.
 
 ---
 
 ## Later
 
-Longer-term features beyond MVP 3.
+Longer term features to keep in mind.
 
-### LLM Integration
+### Security
 
-- [ ] `[L]` **Client-side model orchestration**: Policy enforcement entirely on client; no server-side plaintext handling.
-- [ ] `[M]` **Fallback provider abstraction**: Graceful failover between LLM providers on outage.
-
-### Mentoring
-
-- [ ] `[L]` **Individual mentor mode**: Per-mentor voices (one perspective each) alongside unified Lumen. Each mentor gets their own voice/style wrapper around a single perspective domain. Includes: `buildSystemPrompt()` mode parameter (unified vs. individual), mentor selection UI, session tagging by mentor type for context assembly, domain-specific tracking instructions, depth escalation across sessions. Source prompts at `~/Documents/conversations/mentoring-prompts/`. Unified voice quality comes first.
-
-### Memory
-
-- [ ] `[L]` **Retrieval layer (embeddings)**: Long-horizon context via semantic search over session history. Not needed until context window is consistently full (100+ sessions with large transcripts).
-
-### Harness
-
-- [ ] `[M]` **Async Arc update after closure**: Decouple Arc generation from blocking closure UI. End session after notebook save, then enqueue Arc create/update in background (retryable outbox/worker) with a lightweight "reflection still finalizing" state.
-- [ ] `[M]` **Context compaction**: Compress older notebooks and transcripts to fit more history in token budget. Relevant once users accumulate 100+ sessions.
-- [ ] `[M]` **Priority weighting**: Boost commitments, recurring themes, recognition moments in context assembly.
-- [ ] `[M]` **Hallucination guards for memory**: Cite source session when recalling facts; flag uncertain memories.
-
-### Trust & Safety
-
-- [ ] `[M]` **Define boundaries and governance**: Clear non-therapeutic positioning in product and prompts. Includes guardrails for sensitive topics. Reference resources and escalation guidance when distress detected. (Basic safety already in system prompt v2 §2.8.)
+- [ ] `[M]` **System prompt protection**: Move system prompt to env/secrets, strip from client-visible payloads, add prompt-level deflection instruction. On desktop: prompt bundled in app binary. Not urgent while open-source — revisit before public Mac app distribution.
 
 ### Observability
 
 - [ ] `[L]` **Iterative self-improvement feedback**: In-conversation feedback mechanism (e.g., 0-3 rating at random points) so users can signal how Lumen is doing. Challenge: conversations are encrypted client-side, so server-side analysis isn't possible. Needs a privacy-preserving approach — possibly aggregate scalar signals only.
-- [ ] `[M]` **Privacy-preserving session insights endpoint**: `POST /v1/session-insights` for aggregate learning without PII.
-  - _Collect: session duration bucket, days since last session, turn count, closure type, optional user rating, action step count._
-  - _No plaintext content; purely metadata for product analytics._
-- [ ] `[S]` **Wire client analytics events to session insights endpoint**: Send share/copy events with safe scalar properties.
+- [ ] `[M]` **Think about observability and analytics**
 
 ### CLI
 
 - [ ] `[M]` **CLI entry point**: Terminal-based interface for Lumen conversations. Enables power users and developers to interact with Lumen from the command line.
+
+### Monetization & Sync
+
+- [ ] `[L]` **Provider auth + billing**: Hosted token broker with scoped, short-lived API tokens. Server holds provider key, enforces billing/quotas. BYOK as power-user alternative. Free tier (limited sessions/month), paid tier (unlimited + managed sync). Open-source local app first — revisit when monetization makes sense.
+- [ ] `[M]` **First session free / delayed email requirement**: Don't require email sign-up before the first session. Let users try Lumen immediately and ask for email after they've experienced value. Natural conversion point: after first session closure, prompt to create an account to save their data. Reduces friction for new users and improves conversion. See Iman's feedback: "You require an email too early in the flow."
+- [ ] `[L]` **Folder-based encrypted sync**: Sync vault to user-chosen folder (iCloud Drive, Dropbox, NAS, USB). Encrypted SQLite file copied after each session. Last-write-wins conflict resolution. Natural paid-tier feature. _Depends on: SQLite migration._
+- [ ] `[L]` **Managed encrypted sync (server)**: Go API stores encrypted SQLite blobs (zero plaintext). Push/pull with offline resilience. Paid tier boundary: folder sync = free, managed sync = paid. _Depends on: SQLite migration, folder sync._
 
 ---
 
@@ -78,4 +71,3 @@ Longer-term features beyond MVP 3.
   - Items done directly from backlog → Log in `done/backlog.md`, remove from this file.
   - Items that grow into full sprints → Create a new `mvp*.md` plan, archive in `done/` when complete.
   - Items moved into MVP plans → Remove from this file (MVP plan is the source of truth).
-- **Phase plan templates**: See `done/frontend-plan-template.md` and `done/backend-plan-template.md` for the phase-based pattern used during MVP 1.
