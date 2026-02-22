@@ -88,11 +88,6 @@ Husky automatically runs checks before every commit (see `.husky/pre-commit`):
 
 Commits are blocked if any check fails. Keep `.husky/pre-commit` and `.github/workflows/ci.yml` in sync when adding new checks.
 
-## Napkin
-
-Keep `.claude/napkin.md` updated with high-signal preferences, pitfalls, conventions, and
-decisions as they emerge. This is the persistent scratchpad across sessions.
-
 ## Browser Verification (SweetLink)
 
 SweetLink connects agents to a real browser session for visual verification and debugging.

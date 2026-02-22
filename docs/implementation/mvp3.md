@@ -11,6 +11,7 @@ Status: In progress (restructured)
 
 ## Running Updates
 
+- 2026-02-22: Pivot from WKWebView + static export approach to **full SwiftUI native Mac app**. No React in the loop — complete rewrite of UI and business logic in Swift. Tier 1 items (1.1–1.6) replaced with single reference to `swift-mac-app.md`. Key decisions: GRDB.swift for SQLite, CryptoKit AES-GCM + CommonCrypto PBKDF2, URLSession.bytes for SSE streaming, `@Observable` MVVM, 3 SPM deps (GRDB, swift-markdown-ui, KeychainAccess). 6 implementation phases. Web app stays as-is during development.
 - 2026-02-22: Second restructure pass. Moved billing (4.2), managed sync (4.3), folder sync (3.1), and system prompt protection (4.4) to `backlog.md` Later. Rationale: Lumen will be a local open-source app before any monetization. Encrypted sync and billing are future paid-tier features. Voice input stays — natural fit for the Mac app experience. MVP 3 is now 3 tiers, 7 items.
 - 2026-02-22: First restructure. Moved old Tier 2 (prompt quality, eval harness, design polish) to `backlog.md` under Soon (MVP 4). Moved all Soul Vault integration items (old 1.2, 4.1, 4.2) to `backlog.md` under Later. Lumen will use local file storage rather than depending on Soul Vault as a separate app. Renumbered remaining tiers.
 - 2026-02-20: Completed old 1.1 (seed arc import). Simpler approach than planned: reuses `UserArc` with `last_session_number: 0` instead of new `SeedArc` type — no schema migration, no new Dexie table. Collapsible card on session page for first-time users with copyable helper prompt. Auto-saves on unmount if user clicks "Let's go" without explicit save. Added `seed_context` hint to context assembly YAML front matter so Lumen greets warmly and acknowledges prior context. Also shipped voice dictation tip in chat footer.
@@ -44,144 +45,11 @@ The pivot: Lumen is a personal tool — a journaling companion for self-reflecti
 
 ## Tier 1 — "It lives on my machine"
 
-**Goal**: Lumen moves from a browser tab to a native Mac app. Storage moves from IndexedDB to SQLite.
+**Goal**: Lumen moves from a browser tab to a native SwiftUI Mac app.
 
-### 1.1 Migrate storage: IndexedDB → SQLite `[L]`
-
-**Problem**: IndexedDB is browser-controlled, non-portable, and has eviction risks. A SQLite file is portable, powerful, and works everywhere.
-
-**Approach**:
-
-- Define `VaultStore` interface matching current Dexie usage patterns
-- Implement `SQLiteVaultStore` using wa-sqlite + OPFS for web
-- Keep `DexieVaultStore` as fallback during migration
-- Migration path: on first load with SQLite, detect Dexie data, offer one-time migration
-- Encryption: AES-GCM at the application layer (encrypt before writing to SQLite, decrypt on read). Same PBKDF2 key derivation
-
-**Schema** (derived from current Dexie tables):
-
-```sql
--- Core tables (encrypted content stored as blobs)
-CREATE TABLE transcripts (id TEXT PRIMARY KEY, session_id TEXT, data BLOB, created_at TEXT);
-CREATE TABLE session_notebooks (id TEXT PRIMARY KEY, session_id TEXT, data BLOB, created_at TEXT);
-CREATE TABLE user_arcs (id TEXT PRIMARY KEY, data BLOB, updated_at TEXT);
--- Note: seed arcs are stored as regular user_arcs with last_session_number=0 (no separate table needed)
-CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
-```
-
-**Code refs**:
-
-- New: `lib/storage/sqlite.ts` (wa-sqlite wrapper), `lib/storage/vault-store.ts` (interface)
-- Modified: all storage consumers switch from Dexie direct calls to `VaultStore` interface
-- Keep: `lib/storage/dexie.ts` (backward compat + migration source)
-
-**Ripple effects**: Export/import becomes "copy the `.db` file." Sync becomes "sync the `.db` file." Desktop reads the same file natively.
-
----
-
-### 1.2 Static export for Next.js `[M]`
-
-**Problem**: The Swift desktop app loads the React app from local files. Next.js needs to produce a static build.
-
-**Approach**:
-
-- Add `output: 'export'` to `next.config.mjs` (conditional on build target)
-- The one API route (`/api/llm/anthropic`) moves to the Swift native layer for desktop — not needed in static build
-- Verify all pages work without a Node.js server (they should — all are `'use client'`)
-- Handle the Go backend rewrite (`/v1/:path*`) — on desktop, the Swift layer handles auth directly or the user authenticates via web
-
-**Key consideration**: The web version keeps the current Next.js server setup. Static export is only for the desktop build target.
-
----
-
-### 1.3 Swift native app — macOS `[L]`
-
-**Problem**: A browser tab isn't a product. A native Mac app is.
-
-**Approach**:
-
-- Single Xcode project with macOS target
-- `WKWebView` loads the static-exported React app from app bundle
-- Swift native layer handles:
-  - **Anthropic API calls**: `URLSession` with SSE streaming. API key stored in macOS Keychain
-  - **SQLite**: Native SQLite (built into macOS, zero dependencies). Same schema as wa-sqlite web version
-  - **JS ↔ Swift bridge**: `WKScriptMessageHandler` (JS → Swift) and `evaluateJavaScript` (Swift → JS)
-  - **Window chrome**: Native menu bar, window management, about dialog
-  - **Local data**: All vault data stored in Lumen's app-scoped workspace folder
-- Bundle size target: ~5 MB
-
-**Code refs**:
-
-- New: `apps/apple/` — Xcode project with `Shared/`, `macOS/` directories
-- `Shared/VaultStore.swift` — SQLite + encryption
-- `Shared/AnthropicClient.swift` — streaming API calls
-- `Shared/KeychainHelper.swift` — API key + vault key storage
-- `Shared/WebBridge.swift` — JS ↔ Swift messaging
-
-**Monorepo integration**: `apps/apple/` sits alongside `apps/web/` and `apps/api/`. Build script copies static web export into the Xcode project's resources.
-
----
-
-### 1.4 Keychain vault unlock `[S]`
-
-**Problem**: Typing a passphrase every time the app launches is friction. On macOS, the system Keychain is already unlocked when the user logs in — the derived key should live there.
-
-**Approach**:
-
-- After first passphrase entry, offer to store the derived encryption key in macOS Keychain
-- On subsequent launches: app retrieves key from Keychain automatically — vault unlocks with zero user interaction
-- Fallback: passphrase entry always available (Keychain item missing, user opts out, or Keychain locked)
-- Keychain item scoped to the app's bundle ID
-
-**Depends on**: 1.3 (macOS app with Keychain access)
-
-**Note**: No biometric (Touch ID / Face ID) requirement. Standard Keychain access is sufficient — the user's macOS login password already protects the Keychain.
-
----
-
-### 1.5 Passphrase recovery mechanism `[M]`
-
-**Problem**: If a user forgets their passphrase, their entire conversation history is permanently inaccessible. By MVP 3, testers will have months of meaningful conversation history — losing it would be devastating and trust-destroying.
-
-**Prior art**: LastPass and Obsidian both generate a recovery key at setup time that the user stores offline. Same pattern here.
-
-**Approach**:
-
-- **At setup**: After deriving the encryption key from the passphrase, generate a random recovery key (24-word mnemonic or base64 string). Encrypt the derived key with the recovery key and store the encrypted blob alongside vault metadata.
-- **Show once**: Display the recovery key with clear instructions: "Save this somewhere safe. It's the only way to recover your vault if you forget your passphrase." Require acknowledgment (checkbox: "I've saved my recovery key") before proceeding.
-- **On recovery**: Add a "Forgot passphrase?" link on the unlock page. User enters recovery key → decrypts the stored key blob → vault unlocks → user sets a new passphrase.
-- **No server involvement**: Recovery key generated and used entirely client-side.
-
-**Code refs**:
-
-- `apps/web/app/setup/page.tsx` — vault initialization, passphrase setup
-- `apps/web/lib/crypto.ts` — key derivation
-- `apps/web/app/unlock/page.tsx` — unlock flow, add recovery path
-
-**UX note**: Frame as empowerment, not fear: "This is your backup key. Keep it somewhere safe — a password manager, a note in your desk, wherever you won't lose it."
-
-**Depends on**: Nothing. Can be implemented on the current web stack before SQLite migration.
-
----
-
-### 1.6 Transcript import script — developer migration `[S]`
-
-**Problem**: Existing conversation transcripts, notebooks, and Arc stored as local markdown files (e.g., `~/Documents/conversations/`) need to be imported into Lumen's encrypted storage so they appear as native sessions.
-
-**Approach**:
-
-- CLI script targeting SQLite directly (runs after 1.1 lands — no Dexie path needed)
-- Parses `transcripts/` — splits on `**USER:**` / `**ASSISTANT:**` markers → `Message[]` per session
-- Parses `notebooks/` — reads matching notebook markdown per session, maps `## Mentor's Notebook` → parting words for closure UI
-- Reads `arc.md` → imports as `UserArc` with version set to session count
-- Assigns session metadata (session_id, session_number, date) from filenames (e.g., `contribution_5_2026-01-25.md`)
-- Encrypts everything with the vault passphrase (same PBKDF2 + AES-GCM pipeline)
-- No LLM calls — direct data hydration
-- No UI — run once from terminal, done
-
-**Depends on**: 1.1 (SQLite migration)
-
-**Result**: Lumen sees all imported sessions in history, notebooks feed context assembly, Arc reflects the full journey. Indistinguishable from sessions that happened natively in Lumen.
+> **Full plan**: [`docs/implementation/swift-mac-app.md`](swift-mac-app.md)
+>
+> Covers: Xcode project setup, GRDB.swift SQLite, CryptoKit/CommonCrypto encryption, Keychain auto-unlock, passphrase recovery, auth with deep linking, SSE streaming, context assembly, session closure, history, settings, transcript import — across 6 phases.
 
 ---
 
@@ -249,6 +117,7 @@ CREATE TABLE vault_meta (key TEXT PRIMARY KEY, value TEXT);
 
 | Area                       | Document                                     |
 | -------------------------- | -------------------------------------------- |
+| Swift Mac app plan         | `docs/implementation/swift-mac-app.md`       |
 | Context assembly + closure | `docs/architecture/harness-flow.md`          |
 | System architecture        | `docs/architecture/overview.md`              |
 | Notebook/Arc prompts       | `docs/mentoring/notebook-and-arc-prompts.md` |
