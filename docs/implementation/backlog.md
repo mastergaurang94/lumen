@@ -1,6 +1,6 @@
 # Lumen Backlog
 
-Last Updated: 2026-02-22
+Last Updated: 2026-03-12
 
 Items NOT tracked in any active sprint plan. For MVP items, see active `mvpX.md`.
 
@@ -14,6 +14,10 @@ _Tracked in `mvp3.md`._
 
 ## Soon
 
+### Conversation Quality
+
+- [ ] `[S]` **Gender assumption guardrails**: Lumen should avoid assigning gender to the user or to people in their stories until that has been explicitly clarified. Prefer neutral language when references are ambiguous, and preserve uncertainty instead of guessing. Miss-gendering breaks trust fast in a product that depends on feeling understood. Likely a prompt + evaluation fixture pass rather than a UI change.
+
 ### Domain Tracking
 
 - [ ] `[M]` **Visible domain/progress tracking**: Surface the 5 lenses (Calling, Relationships, Vitality, Prosperity, Spirit) as visible UI elements so users can see what's been explored and what threads are active. Could be as simple as a sidebar or dashboard showing domains with recent themes, milestones, and "what opened" items from session closures. Helps with topic compartmentalization — users forget what they talked about last time. Multiple testers requested this (Iman: "mind map, table, staged progression chart"; Howie: domain focus). Also aids topic recall between sessions.
@@ -26,6 +30,7 @@ _Tracked in `mvp3.md`._
 
 - [ ] `[M]` **Improve onboarding for non-technical users**: Current flow assumes comfort with email auth + passphrase creation. A 55-year-old first-time AI user needed hand-holding through every step. Consider: simpler language, fewer steps before first chat, guided walkthrough, optional passphrase (defer to Keychain/device-level security on desktop), and gentle hints about how to talk to Lumen (e.g., "it's okay to say 'I don't know'"). Also consider guided vs. open session start — offer choice between guided discovery (Tony Robbins-style intake questions) or bring-your-own-problem mode. See `docs/feedback/2026-02-18-meg-in-person.md`, `docs/feedback/2026-02-20-iman-imessage.md`.
 - [ ] `[M]` **Design + atmospheric polish**: Evolve palettes with richer backgrounds and textures, increase base text/icon sizing, add atmospheric elements (subtle gradients, breathing animations), apply Fraunces display typography to key moments. OmmWriter-level atmosphere. Polish pass, not redesign.
+- [ ] `[M]` **Mobile chat layout + keyboard polish**: Tighten the phone chat experience so incoming assistant messages are easier to read. Dismiss the mobile keyboard when a new assistant response starts streaming, let assistant messages use more of the available screen width, reduce unnecessary horizontal padding on mobile, and consider a slightly smaller mobile text size so more conversation fits onscreen. Audit the full keyboard-open / keyboard-closed transition so composer height, safe-area spacing, and message positioning stay calm instead of jumping around. Include portrait and landscape QA.
 
 ### Harness
 

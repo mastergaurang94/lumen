@@ -1,6 +1,6 @@
 # MVP 3 Implementation
 
-Last Updated: 2026-02-22
+Last Updated: 2026-03-12
 Status: In progress (restructured)
 
 > **Session protocol**: At the end of each working session, append a dated entry to
@@ -11,6 +11,7 @@ Status: In progress (restructured)
 
 ## Running Updates
 
+- 2026-03-12: Added fresh mobile-session feedback to `backlog.md`. New Soon items: gender assumption guardrails in conversation quality, plus a mobile chat layout/keyboard polish pass covering keyboard dismissal on assistant stream start, wider assistant message layout on phones, lighter mobile padding, slightly denser mobile typography, and calmer keyboard open/close transitions. Prompt-quality follow-up: explicitly avoid gendering ambiguous people until clarified.
 - 2026-02-22: Pivot from WKWebView + static export approach to **full SwiftUI native Mac app**. No React in the loop — complete rewrite of UI and business logic in Swift. Tier 1 items (1.1–1.6) replaced with single reference to `swift-mac-app.md`. Key decisions: GRDB.swift for SQLite, CryptoKit AES-GCM + CommonCrypto PBKDF2, URLSession.bytes for SSE streaming, `@Observable` MVVM, 3 SPM deps (GRDB, swift-markdown-ui, KeychainAccess). 6 implementation phases. Web app stays as-is during development.
 - 2026-02-22: Second restructure pass. Moved billing (4.2), managed sync (4.3), folder sync (3.1), and system prompt protection (4.4) to `backlog.md` Later. Rationale: Lumen will be a local open-source app before any monetization. Encrypted sync and billing are future paid-tier features. Voice input stays — natural fit for the Mac app experience. MVP 3 is now 3 tiers, 7 items.
 - 2026-02-22: First restructure. Moved old Tier 2 (prompt quality, eval harness, design polish) to `backlog.md` under Soon (MVP 4). Moved all Soul Vault integration items (old 1.2, 4.1, 4.2) to `backlog.md` under Later. Lumen will use local file storage rather than depending on Soul Vault as a separate app. Renumbered remaining tiers.
