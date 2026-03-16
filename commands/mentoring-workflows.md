@@ -16,7 +16,7 @@ This can be:
 - A single mentor name (e.g., `contribution`)
 - `council` for all six mentors
 - Multiple mentor names for a coalition (e.g., `contribution vitality`)
-- Empty, in which case ask which mentor(s) they want
+- Empty, which defaults to `lumen`
 
 Valid mentor names: `contribution`, `relationships`, `vitality`, `spirit`, `prosperity`, `lumen`
 
