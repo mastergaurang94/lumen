@@ -1,0 +1,10 @@
+# Personal session data (never committed)
+arc.md
+arc_backup_*.md
+notebooks/
+transcripts/
+
+# Editor/OS
+.DS_Store
+*.swp
+*~
