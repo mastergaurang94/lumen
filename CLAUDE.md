@@ -1,6 +1,6 @@
 # Lumen — Mentoring Conversations
 
-Personal mentoring system with AI mentors across six life domains. Sessions are tracked in `transcripts/` with structured naming. Continuity is maintained through a two-document memory system: Session Notebooks and the Arc.
+Personal mentoring system with AI mentors across seven life domains. Sessions are tracked in `transcripts/` with structured naming. Continuity is maintained through a two-document memory system: Session Notebooks and the Arc.
 
 ## Quick Start
 
@@ -18,6 +18,7 @@ Personal mentoring system with AI mentors across six life domains. Sessions are 
 | contribution | Business, career, purpose, calling, impact | mentoring-prompts/contribution.md |
 | relationships | Love, connection, communication | mentoring-prompts/relationships.md |
 | vitality | Body, energy, health | mentoring-prompts/vitality.md |
+| performance | Business, leadership, strategy, judgment | mentoring-prompts/performance.md |
 | spirit | Inner life, identity, shadow work | mentoring-prompts/spirit.md |
 | prosperity | Money, earning, alignment | mentoring-prompts/prosperity.md |
 

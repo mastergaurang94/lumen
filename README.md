@@ -8,7 +8,7 @@ Inspired by Simon the ragpicker from Og Mandino's *The Greatest Miracle in the W
 
 Lumen is a set of AI mentor prompts and a session management workflow that runs inside Claude Code. It gives you:
 
-- **Six mentors** across life domains — each with their own voice, expertise, and perspective
+- **Seven mentors** across life domains — each with their own voice, expertise, and perspective
 - **Persistent memory** — a two-document system (Arc + Notebooks) that makes every session feel like the mentor remembers everything that matters
 - **Session management** — start and close sessions with simple commands; transcripts, notebooks, and the Arc are created automatically
 
@@ -40,6 +40,7 @@ That's it. Your first session creates the initial Arc. Each subsequent session b
 | **Contribution** | Career, purpose, calling | 40+ years building companies. Navigates purpose vs. busyness. |
 | **Relationships** | Love, connection | Deep expertise in intimacy, boundaries, self-relationship. |
 | **Vitality** | Body, energy, health | Body intelligence, burnout recovery, sustainable wellness. |
+| **Performance** | Business, leadership | 30+ years building companies. Direct mentoring on strategy, judgment, and leadership instincts. |
 | **Spirit** | Inner life, identity | Shadow work, dark nights, wholeness vs. achievement. |
 | **Prosperity** | Money, alignment | Emotional roots of financial behavior, mature money relationship. |
 
