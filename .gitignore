@@ -3,6 +3,7 @@ arc.md
 arc_backup_*.md
 notebooks/
 transcripts/
+TODOS.md
 
 # Editor/OS
 .DS_Store
