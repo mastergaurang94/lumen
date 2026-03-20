@@ -32,7 +32,8 @@ Valid mentor names: `contribution`, `relationships`, `vitality`, `spirit`, `pros
 - Coalition: `coalition`
 
 3. Find next session number
-- Scan `transcripts/` for `{prefix}_*_*.md` (exclude `_notes.md`) and legacy `.txt`
+- First check `sessions.md` for entries matching `{prefix}_*` — the highest number there is authoritative
+- Fallback: scan `transcripts/` for `{prefix}_*_*.md` (exclude `_notes.md`) and legacy `.txt`
 - Extract highest session number and add one, else start at `1`
 
 4. Create transcript file
@@ -53,24 +54,35 @@ Model: {current model name}
   - Council: `Council Session 2`
   - Coalition: `Coalition Session 3 (Contribution, Vitality)`
 
-5. Load context (respect budget)
-- `arc.md` first
-- All `notebooks/` newest first
-- Last 2-3 related raw transcripts
-- If budget allows, 1-2 cross-domain transcripts
-- Do not load all raw transcripts
+5. Load context (deterministic budget)
 
-6. Load mentor prompt(s)
+| Priority | Source | Cap | Tokens (approx) |
+|----------|--------|-----|------------------|
+| 1 | `arc.md` | 1 file | ~3.5K |
+| 2 | All session notebooks (newest first) | no cap | ~1.3K each |
+| 3 | Same-mentor raw transcripts (newest first) | up to 5 | ~12K each |
+| 4 | Cross-domain raw transcripts (newest first) | up to 3 | ~12K each |
+
+- Load in priority order. Stop adding transcripts if context is getting large.
+- Do NOT load all raw transcripts. The Arc and notebooks are the memory system.
+
+6. Silent pre-flight checklist (no output to user)
+- [ ] Arc loaded (or noted as missing for first session)
+- [ ] Notebook count confirmed against session index / transcript scan
+- [ ] Session number is correct (no gaps or duplicates)
+- [ ] Template variables (`[NAME]`, `[XTH]`, `[DATE + TIME]`) will be replaced in step 8
+
+7. Load mentor prompt(s)
 - Single: `mentoring-prompts/{mentor}.md`
 - Council: `mentoring-prompts/council.md` plus all individual mentor files
 - Coalition: each participating mentor file
 
-7. Replace prompt template variables
+8. Replace prompt template variables
 - `[NAME]` -> the user's name (ask on first session if not known; remember for future sessions)
 - `[XTH]` -> ordinal session number
 - `[DATE + TIME]` -> current date and time
 
-8. Append rendered prompt to transcript
+9. Append rendered prompt to transcript
 - Save exact rendered prompt text to transcript
 - Add separator:
 
@@ -78,9 +90,20 @@ Model: {current model name}
 ----------------------------------------
 ```
 
-9. Enter character and begin
+10. Enter character and begin
 - Stay fully in mentor character until explicitly asked to step out or `wrap-up` is called
 - For council/coalition, prefix each mentor line with `**Mentor**:`
+
+## Graceful Closure
+
+Session closure awareness — a sensitivity instruction, not a state machine.
+
+- **Detect winding-down energy.** When farewell language, gratitude, or natural conversation endings appear, the mentor delivers their natural in-character closing (a reflection, a parting image, final words).
+- **Nudge for wrap-up.** After the in-character closing, add a quiet reminder: *"When you're ready, say `/project:wrap-up` and I'll save our session."*
+- **Unambiguous goodbye.** If the farewell is clear and complete ("I'm heading out, thanks for this"), the mentor may initiate wrap-up directly — deliver closing remarks, then proceed to the Wrap-Up Command steps automatically.
+- **Never interrupt.** If the conversation is still active, do not nudge. Only respond to genuine closure signals.
+
+The goal: no session ends without the memory system being updated. A forgotten `/project:wrap-up` is the highest-risk failure mode.
 
 ## Wrap-Up Command
 
@@ -140,11 +163,24 @@ Notebook: notebooks/{prefix}_{number}_{date}.md
 Arc: arc.md (updated)
 ```
 
-7. Ask about notes
+7. Append to session index (`sessions.md`)
+- If `sessions.md` does not exist, create it with a header: `# Session Index`
+- Append an entry using themes and commitments from the summary block:
+
+```
+### {prefix}_{number} | {YYYY-MM-DD}
+Mentor(s): {comma-separated list}
+Themes: {theme 1, theme 2}
+Commitments: {commitment 1, commitment 2}
+```
+
+- If this is the first time `sessions.md` is created and notebooks already exist, backfill entries from existing notebooks before appending the current session.
+
+8. Ask about notes
 - Ask: `Want me to generate a detailed _notes.md for this session?`
 - If yes, create: `transcripts/{prefix}_{number}_{date}_notes.md`
 
-8. Confirm closure
+9. Confirm closure
 - List updated/created files
 - Confirm session is closed
 - Remind top commitment for the week ahead

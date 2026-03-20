@@ -66,19 +66,17 @@ The consolidation-layer approach (notebooks as episodic memory, Arc as semantic 
 When starting a session, context loads in this order:
 
 ```
-1. The Arc                        ~3.5K tokens   [always, if exists]
-2. All session notebooks          ~1.3K each     [always, newest first]
-3. Last 2-3 raw transcripts       ~12K each      [if budget allows]
-4. Random older transcripts       ~12K each      [fill remaining budget]
+1. The Arc                                  ~3.5K tokens   [always, if exists]
+2. All session notebooks (newest first)     ~1.3K each     [always]
+3. Same-mentor raw transcripts (newest)     ~12K each      [up to 5]
+4. Cross-domain raw transcripts (newest)    ~12K each      [up to 3]
 ```
 
 ### Budget Rules
 
-- Default context window: 200K tokens
-- Reserve ~60K tokens for system prompt + model response
-- Fill remaining budget: Arc → notebooks → transcripts
-- Random selection of older transcripts uses Fisher-Yates shuffle (serendipitous recall, not strict recency)
-- Works comfortably for 50+ sessions. Larger context windows load more transcripts automatically.
+- Load in priority order with hard ceilings per category (see table above)
+- Stop adding transcripts if context is getting large
+- Works comfortably for 50+ sessions
 
 ## Session Closure Flow
 

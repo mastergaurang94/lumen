@@ -57,11 +57,14 @@ Immutable records of every conversation. Source of truth. Not loaded in full at 
 
 ## Context Assembly (at `/project:begin`)
 
-Load in this order:
-1. **The Arc** (~3.5K tokens) — always
-2. **All session notebooks** (~1.3K each, newest first) — always
-3. **Last 2-3 raw transcripts** for this mentor type — if budget allows
-4. **1-2 cross-domain transcripts** — if budget allows
+Load in this order with hard ceilings:
+
+| Priority | Source | Cap |
+|----------|--------|-----|
+| 1 | **The Arc** (~3.5K tokens) | always |
+| 2 | **All session notebooks** (~1.3K each, newest first) | always |
+| 3 | **Same-mentor raw transcripts** (newest first) | up to 5 |
+| 4 | **Cross-domain raw transcripts** (newest first) | up to 3 |
 
 Do NOT load all raw transcripts. The Arc and notebooks are the memory system.
 
@@ -71,7 +74,10 @@ After the in-character closing:
 1. Generate Session Notebook → save to `notebooks/`
 2. Update the Arc → save to `arc.md`
 3. Append brief summary to transcript file
-4. Ask about `_notes.md`
+4. Append entry to `sessions.md` (session index)
+5. Ask about `_notes.md`
+
+**Graceful Closure:** If the user signals they're done (farewell language, gratitude, winding down), deliver a natural in-character closing, then nudge: *"When you're ready, say `/project:wrap-up` and I'll save our session."* If the goodbye is unambiguous, initiate wrap-up directly. See `commands/mentoring-workflows.md` for details.
 
 ## File Naming
 
